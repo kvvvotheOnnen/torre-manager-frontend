@@ -1,0 +1,241 @@
+# Log de Agentes — Torre Manager Backend (copia de referencia)
+
+> Esta bitácora pertenece al repositorio **backend**
+> (`torre-manager-backend/docs/agents_logs/`). Se conserva aquí, junto a la del
+> cliente Flutter, únicamente como referencia de continuidad del módulo Auth.
+
+Bitácora de los cambios realizados por el agente de IA en este repositorio.
+
+> **Privacidad:** este repositorio es público. En todos los logs queda
+> estrictamente prohibido incluir datos sensibles: credenciales, tokens,
+> API keys, correos o nombres reales, cadenas de conexión, rutas absolutas
+> del entorno local o contenido de `.env`.
+
+---
+
+## 2026-10-19 — Módulo Auth, Paso 1: Capa de Dominio
+
+**Branch:** `feature/login/koke/19-10-2026`
+
+### Contexto
+
+Primera funcionalidad del sistema siguiendo Clean Architecture + Feature-First
+(definido en el AGENTS.md raíz del proyecto). El backend expone una API pura.
+Las capas de Dominio y Datos viven en `src/` (namespace `Features\`), mientras
+que `app/` se reserva para infraestructura del framework.
+
+### Cambios realizados
+
+1. **Mapeo PSR-4.** Se agregó `"Features\\"` al bloque `autoload.psr-4`
+   de `composer.json` (el AGENTS.md lo indicaba pero no estaba aplicado en el
+   repo). Luego se ejecutó `composer dump-autoload`.
+   *Corrección posterior:* el prefijo se ajustó a `"Features\\": "src/Features/"`
+   porque los archivos viven en `src/Features/...`; con `"src/"` la clase
+   `Features\Auth\...` se resolvía a `src/Auth/...` y no cargaba.
+
+2. **Verificación de dependencias.** Se confirmó que `laravel/sanctum` ya está
+   instalado (`composer show laravel/sanctum`).
+
+3. **Entidad `Rol`** — `src/Features/Auth/Domain/Entities/Rol.php`
+   - Enum nativo *backed* (`string`) con los casos `Administrador`,
+     `Residente` y `Conserje` (valores en minúscula).
+
+4. **Entidad `Usuario`** — `src/Features/Auth/Domain/Entities/Usuario.php`
+   - Clase PHP pura y `final`, sin herencia de Eloquent ni acoplamiento al
+     framework.
+   - Propiedades inmutables (`readonly`) con promoción en el constructor:
+     `id`, `nombre`, `correo`, `rol`.
+   - Únicamente *getters*; sin setters para preservar inmutabilidad.
+
+5. **Excepción de dominio** —
+   `src/Features/Auth/Domain/Exceptions/InvalidCredentialsException.php`
+   - Extiende `RuntimeException` de la librería estándar, con un constructor
+     estático nombrado `becauseCredentialsAreWrong()`.
+
+6. **Interfaz `AuthRepositoryInterface`** —
+   `src/Features/Auth/Domain/Repositories/AuthRepositoryInterface.php`
+   - Contrato: `login(string $email, string $password): string`. El string
+     retornado es el token de acceso.
+
+7. **Caso de uso `LoginUseCase`** —
+   `src/Features/Auth/Domain/UseCases/LoginUseCase.php`
+   - Inyecta `AuthRepositoryInterface` por constructor.
+   - Método `execute(string $email, string $password): string`.
+   - Valida entrada en la capa de dominio (correo con formato válido,
+     contraseña no vacía) y delega la verificación de credenciales al
+     repositorio (inversión de dependencias).
+
+### Verificación
+
+- `php -l` ejecutado sobre los cinco archivos nuevos: sin errores de sintaxis.
+- `composer dump-autoload`: autoload generado correctamente.
+
+---
+
+## 2026-10-19 — Módulo Auth, Paso 2: Docker + PostgreSQL y Capa de Datos
+
+**Branch:** `feature/login/koke/19-10-2026`
+
+### Objetivo
+
+Ambientar un entorno local reproducible mediante Docker, pensado para
+reutilizarse tal cual en un VPS de producción, y conectar la capa de Dominio
+con la persistencia real (PostgreSQL) sin filtrar detalles del framework hacia
+el dominio.
+
+### Infraestructura Docker (multi-contenedor)
+
+Se adoptó una arquitectura `nginx` + `php-fpm` + `postgres` (se descartó
+`php artisan serve` por no soportar concurrencia real).
+
+- **`Dockerfile`** (imagen `php:8.4-fpm`):
+  - Extensión `pdo_pgsql` (además de `zip` y `opcache`) instalada con
+    `docker-php-ext-install`.
+  - Composer 2 copiado desde su imagen oficial.
+  - `composer install` en la construcción y luego `composer dump-autoload
+    --optimize` sobre el código copiado.
+  - **Alineación de UID:** `groupmod`/`usermod` reasignan `www-data` a
+    `1000:1000` para que el usuario de PHP-FPM coincida con el usuario del
+    host. Esto evita los conflictos clásicos de permisos sobre el *bind mount*
+    y permite que tanto el host como el contenedor escriban en
+    `storage/` y `bootstrap/cache/` sin recurrir a `chmod 777`.
+- **`docker/nginx/default.conf`**: server que sirve `/var/www/html/public`,
+  `try_files` hacia `index.php` y `fastcgi_pass app:9000` (comunicación por
+  red interna usando el nombre del servicio).
+- **`docker-compose.yml`** con tres servicios:
+  - `app`: imagen construida localmente, *bind mount* del código para
+    desarrollo, variables `DB_*` apuntando al servicio `db`. Sin puertos
+    publicados (solo accesible desde `nginx`).
+  - `nginx`: expone **únicamente** `8000:80`. Lee el código montado en modo
+    solo lectura y monta su configuración.
+  - `db`: `postgres:16`.
+- **`.dockerignore`**: excluye `.env`, `vendor`, `node_modules`, `.git`, etc.
+  del contexto de construcción.
+
+### Aislamiento y persistencia (reglas críticas)
+
+- **Aislamiento de red:** el servicio `db` **no declara la directiva `ports`**.
+  PostgreSQL solo es alcanzable por los demás servicios a través de la red
+  interna de Compose (`torre-net`, driver `bridge`). Verificado: el puerto
+  `5432` no es accesible desde el host y `docker compose port db 5432` no
+  publica nada.
+- **Persistencia:** volumen nombrado `db_data` montado en
+  `/var/lib/postgresql/data`. Verificado: tras reiniciar los contenedores, el
+  esquema y los datos siguen presentes, y el volumen aparece en
+  `docker volume ls` con su punto de montaje gestionado por Docker.
+- **Healthcheck:** `pg_isready` en `db`; `app` depende de
+  `condition: service_healthy` para arrancar solo cuando la base está lista.
+
+### Variables de entorno
+
+- `.env.example` actualizado a la pila PostgreSQL:
+  `DB_CONNECTION=pgsql`, `DB_HOST=db`, `DB_PORT=5432` y credenciales
+  **ficticias** (`POSTGRES_DB`, `POSTGRES_USER`, `POSTGRES_PASSWORD`).
+- Como la API es *stateless* (Sanctum/JWT) se eliminó la dependencia de la
+  tabla de sesiones: `SESSION_DRIVER=file`, `CACHE_STORE=file` y
+  `QUEUE_CONNECTION=sync`.
+- El archivo `.env` real se generó localmente a partir del ejemplo y está
+  ignorado por Git. **No se registran aquí ni sus valores ni la `APP_KEY`.**
+
+### Capa de Datos
+
+1. **Migración `0001_01_01_000000_create_users_table.php`** — reescrita para
+   crear **solo** la tabla `usuarios` con: `id`, `nombre`, `email` (único),
+   `password`, `rol` (string, indexado), `remember_token` y `timestamps`.
+   Se eliminaron `password_reset_tokens` y `sessions` (innecesarias). Se
+   conservó la migración de `personal_access_tokens` de Sanctum.
+
+2. **Modelo `app/Models/User.php`** (Eloquent = infraestructura):
+   - `protected $table = 'usuarios';`
+   - `use HasApiTokens` (Sanctum).
+   - `$fillable` actualizado a `nombre`, `email`, `password`, `rol`.
+   - `toEntity(): Usuario` mapea el registro a la entidad pura y parsea el
+     string de rol con `Rol::from(...)`.
+   - `UserFactory` actualizado (`nombre`, `rol` aleatorio, estado
+     `administrador()`).
+
+3. **`src/Features/Auth/Data/Repositories/AuthRepository.php`** — implementa
+   `AuthRepositoryInterface`:
+   - Busca por `email`, verifica el hash con `Hash::check`.
+   - Ante usuario inexistente o credenciales incorrectas lanza
+     `InvalidCredentialsException` (del dominio).
+   - Retorna `$user->createToken('api')->plainTextToken` (Sanctum).
+
+4. **Binding** en `app/Providers/AppServiceProvider::register()`:
+   `AuthRepositoryInterface` → `AuthRepository`.
+
+### Ejecución y verificación
+
+- `docker compose build` + `docker compose up -d`: los tres servicios en
+  estado *Up* (`db` como *healthy*).
+- `docker compose exec app php artisan migrate --force`: migraciones aplicadas
+  **dentro del contenedor**.
+- Tabla `usuarios` verificada con `psql` (columnas e índices correctos).
+- Smoke test dentro del contenedor (tinker): creación de usuario → `toEntity()`
+  con rol correcto → `LoginUseCase` retorna token → credenciales inválidas
+  lanzan `InvalidCredentialsException` → limpieza de datos de prueba.
+- Endpoint de salud `GET /up` responde **200** a través de nginx.
+- Escritura verificada tanto desde el contenedor como desde el host en
+  `storage/`; `git status` limpio (se restauraron los bits de modo de los
+  `.gitignore` alterados por un `chmod` temporal).
+- `php artisan test` dentro del contenedor: 2 pruebas pasan.
+- `vendor/bin/pint` aplicado sobre los archivos nuevos/modificados.
+
+---
+
+## 2026-10-19 — Módulo Auth, Paso 3: Capa de Presentación (API)
+
+**Branch:** `feature/login/koke/19-10-2026`
+
+### Objetivo
+
+Exponer el caso de uso `LoginUseCase` como un endpoint HTTP, manteniendo los
+controladores delgados y sin filtrar el dominio hacia el framework.
+
+### Cambios realizados
+
+1. **`app/Http/Requests/LoginRequest.php`** — `FormRequest` con validación:
+   - `email`: `required`, `string`, `email`.
+   - `password`: `required`, `string`.
+   - `authorize()` retorna `true`.
+   - La validación de entrada se resuelve aquí; el caso de uso mantiene su
+     propia defensa como segunda capa.
+
+2. **`app/Http/Controllers/Api/AuthController.php`** (controlador delgado):
+   - Inyecta `LoginUseCase` por constructor (resuelto automáticamente por el
+     contenedor, que a su vez resuelve `AuthRepositoryInterface`).
+   - `login(LoginRequest $request): JsonResponse`:
+     - Ejecuta el caso de uso con las credenciales validadas.
+     - Captura `InvalidCredentialsException` → **401** con mensaje **genérico**
+       (`"Credenciales inválidas."`) para no revelar si el email existe.
+     - Éxito → **200** con `{"access_token": "...", "token_type": "Bearer"}`.
+
+3. **Ruta** en `routes/api.php`:
+   - `Route::post('/login', [AuthController::class, 'login']);`
+   - El ruteo de API ya estaba habilitado (`withRouting(api: ...)` en
+     `bootstrap/app.php`), por lo que no fue necesario `install:api`. La ruta
+     queda expuesta como `POST /api/login`.
+
+### Verificación (end-to-end vía nginx)
+
+- `POST /api/login` con credenciales correctas → **200** + `access_token` y
+  `token_type: Bearer`.
+- Credenciales incorrectas → **401** con mensaje genérico.
+- Payload inválido (email mal formado, password vacía) → **422** con errores de
+  validación.
+- Datos de prueba eliminados tras la verificación.
+- `php artisan route:list --path=api` muestra `POST api/login`.
+- `php artisan test`: 2 pruebas pasan. `vendor/bin/pint`: sin cambios.
+
+### Cierre
+
+- Restaurados `AGENTS.md` y `CLAUDE.md` (habían quedado marcados como
+  eliminados en el working tree; no debían borrarse).
+- Commit unificado de los Pasos 1, 2 y 3.
+
+### Estado del backend del módulo Auth
+
+Completo: Dominio (entidades, contrato, caso de uso), Datos (migración, modelo
+Eloquent, repositorio Sanctum), Infraestructura (Docker nginx + php-fpm +
+postgres) y Presentación (controlador, FormRequest, ruta y endpoint).
+Listo para continuar con el cliente Flutter.
