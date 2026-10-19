@@ -88,3 +88,24 @@ El ciclo de vida de los datos (desde el JSON entrante hasta la Entidad en memori
 3. Crear los **Casos de Uso** que contienen las reglas de negocio.
 4. Definir las **Interfaces de los Repositorios** (Contratos).
    *Regla: No implementar Modelos de Datos, Fuentes de Datos o UI/Controladores hasta que la capa de Dominio de la funcionalidad específica esté completa y revisada.*
+
+## 7. Bitácoras de Agentes y Logs del Sistema
+
+Son dos cosas **distintas** y no deben confundirse: la bitácora es documentación versionada del trabajo del agente; los logs del sistema son salida de ejecución **no versionada**.
+
+### 7.1 Bitácora de Agentes (obligatoria)
+
+* **Qué es:** registro narrativo del trabajo realizado por el agente de IA en cada repositorio (qué se hizo, decisiones de diseño, verificación y pendientes).
+* **Ubicación:** `docs/agents_log/` en la raíz de **cada** repositorio (`torre-manager-backend` y `torre_manager_frontend`). Está **versionada en Git**.
+* **Uso obligatorio:** al cerrar cada paso o hito, el agente **DEBE crear o actualizar** la bitácora correspondiente **antes** de dar la tarea por terminada. No es opcional.
+* **Nomenclatura:** `YYYY-MM-DD_modulo_descripcion.md` (ej. `2026-10-19_auth_pasos-1-2-3.md`).
+* **Contenido mínimo:** fecha, branch, contexto, cambios realizados, decisiones de diseño, verificación y pendientes.
+* **Regla Cero de Secretos:** la bitácora **jamás** debe contener credenciales, tokens, API keys, correos o nombres reales, cadenas de conexión, contenido de `.env` ni rutas absolutas del entorno local. Este repositorio es público.
+
+### 7.2 Logs del Sistema (runtime)
+
+* **Herramienta:** se usa el **logging nativo de Laravel (Monolog)** mediante el facade `Log` o el contrato **PSR-3** (`Psr\Log\LoggerInterface`). No crear mecanismos propios ni agregar paquetes de logging sin aprobación.
+* **Ubicación:** `storage/logs/` (ej. `storage/logs/laravel.log`). **Prohibido** crear un directorio `logs/` en la raíz del repositorio o **versionar logs de runtime** en Git.
+* **Visualización:** el archivo `storage/logs/laravel.log`, `docker compose logs -f app` (salida a stderr) y `php artisan pail` en desarrollo.
+* **Dónde loguear:** únicamente en la capa de **infraestructura** (controladores, middleware y repositorios de la capa de Datos). El Dominio es puro y **no** escribe logs.
+* **Prohibido** loguear contraseñas, tokens, hashes o datos personales (PII).
