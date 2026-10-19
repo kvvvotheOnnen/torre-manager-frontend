@@ -28,12 +28,7 @@ class UsuarioDTO {
   }
 
   Usuario toEntity() {
-    return Usuario(
-      id: id,
-      nombre: nombre,
-      correo: correo,
-      rol: _parseRol(rol),
-    );
+    return Usuario(id: id, nombre: nombre, correo: correo, rol: _parseRol(rol));
   }
 
   static Rol _parseRol(String value) {

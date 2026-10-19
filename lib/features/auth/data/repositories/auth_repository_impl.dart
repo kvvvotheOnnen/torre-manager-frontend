@@ -26,7 +26,7 @@ class AuthRepositoryImpl implements AuthRepositoryInterface {
       return Right(response.usuario.toEntity());
     } on DioException catch (error) {
       if (error.response?.statusCode == 401) {
-        return const Left(ServerFailure('Credenciales inválidas'));
+        return const Left(ServerFailure('Credenciales incorrectas'));
       }
       return const Left(ServerFailure());
     } on FormatException {

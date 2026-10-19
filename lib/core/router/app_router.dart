@@ -32,36 +32,77 @@ GoRouter buildRouter() {
       ),
       GoRoute(
         path: AppRoutes.adminPanel,
-        builder: (context, state) =>
-            const _RolePlaceholder(title: 'Panel de Administración'),
+        builder: (context, state) => _RolePlaceholder(
+          title: 'Panel de Administración',
+          usuario: _usuarioFromExtra(state),
+        ),
       ),
       GoRoute(
         path: AppRoutes.residenteHome,
-        builder: (context, state) =>
-            const _RolePlaceholder(title: 'Inicio Residente'),
+        builder: (context, state) => _RolePlaceholder(
+          title: 'Inicio Residente',
+          usuario: _usuarioFromExtra(state),
+        ),
       ),
       GoRoute(
         path: AppRoutes.conserjeria,
-        builder: (context, state) =>
-            const _RolePlaceholder(title: 'Conserjería'),
+        builder: (context, state) => _RolePlaceholder(
+          title: 'Conserjería',
+          usuario: _usuarioFromExtra(state),
+        ),
       ),
     ],
   );
 }
 
+Usuario? _usuarioFromExtra(GoRouterState state) {
+  final extra = state.extra;
+  return extra is Usuario ? extra : null;
+}
+
 class _RolePlaceholder extends StatelessWidget {
-  const _RolePlaceholder({required this.title});
+  const _RolePlaceholder({required this.title, this.usuario});
 
   final String title;
+  final Usuario? usuario;
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return Scaffold(
       appBar: AppBar(title: Text(title)),
       body: Center(
-        child: Text(
-          title,
-          style: Theme.of(context).textTheme.headlineSmall,
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(
+                Icons.check_circle_outline,
+                size: 64,
+                color: Colors.green,
+              ),
+              const SizedBox(height: 16),
+              Text(
+                usuario != null
+                    ? 'Bienvenido, ${usuario!.nombre}'
+                    : 'Bienvenido',
+                textAlign: TextAlign.center,
+                style: theme.textTheme.headlineSmall,
+              ),
+              const SizedBox(height: 8),
+              if (usuario != null)
+                Text(
+                  'Rol: ${usuario!.rol.name}',
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              const SizedBox(height: 4),
+              Text(title, style: theme.textTheme.bodyMedium),
+            ],
+          ),
         ),
       ),
     );

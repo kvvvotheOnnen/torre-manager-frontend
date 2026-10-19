@@ -1,10 +1,7 @@
 import 'usuario_dto.dart';
 
 class AuthResponseDTO {
-  const AuthResponseDTO({
-    required this.accessToken,
-    required this.usuario,
-  });
+  const AuthResponseDTO({required this.accessToken, required this.usuario});
 
   final String accessToken;
   final UsuarioDTO usuario;
