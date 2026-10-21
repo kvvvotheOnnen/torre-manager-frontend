@@ -6,6 +6,8 @@ import '../../../auth/domain/entities/usuario.dart';
 import '../../../auth/presentation/bloc/auth_bloc.dart';
 import '../../../auth/presentation/bloc/auth_event.dart';
 import '../../../auth/presentation/bloc/auth_state.dart';
+import '../../../superadmin/domain/entities/modulo_sistema.dart';
+import '../../../tenant/presentation/bloc/tenant_bloc.dart';
 
 /// Descriptor de un módulo visible en el dashboard.
 class _Modulo {
@@ -14,12 +16,14 @@ class _Modulo {
     required this.descripcion,
     required this.icono,
     required this.ruta,
+    this.modulo,
   });
 
   final String titulo;
   final String descripcion;
   final IconData icono;
   final String ruta;
+  final ModuloSistema? modulo;
 }
 
 class DashboardScreen extends StatelessWidget {
@@ -35,6 +39,7 @@ class DashboardScreen extends StatelessWidget {
       descripcion: 'Proyecto, agrupaciones, unidades principales y accesorias',
       icono: Icons.domain,
       ruta: '/admin/infraestructura',
+      modulo: ModuloSistema.infraestructura,
     );
     const gestionProyectos = _Modulo(
       titulo: 'Gestión de Proyectos',
@@ -61,10 +66,27 @@ class DashboardScreen extends StatelessWidget {
     };
   }
 
+  List<_Modulo> _modulosFiltrados(BuildContext context, Rol rol) {
+    final modulos = _modulosPara(rol);
+
+    if (rol != Rol.administrador) return modulos;
+
+    final proyectoActivo = context.watch<TenantBloc>().state.proyectoActivo;
+    if (proyectoActivo == null) return const [];
+
+    return modulos
+        .where(
+          (modulo) =>
+              modulo.modulo == null ||
+              proyectoActivo.modulos.contains(modulo.modulo),
+        )
+        .toList();
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final modulos = _modulosPara(usuario.rol);
+    final modulos = _modulosFiltrados(context, usuario.rol);
 
     return Scaffold(
       appBar: AppBar(

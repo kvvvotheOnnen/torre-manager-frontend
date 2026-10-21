@@ -5,6 +5,9 @@ import 'package:go_router/go_router.dart';
 import 'core/network/dio_client.dart';
 import 'core/router/app_router.dart';
 import 'core/storage/token_storage.dart';
+import 'core/tenant/proyecto_activo_store.dart';
+import 'features/auth/domain/entities/usuario.dart';
+import 'features/auth/presentation/bloc/auth_state.dart';
 import 'features/auth/data/datasources/auth_remote_data_source.dart';
 import 'features/auth/data/repositories/auth_repository_impl.dart';
 import 'features/auth/domain/usecases/login_usecase.dart';
@@ -23,9 +26,11 @@ import 'features/superadmin/data/repositories/superadmin_repository_impl.dart';
 import 'features/superadmin/domain/usecases/crear_administrador_usecase.dart';
 import 'features/superadmin/domain/usecases/crear_proyecto_usecase.dart';
 import 'features/superadmin/domain/usecases/listar_administradores_usecase.dart';
+import 'features/superadmin/domain/usecases/listar_mis_proyectos_usecase.dart';
 import 'features/superadmin/domain/usecases/listar_proyectos_usecase.dart';
 import 'features/superadmin/presentation/bloc/administradores_bloc.dart';
 import 'features/superadmin/presentation/bloc/superadmin_bloc.dart';
+import 'features/tenant/presentation/bloc/tenant_bloc.dart';
 
 void main() {
   runApp(const TorreManagerApp());
@@ -43,6 +48,7 @@ class _TorreManagerAppState extends State<TorreManagerApp> {
   late final InfraestructuraBloc _infraestructuraBloc;
   late final SuperadminBloc _superadminBloc;
   late final AdministradoresBloc _administradoresBloc;
+  late final TenantBloc _tenantBloc;
   late final GoRouter _router;
 
   @override
@@ -50,7 +56,8 @@ class _TorreManagerAppState extends State<TorreManagerApp> {
     super.initState();
 
     final tokenStorage = SecureTokenStorage();
-    final dio = DioClient(tokenStorage).dio;
+    final proyectoActivoStore = SharedPreferencesProyectoActivoStore();
+    final dio = DioClient(tokenStorage, proyectoActivoStore).dio;
 
     final authDataSource = AuthRemoteDataSource(dio);
     final authRepository = AuthRepositoryImpl(authDataSource, tokenStorage);
@@ -99,7 +106,22 @@ class _TorreManagerAppState extends State<TorreManagerApp> {
       ),
     );
 
-    _router = buildRouter(_authBloc);
+    _tenantBloc = TenantBloc(
+      listarMisProyectosUseCase: ListarMisProyectosUseCase(
+        superadminRepository,
+      ),
+      proyectoActivoStore: proyectoActivoStore,
+    );
+
+    _authBloc.stream.listen((state) {
+      if (state is AuthSuccess && state.usuario.rol == Rol.administrador) {
+        _tenantBloc.add(const TenantResuelto());
+      } else if (state is AuthUnauthenticated) {
+        _tenantBloc.add(const TenantLimpiado());
+      }
+    });
+
+    _router = buildRouter(_authBloc, _tenantBloc);
   }
 
   @override
@@ -108,6 +130,7 @@ class _TorreManagerAppState extends State<TorreManagerApp> {
     _infraestructuraBloc.close();
     _superadminBloc.close();
     _administradoresBloc.close();
+    _tenantBloc.close();
     super.dispose();
   }
 
@@ -119,6 +142,7 @@ class _TorreManagerAppState extends State<TorreManagerApp> {
         BlocProvider.value(value: _infraestructuraBloc),
         BlocProvider.value(value: _superadminBloc),
         BlocProvider.value(value: _administradoresBloc),
+        BlocProvider.value(value: _tenantBloc),
       ],
       child: MaterialApp.router(
         title: 'Torre Manager',

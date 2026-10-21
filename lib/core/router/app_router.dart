@@ -10,6 +10,8 @@ import '../../features/dashboard/presentation/screens/dashboard_screen.dart';
 import '../../features/infraestructura/presentation/screens/infraestructura_screen.dart';
 import '../../features/superadmin/presentation/screens/administradores_screen.dart';
 import '../../features/superadmin/presentation/screens/proyectos_screen.dart';
+import '../../features/tenant/presentation/bloc/tenant_bloc.dart';
+import '../../features/tenant/presentation/screens/selector_proyecto_screen.dart';
 
 class AppRoutes {
   const AppRoutes._();
@@ -17,6 +19,7 @@ class AppRoutes {
   static const String splash = '/';
   static const String login = '/login';
   static const String dashboard = '/dashboard';
+  static const String selectorProyecto = '/selector-proyecto';
   static const String adminInfraestructura = '/admin/infraestructura';
   static const String superadminProyectos = '/superadmin/proyectos';
   static const String superadminAdministradores = '/superadmin/administradores';
@@ -25,16 +28,18 @@ class AppRoutes {
   static String homeForRol(Rol rol) => dashboard;
 }
 
-GoRouter buildRouter(AuthBloc authBloc) {
+GoRouter buildRouter(AuthBloc authBloc, TenantBloc tenantBloc) {
   return GoRouter(
     initialLocation: AppRoutes.splash,
-    refreshListenable: _AuthStateListenable(authBloc),
+    refreshListenable: _AuthStateListenable(authBloc, tenantBloc),
     redirect: (context, state) {
       final authState = authBloc.state;
+      final tenantState = tenantBloc.state;
       final location = state.matchedLocation;
 
       final isSplash = location == AppRoutes.splash;
       final isLogin = location == AppRoutes.login;
+      final isSelector = location == AppRoutes.selectorProyecto;
       final isInfraestructura = location == AppRoutes.adminInfraestructura;
       final isSuperadminRoute = location.startsWith('/superadmin');
 
@@ -46,16 +51,25 @@ GoRouter buildRouter(AuthBloc authBloc) {
           final rol = authState.usuario.rol;
           if (isSplash || isLogin) return AppRoutes.dashboard;
 
-          // RBAC: Infraestructura administrador + superadmin (herencia).
           if (isInfraestructura &&
               rol != Rol.administrador &&
               rol != Rol.superadmin) {
             return AppRoutes.dashboard;
           }
 
-          // RBAC: rutas de plataforma exclusivas del superadmin.
           if (isSuperadminRoute && rol != Rol.superadmin) {
             return AppRoutes.dashboard;
+          }
+
+          // Enrutamiento multi-tenant del administrador.
+          if (rol == Rol.administrador) {
+            if (tenantState.status == TenantStatus.cargando) {
+              return AppRoutes.splash;
+            }
+            if (tenantState.status == TenantStatus.seleccionPendiente) {
+              return isSelector ? null : AppRoutes.selectorProyecto;
+            }
+            if (isSelector) return AppRoutes.dashboard;
           }
 
           return null;
@@ -81,6 +95,10 @@ GoRouter buildRouter(AuthBloc authBloc) {
               : _usuarioDesdeBloc(context);
           return DashboardScreen(usuario: usuario);
         },
+      ),
+      GoRoute(
+        path: AppRoutes.selectorProyecto,
+        builder: (context, state) => const SelectorProyectoScreen(),
       ),
       GoRoute(
         path: AppRoutes.adminInfraestructura,
@@ -113,10 +131,11 @@ class _SplashScreen extends StatelessWidget {
   }
 }
 
-/// Adaptador que expone el stream del [AuthBloc] como [Listenable]
-/// para que go_router reevalúe los redirects ante cambios de sesión.
+/// Adaptador que expone los streams del [AuthBloc] y del [TenantBloc] como
+/// [Listenable] para que go_router reevalúe los redirects.
 class _AuthStateListenable extends ChangeNotifier {
-  _AuthStateListenable(AuthBloc bloc) {
-    bloc.stream.listen((_) => notifyListeners());
+  _AuthStateListenable(AuthBloc authBloc, TenantBloc tenantBloc) {
+    authBloc.stream.listen((_) => notifyListeners());
+    tenantBloc.stream.listen((_) => notifyListeners());
   }
 }
