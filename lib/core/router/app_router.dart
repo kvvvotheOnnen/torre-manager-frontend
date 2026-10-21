@@ -8,6 +8,7 @@ import '../../features/auth/presentation/bloc/auth_state.dart';
 import '../../features/auth/presentation/screens/login_screen.dart';
 import '../../features/dashboard/presentation/screens/dashboard_screen.dart';
 import '../../features/infraestructura/presentation/screens/infraestructura_screen.dart';
+import '../../features/superadmin/presentation/screens/administradores_screen.dart';
 import '../../features/superadmin/presentation/screens/proyectos_screen.dart';
 
 class AppRoutes {
@@ -18,6 +19,7 @@ class AppRoutes {
   static const String dashboard = '/dashboard';
   static const String adminInfraestructura = '/admin/infraestructura';
   static const String superadminProyectos = '/superadmin/proyectos';
+  static const String superadminAdministradores = '/superadmin/administradores';
 
   /// Todos los roles llegan al mismo dashboard; los módulos varían por rol.
   static String homeForRol(Rol rol) => dashboard;
@@ -87,6 +89,10 @@ GoRouter buildRouter(AuthBloc authBloc) {
       GoRoute(
         path: AppRoutes.superadminProyectos,
         builder: (context, state) => const ProyectosScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.superadminAdministradores,
+        builder: (context, state) => const AdministradoresScreen(),
       ),
     ],
   );

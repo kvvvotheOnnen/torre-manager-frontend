@@ -23,4 +23,5 @@ class AppConfig {
   static const String infraestructuraArbolPath = '$infraestructuraBasePath/arbol';
   static const String infraestructuraVistaPreviaPath = '$infraestructuraBasePath/vista-previa-identificaciones';
   static const String superadminProyectosPath = '/api/superadmin/proyectos';
+  static const String superadminAdministradoresPath = '/api/superadmin/administradores';
 }

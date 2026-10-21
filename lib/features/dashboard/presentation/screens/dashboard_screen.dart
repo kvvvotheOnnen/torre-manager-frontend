@@ -42,9 +42,19 @@ class DashboardScreen extends StatelessWidget {
       icono: Icons.apartment,
       ruta: '/superadmin/proyectos',
     );
+    const gestionAdministradores = _Modulo(
+      titulo: 'Administradores',
+      descripcion: 'Crea y lista las cuentas administradoras de recintos',
+      icono: Icons.manage_accounts,
+      ruta: '/superadmin/administradores',
+    );
 
     return switch (rol) {
-      Rol.superadmin => const [gestionProyectos, infraestructura],
+      Rol.superadmin => const [
+        gestionProyectos,
+        gestionAdministradores,
+        infraestructura,
+      ],
       Rol.administrador => const [infraestructura],
       Rol.residente => const [],
       Rol.conserje => const [],

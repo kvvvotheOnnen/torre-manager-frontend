@@ -20,7 +20,10 @@ import 'features/infraestructura/domain/usecases/registrar_agrupacion_en_cascada
 import 'features/infraestructura/presentation/bloc/infraestructura_bloc.dart';
 import 'features/superadmin/data/datasources/superadmin_remote_data_source.dart';
 import 'features/superadmin/data/repositories/superadmin_repository_impl.dart';
+import 'features/superadmin/domain/usecases/crear_administrador_usecase.dart';
+import 'features/superadmin/domain/usecases/listar_administradores_usecase.dart';
 import 'features/superadmin/domain/usecases/listar_proyectos_usecase.dart';
+import 'features/superadmin/presentation/bloc/administradores_bloc.dart';
 import 'features/superadmin/presentation/bloc/superadmin_bloc.dart';
 
 void main() {
@@ -38,6 +41,7 @@ class _TorreManagerAppState extends State<TorreManagerApp> {
   late final AuthBloc _authBloc;
   late final InfraestructuraBloc _infraestructuraBloc;
   late final SuperadminBloc _superadminBloc;
+  late final AdministradoresBloc _administradoresBloc;
   late final GoRouter _router;
 
   @override
@@ -84,6 +88,15 @@ class _TorreManagerAppState extends State<TorreManagerApp> {
       ListarProyectosUseCase(superadminRepository),
     );
 
+    _administradoresBloc = AdministradoresBloc(
+      listarAdministradoresUseCase: ListarAdministradoresUseCase(
+        superadminRepository,
+      ),
+      crearAdministradorUseCase: CrearAdministradorUseCase(
+        superadminRepository,
+      ),
+    );
+
     _router = buildRouter(_authBloc);
   }
 
@@ -92,6 +105,7 @@ class _TorreManagerAppState extends State<TorreManagerApp> {
     _authBloc.close();
     _infraestructuraBloc.close();
     _superadminBloc.close();
+    _administradoresBloc.close();
     super.dispose();
   }
 
@@ -102,6 +116,7 @@ class _TorreManagerAppState extends State<TorreManagerApp> {
         BlocProvider.value(value: _authBloc),
         BlocProvider.value(value: _infraestructuraBloc),
         BlocProvider.value(value: _superadminBloc),
+        BlocProvider.value(value: _administradoresBloc),
       ],
       child: MaterialApp.router(
         title: 'Torre Manager',
