@@ -3,7 +3,11 @@ import 'package:fpdart/fpdart.dart';
 
 import '../../../../core/errors/failures.dart';
 import '../../domain/entities/administrador.dart';
+import '../../domain/entities/instalacion_extra.dart';
+import '../../domain/entities/modulo_sistema.dart';
+import '../../domain/entities/proyecto_detalle.dart';
 import '../../domain/entities/resumen_proyecto.dart';
+import '../../domain/entities/tipo_condominio.dart';
 import '../../domain/repositories/superadmin_repository.dart';
 import '../datasources/superadmin_remote_data_source.dart';
 
@@ -47,6 +51,38 @@ class SuperadminRepositoryImpl implements SuperadminRepositoryInterface {
     );
   }
 
+  @override
+  Future<Either<Failure, ProyectoDetalle>> crearProyecto({
+    required String nombre,
+    String? descripcion,
+    required TipoCondominio tipoCondominio,
+    required List<ModuloSistema> modulos,
+    required List<InstalacionExtra> instalaciones,
+    required List<String> adminIds,
+  }) {
+    return _guard(
+      () => _remoteDataSource
+          .crearProyecto(
+            nombre: nombre,
+            descripcion: descripcion,
+            tipoCondominio: tipoCondominio,
+            modulos: modulos,
+            instalaciones: instalaciones,
+            adminIds: adminIds,
+          )
+          .then((dto) => dto.toEntity()),
+    );
+  }
+
+  @override
+  Future<Either<Failure, List<ProyectoDetalle>>> listarMisProyectos() async {
+    return _guard(
+      () => _remoteDataSource.listarMisProyectos().then(
+        (dtos) => dtos.map((dto) => dto.toEntity()).toList(),
+      ),
+    );
+  }
+
   Future<Either<Failure, T>> _guard<T>(Future<T> Function() action) async {
     try {
       return Right(await action());
@@ -59,6 +95,9 @@ class SuperadminRepositoryImpl implements SuperadminRepositoryInterface {
         if (statusCode == 409 || statusCode == 422) {
           return Left(ValidationFailure(message));
         }
+        if (statusCode == 404) {
+          return Left(ServerFailure(message));
+        }
       }
 
       if (statusCode == 403) {
@@ -70,6 +109,8 @@ class SuperadminRepositoryImpl implements SuperadminRepositoryInterface {
         return const Left(AuthenticationFailure());
       }
       return const Left(ServerFailure());
+    } on ArgumentError catch (error) {
+      return Left(ValidationFailure('Datos inesperados: ${error.message}'));
     } on FormatException {
       return const Left(ServerFailure('Respuesta inesperada del servidor.'));
     } catch (_) {

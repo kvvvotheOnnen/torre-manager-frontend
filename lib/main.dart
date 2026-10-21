@@ -21,6 +21,7 @@ import 'features/infraestructura/presentation/bloc/infraestructura_bloc.dart';
 import 'features/superadmin/data/datasources/superadmin_remote_data_source.dart';
 import 'features/superadmin/data/repositories/superadmin_repository_impl.dart';
 import 'features/superadmin/domain/usecases/crear_administrador_usecase.dart';
+import 'features/superadmin/domain/usecases/crear_proyecto_usecase.dart';
 import 'features/superadmin/domain/usecases/listar_administradores_usecase.dart';
 import 'features/superadmin/domain/usecases/listar_proyectos_usecase.dart';
 import 'features/superadmin/presentation/bloc/administradores_bloc.dart';
@@ -85,7 +86,8 @@ class _TorreManagerAppState extends State<TorreManagerApp> {
     final superadminRepository = SuperadminRepositoryImpl(superadminDataSource);
 
     _superadminBloc = SuperadminBloc(
-      ListarProyectosUseCase(superadminRepository),
+      listarProyectosUseCase: ListarProyectosUseCase(superadminRepository),
+      crearProyectoUseCase: CrearProyectoUseCase(superadminRepository),
     );
 
     _administradoresBloc = AdministradoresBloc(

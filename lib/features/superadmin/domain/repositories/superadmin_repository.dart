@@ -2,7 +2,11 @@ import 'package:fpdart/fpdart.dart';
 
 import '../../../../core/errors/failures.dart';
 import '../entities/administrador.dart';
+import '../entities/instalacion_extra.dart';
+import '../entities/modulo_sistema.dart';
+import '../entities/proyecto_detalle.dart';
 import '../entities/resumen_proyecto.dart';
+import '../entities/tipo_condominio.dart';
 
 abstract interface class SuperadminRepositoryInterface {
   Future<Either<Failure, List<ResumenProyecto>>> listarProyectos();
@@ -14,4 +18,15 @@ abstract interface class SuperadminRepositoryInterface {
     required String correo,
     required String password,
   });
+
+  Future<Either<Failure, ProyectoDetalle>> crearProyecto({
+    required String nombre,
+    String? descripcion,
+    required TipoCondominio tipoCondominio,
+    required List<ModuloSistema> modulos,
+    required List<InstalacionExtra> instalaciones,
+    required List<String> adminIds,
+  });
+
+  Future<Either<Failure, List<ProyectoDetalle>>> listarMisProyectos();
 }
