@@ -43,7 +43,9 @@ class DashboardScreen extends StatelessWidget {
     );
     const gestionProyectos = _Modulo(
       titulo: 'Gestión de Proyectos',
-      descripcion: 'Proyectos (condominios) de la plataforma y sus conteos',
+      descripcion:
+          'Crea recintos con su estructura (torres, casas, edificios), '
+          'módulos y administradores',
       icono: Icons.apartment,
       ruta: '/superadmin/proyectos',
     );
@@ -55,11 +57,7 @@ class DashboardScreen extends StatelessWidget {
     );
 
     return switch (rol) {
-      Rol.superadmin => const [
-        gestionProyectos,
-        gestionAdministradores,
-        infraestructura,
-      ],
+      Rol.superadmin => const [gestionProyectos, gestionAdministradores],
       Rol.administrador => const [infraestructura],
       Rol.residente => const [],
       Rol.conserje => const [],

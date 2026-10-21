@@ -2,6 +2,7 @@
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../domain/entities/definicion_agrupacion.dart';
 import '../../domain/entities/instalacion_extra.dart';
 import '../../domain/entities/modulo_sistema.dart';
 import '../../domain/entities/proyecto_detalle.dart';
@@ -27,6 +28,7 @@ class ProyectoCreado extends SuperadminEvent {
     required this.descripcion,
     required this.tipoCondominio,
     required this.modulos,
+    required this.agrupaciones,
     required this.instalaciones,
     required this.adminIds,
   });
@@ -35,6 +37,7 @@ class ProyectoCreado extends SuperadminEvent {
   final String? descripcion;
   final TipoCondominio tipoCondominio;
   final List<ModuloSistema> modulos;
+  final List<DefinicionAgrupacion> agrupaciones;
   final List<InstalacionExtra> instalaciones;
   final List<String> adminIds;
 
@@ -44,6 +47,7 @@ class ProyectoCreado extends SuperadminEvent {
     descripcion,
     tipoCondominio,
     modulos,
+    agrupaciones,
     instalaciones,
     adminIds,
   ];
@@ -149,6 +153,7 @@ class SuperadminBloc extends Bloc<SuperadminEvent, SuperadminState> {
       descripcion: event.descripcion,
       tipoCondominio: event.tipoCondominio,
       modulos: event.modulos,
+      agrupaciones: event.agrupaciones,
       instalaciones: event.instalaciones,
       adminIds: event.adminIds,
     );

@@ -325,11 +325,7 @@ class _DialogoNuevaAgrupacionState extends State<_DialogoNuevaAgrupacion> {
                     .map(
                       (tipo) => DropdownMenuItem(
                         value: tipo,
-                        child: Text(switch (tipo) {
-                          TipoAgrupacion.torre => 'Torre',
-                          TipoAgrupacion.bloque => 'Bloque',
-                          TipoAgrupacion.manzana => 'Manzana',
-                        }),
+                        child: Text(tipo.etiqueta),
                       ),
                     )
                     .toList(),

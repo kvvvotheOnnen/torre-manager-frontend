@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../infraestructura/domain/entities/tipo_agrupacion.dart';
+import '../../domain/entities/definicion_agrupacion.dart';
 import '../../domain/entities/instalacion_extra.dart';
 import '../../domain/entities/modulo_sistema.dart';
 import '../../domain/entities/tipo_condominio.dart';
@@ -115,6 +117,14 @@ class _CrearProyectoScreenState extends State<_CrearProyectoScreen> {
   final List<_InstalacionForm> _instalaciones = [];
   final Set<String> _adminIds = {};
 
+  final List<_AgrupacionPisosForm> _torres = [
+    _AgrupacionPisosForm(nombre: 'Torre A'),
+  ];
+  final List<_ManzanaForm> _manzanas = [_ManzanaForm(nombre: 'Manzana 1')];
+  final _AgrupacionPisosForm _edificio = _AgrupacionPisosForm(
+    nombre: 'Edificio',
+  );
+
   @override
   void initState() {
     super.initState();
@@ -128,6 +138,13 @@ class _CrearProyectoScreenState extends State<_CrearProyectoScreen> {
     for (final instalacion in _instalaciones) {
       instalacion.dispose();
     }
+    for (final torre in _torres) {
+      torre.dispose();
+    }
+    for (final manzana in _manzanas) {
+      manzana.dispose();
+    }
+    _edificio.dispose();
     super.dispose();
   }
 
@@ -136,9 +153,45 @@ class _CrearProyectoScreenState extends State<_CrearProyectoScreen> {
   }
 
   void _quitarInstalacion(int index) {
-    setState(() {
-      _instalaciones.removeAt(index).dispose();
-    });
+    setState(() => _instalaciones.removeAt(index).dispose());
+  }
+
+  void _agregarTorre() {
+    setState(
+      () => _torres.add(
+        _AgrupacionPisosForm(nombre: 'Torre ${_torres.length + 1}'),
+      ),
+    );
+  }
+
+  void _agregarManzana() {
+    setState(
+      () => _manzanas.add(
+        _ManzanaForm(nombre: 'Manzana ${_manzanas.length + 1}'),
+      ),
+    );
+  }
+
+  List<DefinicionAgrupacion> _construirAgrupaciones() {
+    final agrupaciones = <DefinicionAgrupacion>[];
+
+    if (_tipo == TipoCondominio.torres || _tipo == TipoCondominio.mixto) {
+      for (final torre in _torres) {
+        agrupaciones.add(torre.toDefinicion(TipoAgrupacion.torre));
+      }
+    }
+
+    if (_tipo == TipoCondominio.casas || _tipo == TipoCondominio.mixto) {
+      for (final manzana in _manzanas) {
+        agrupaciones.add(manzana.toDefinicion());
+      }
+    }
+
+    if (_tipo == TipoCondominio.edificio) {
+      agrupaciones.add(_edificio.toDefinicion(TipoAgrupacion.edificio));
+    }
+
+    return agrupaciones;
   }
 
   void _submit() {
@@ -149,6 +202,12 @@ class _CrearProyectoScreenState extends State<_CrearProyectoScreen> {
     }
     if (_adminIds.isEmpty) {
       _snack('Debes asignar al menos un administrador.', error: true);
+      return;
+    }
+
+    final agrupaciones = _construirAgrupaciones();
+    if (agrupaciones.isEmpty) {
+      _snack('Debes definir al menos una agrupación.', error: true);
       return;
     }
 
@@ -170,6 +229,7 @@ class _CrearProyectoScreenState extends State<_CrearProyectoScreen> {
             : _descripcionController.text,
         tipoCondominio: _tipo,
         modulos: _modulos.toList(),
+        agrupaciones: agrupaciones,
         instalaciones: instalaciones,
         adminIds: _adminIds.toList(),
       ),
@@ -229,20 +289,36 @@ class _CrearProyectoScreenState extends State<_CrearProyectoScreen> {
                       style: theme.textTheme.titleMedium,
                     ),
                     const SizedBox(height: 8),
-                    SegmentedButton<TipoCondominio>(
-                      segments: TipoCondominio.values
-                          .map(
-                            (tipo) => ButtonSegment(
-                              value: tipo,
-                              label: Text(tipo.etiqueta),
-                            ),
-                          )
-                          .toList(),
-                      selected: {_tipo},
-                      onSelectionChanged: (value) =>
-                          setState(() => _tipo = value.first),
+                    RadioGroup<TipoCondominio>(
+                      groupValue: _tipo,
+                      onChanged: (value) =>
+                          setState(() => _tipo = value ?? _tipo),
+                      child: Column(
+                        children: TipoCondominio.values
+                            .map(
+                              (tipo) => RadioListTile<TipoCondominio>(
+                                contentPadding: EdgeInsets.zero,
+                                value: tipo,
+                                title: Text(tipo.etiqueta),
+                                subtitle: Text(tipo.descripcion),
+                              ),
+                            )
+                            .toList(),
+                      ),
                     ),
-                    const SizedBox(height: 20),
+                    const Divider(height: 32),
+                    Text(
+                      'Estructura del recinto',
+                      style: theme.textTheme.titleMedium,
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'La estructura se crea junto con el proyecto.',
+                      style: theme.textTheme.bodySmall,
+                    ),
+                    const SizedBox(height: 12),
+                    ..._construirSeccionesEstructura(),
+                    const Divider(height: 32),
                     Text(
                       'Módulos habilitados',
                       style: theme.textTheme.titleMedium,
@@ -261,7 +337,7 @@ class _CrearProyectoScreenState extends State<_CrearProyectoScreen> {
                         }),
                       ),
                     ),
-                    const SizedBox(height: 12),
+                    const Divider(height: 32),
                     Row(
                       children: [
                         Text(
@@ -312,7 +388,7 @@ class _CrearProyectoScreenState extends State<_CrearProyectoScreen> {
                         ),
                       );
                     }),
-                    const SizedBox(height: 12),
+                    const Divider(height: 32),
                     Text(
                       'Administradores con acceso',
                       style: theme.textTheme.titleMedium,
@@ -371,6 +447,224 @@ class _CrearProyectoScreenState extends State<_CrearProyectoScreen> {
       ),
     );
   }
+
+  List<Widget> _construirSeccionesEstructura() {
+    switch (_tipo) {
+      case TipoCondominio.torres:
+        return _seccionPisos(
+          titulo: 'Torres / bloques',
+          formularios: _torres,
+          onAgregar: _agregarTorre,
+          onQuitar: (index) =>
+              setState(() => _torres.removeAt(index).dispose()),
+        );
+      case TipoCondominio.casas:
+        return _seccionManzanas();
+      case TipoCondominio.edificio:
+        return [_cardPisos('Edificio (sin torres)', _edificio, onQuitar: null)];
+      case TipoCondominio.mixto:
+        return [
+          ..._seccionPisos(
+            titulo: 'Torres / bloques',
+            formularios: _torres,
+            onAgregar: _agregarTorre,
+            onQuitar: (index) =>
+                setState(() => _torres.removeAt(index).dispose()),
+          ),
+          const SizedBox(height: 8),
+          ..._seccionManzanas(),
+        ];
+    }
+  }
+
+  List<Widget> _seccionPisos({
+    required String titulo,
+    required List<_AgrupacionPisosForm> formularios,
+    required VoidCallback onAgregar,
+    required void Function(int) onQuitar,
+  }) {
+    return [
+      Row(
+        children: [
+          Text(titulo, style: const TextStyle(fontWeight: FontWeight.bold)),
+          const Spacer(),
+          TextButton.icon(
+            onPressed: onAgregar,
+            icon: const Icon(Icons.add, size: 18),
+            label: const Text('Agregar'),
+          ),
+        ],
+      ),
+      ...List.generate(
+        formularios.length,
+        (index) => _cardPisos(
+          null,
+          formularios[index],
+          onQuitar: formularios.length > 1 ? () => onQuitar(index) : null,
+        ),
+      ),
+    ];
+  }
+
+  List<Widget> _seccionManzanas() {
+    return [
+      Row(
+        children: [
+          const Text(
+            'Manzanas (casas)',
+            style: TextStyle(fontWeight: FontWeight.bold),
+          ),
+          const Spacer(),
+          TextButton.icon(
+            onPressed: _agregarManzana,
+            icon: const Icon(Icons.add, size: 18),
+            label: const Text('Agregar'),
+          ),
+        ],
+      ),
+      ...List.generate(
+        _manzanas.length,
+        (index) => Card(
+          margin: const EdgeInsets.only(bottom: 8),
+          child: Padding(
+            padding: const EdgeInsets.all(12),
+            child: Column(
+              children: [
+                Row(
+                  children: [
+                    Expanded(
+                      child: TextFormField(
+                        controller: _manzanas[index].nombre,
+                        decoration: const InputDecoration(
+                          labelText: 'Nombre (ej. Manzana 1)',
+                          border: OutlineInputBorder(),
+                          isDense: true,
+                        ),
+                        validator: (value) => (value?.trim().isEmpty ?? true)
+                            ? 'Requerido'
+                            : null,
+                      ),
+                    ),
+                    if (_manzanas.length > 1)
+                      IconButton(
+                        onPressed: () =>
+                            setState(() => _manzanas.removeAt(index).dispose()),
+                        icon: const Icon(Icons.delete_outline),
+                      ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                TextFormField(
+                  controller: _manzanas[index].cantidad,
+                  keyboardType: TextInputType.number,
+                  decoration: const InputDecoration(
+                    labelText: 'Cantidad de casas',
+                    border: OutlineInputBorder(),
+                    isDense: true,
+                  ),
+                  validator: (value) =>
+                      (int.tryParse(value ?? '') ?? 0) < 1 ? 'Mínimo 1' : null,
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    ];
+  }
+
+  Widget _cardPisos(
+    String? titulo,
+    _AgrupacionPisosForm form, {
+    VoidCallback? onQuitar,
+  }) {
+    return Card(
+      margin: const EdgeInsets.only(bottom: 8),
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            if (titulo != null)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 8),
+                child: Text(
+                  titulo,
+                  style: const TextStyle(fontWeight: FontWeight.bold),
+                ),
+              ),
+            Row(
+              children: [
+                Expanded(
+                  child: TextFormField(
+                    controller: form.nombre,
+                    decoration: const InputDecoration(
+                      labelText: 'Nombre (ej. Torre A)',
+                      border: OutlineInputBorder(),
+                      isDense: true,
+                    ),
+                    validator: (value) =>
+                        (value?.trim().isEmpty ?? true) ? 'Requerido' : null,
+                  ),
+                ),
+                if (onQuitar != null)
+                  IconButton(
+                    onPressed: onQuitar,
+                    icon: const Icon(Icons.delete_outline),
+                  ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                Expanded(
+                  child: TextFormField(
+                    controller: form.pisoDesde,
+                    keyboardType: TextInputType.number,
+                    decoration: const InputDecoration(
+                      labelText: 'Piso desde',
+                      border: OutlineInputBorder(),
+                      isDense: true,
+                    ),
+                    validator: (value) =>
+                        int.tryParse(value ?? '') == null ? 'Inválido' : null,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: TextFormField(
+                    controller: form.pisoHasta,
+                    keyboardType: TextInputType.number,
+                    decoration: const InputDecoration(
+                      labelText: 'Piso hasta',
+                      border: OutlineInputBorder(),
+                      isDense: true,
+                    ),
+                    validator: (value) =>
+                        int.tryParse(value ?? '') == null ? 'Inválido' : null,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: TextFormField(
+                    controller: form.unidadesPorPiso,
+                    keyboardType: TextInputType.number,
+                    decoration: const InputDecoration(
+                      labelText: 'Unid./piso',
+                      border: OutlineInputBorder(),
+                      isDense: true,
+                    ),
+                    validator: (value) =>
+                        (int.tryParse(value ?? '') ?? 0) < 1 ? 'Mín. 1' : null,
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 }
 
 class _InstalacionForm {
@@ -380,5 +674,61 @@ class _InstalacionForm {
   void dispose() {
     nombre.dispose();
     tipo.dispose();
+  }
+}
+
+class _AgrupacionPisosForm {
+  _AgrupacionPisosForm({
+    required String nombre,
+    String pisoDesde = '1',
+    String pisoHasta = '1',
+    String unidadesPorPiso = '4',
+  }) : nombre = TextEditingController(text: nombre),
+       pisoDesde = TextEditingController(text: pisoDesde),
+       pisoHasta = TextEditingController(text: pisoHasta),
+       unidadesPorPiso = TextEditingController(text: unidadesPorPiso);
+
+  final TextEditingController nombre;
+  final TextEditingController pisoDesde;
+  final TextEditingController pisoHasta;
+  final TextEditingController unidadesPorPiso;
+
+  DefinicionAgrupacion toDefinicion(TipoAgrupacion tipo) {
+    return DefinicionAgrupacion(
+      nombre: nombre.text.trim(),
+      tipo: tipo,
+      pisoDesde: int.tryParse(pisoDesde.text) ?? 1,
+      pisoHasta: int.tryParse(pisoHasta.text) ?? 1,
+      unidadesPorPiso: int.tryParse(unidadesPorPiso.text) ?? 1,
+    );
+  }
+
+  void dispose() {
+    nombre.dispose();
+    pisoDesde.dispose();
+    pisoHasta.dispose();
+    unidadesPorPiso.dispose();
+  }
+}
+
+class _ManzanaForm {
+  _ManzanaForm({required String nombre, String cantidad = '6'})
+    : nombre = TextEditingController(text: nombre),
+      cantidad = TextEditingController(text: cantidad);
+
+  final TextEditingController nombre;
+  final TextEditingController cantidad;
+
+  DefinicionAgrupacion toDefinicion() {
+    return DefinicionAgrupacion(
+      nombre: nombre.text.trim(),
+      tipo: TipoAgrupacion.manzana,
+      cantidad: int.tryParse(cantidad.text) ?? 0,
+    );
+  }
+
+  void dispose() {
+    nombre.dispose();
+    cantidad.dispose();
   }
 }

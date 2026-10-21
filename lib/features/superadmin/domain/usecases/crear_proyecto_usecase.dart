@@ -1,6 +1,7 @@
 import 'package:fpdart/fpdart.dart';
 
 import '../../../../core/errors/failures.dart';
+import '../entities/definicion_agrupacion.dart';
 import '../entities/instalacion_extra.dart';
 import '../entities/modulo_sistema.dart';
 import '../entities/proyecto_detalle.dart';
@@ -17,6 +18,7 @@ class CrearProyectoUseCase {
     String? descripcion,
     required TipoCondominio tipoCondominio,
     required List<ModuloSistema> modulos,
+    required List<DefinicionAgrupacion> agrupaciones,
     required List<InstalacionExtra> instalaciones,
     required List<String> adminIds,
   }) {
@@ -32,6 +34,15 @@ class CrearProyectoUseCase {
         Left(ValidationFailure('Debes habilitar al menos un módulo.')),
       );
     }
+    if (agrupaciones.isEmpty) {
+      return Future.value(
+        Left(
+          ValidationFailure(
+            'Debes definir al menos una agrupación con sus unidades.',
+          ),
+        ),
+      );
+    }
     if (adminIds.isEmpty) {
       return Future.value(
         Left(ValidationFailure('Debes asignar al menos un administrador.')),
@@ -43,6 +54,7 @@ class CrearProyectoUseCase {
       descripcion: descripcion?.trim(),
       tipoCondominio: tipoCondominio,
       modulos: modulos,
+      agrupaciones: agrupaciones,
       instalaciones: instalaciones,
       adminIds: adminIds,
     );

@@ -2,6 +2,7 @@ import 'package:fpdart/fpdart.dart';
 
 import '../../../../core/errors/failures.dart';
 import '../entities/administrador.dart';
+import '../entities/definicion_agrupacion.dart';
 import '../entities/instalacion_extra.dart';
 import '../entities/modulo_sistema.dart';
 import '../entities/proyecto_detalle.dart';
@@ -24,6 +25,7 @@ abstract interface class SuperadminRepositoryInterface {
     String? descripcion,
     required TipoCondominio tipoCondominio,
     required List<ModuloSistema> modulos,
+    required List<DefinicionAgrupacion> agrupaciones,
     required List<InstalacionExtra> instalaciones,
     required List<String> adminIds,
   });

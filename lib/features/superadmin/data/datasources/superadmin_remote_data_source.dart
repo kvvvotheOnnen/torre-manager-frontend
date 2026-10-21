@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 
 import '../../../../core/config/app_config.dart';
+import '../../domain/entities/definicion_agrupacion.dart';
 import '../../domain/entities/instalacion_extra.dart';
 import '../../domain/entities/modulo_sistema.dart';
 import '../../domain/entities/tipo_condominio.dart';
@@ -60,6 +61,7 @@ class SuperadminRemoteDataSource {
     String? descripcion,
     required TipoCondominio tipoCondominio,
     required List<ModuloSistema> modulos,
+    required List<DefinicionAgrupacion> agrupaciones,
     required List<InstalacionExtra> instalaciones,
     required List<String> adminIds,
   }) async {
@@ -70,6 +72,19 @@ class SuperadminRemoteDataSource {
         'descripcion': ?descripcion,
         'tipo_condominio': tipoCondominio.name,
         'modulos': modulos.map((modulo) => modulo.valor).toList(),
+        'agrupaciones': agrupaciones
+            .map(
+              (agrupacion) => {
+                'nombre': agrupacion.nombre,
+                'tipo': agrupacion.tipo.name,
+                'prefijo': ?agrupacion.prefijo,
+                'piso_desde': ?agrupacion.pisoDesde,
+                'piso_hasta': ?agrupacion.pisoHasta,
+                'unidades_por_piso': ?agrupacion.unidadesPorPiso,
+                'cantidad': ?agrupacion.cantidad,
+              },
+            )
+            .toList(),
         'instalaciones': instalaciones
             .map(
               (instalacion) => {
