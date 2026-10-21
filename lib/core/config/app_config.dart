@@ -14,6 +14,7 @@ class AppConfig {
   );
 
   static const String loginPath = '/api/login';
+  static const String userPath = '/api/user';
   static const String infraestructuraBasePath = '/api/infraestructura';
   static const String infraestructuraProyectoPath = '$infraestructuraBasePath/proyecto';
   static const String infraestructuraProyectosPath = '$infraestructuraBasePath/proyectos';

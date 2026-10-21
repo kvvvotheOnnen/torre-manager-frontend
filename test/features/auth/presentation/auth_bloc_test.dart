@@ -14,9 +14,18 @@ class _FakeAuthRepository implements AuthRepositoryInterface {
   final Either<Failure, Usuario> _result;
 
   @override
+  @override
   Future<Either<Failure, Usuario>> login(String email, String password) async {
     return _result;
   }
+
+  @override
+  Future<Either<Failure, Usuario>> obtenerUsuarioAutenticado() async {
+    return const Left(AuthenticationFailure());
+  }
+
+  @override
+  Future<void> cerrarSesion() async {}
 }
 
 void main() {
@@ -30,9 +39,8 @@ void main() {
   test(
     'emite AuthLoading y luego AuthSuccess en credenciales válidas',
     () async {
-      final bloc = AuthBloc(
-        LoginUseCase(_FakeAuthRepository(const Right(usuario))),
-      );
+      final repository = _FakeAuthRepository(const Right(usuario));
+      final bloc = AuthBloc(LoginUseCase(repository), repository);
 
       final states = <AuthState>[];
       final subscription = bloc.stream.listen(states.add);
@@ -51,13 +59,10 @@ void main() {
   test(
     'emite AuthLoading y luego AuthError en credenciales inválidas',
     () async {
-      final bloc = AuthBloc(
-        LoginUseCase(
-          _FakeAuthRepository(
-            const Left(ServerFailure('Credenciales inválidas')),
-          ),
-        ),
+      final repository = _FakeAuthRepository(
+        const Left(ServerFailure('Credenciales inválidas')),
       );
+      final bloc = AuthBloc(LoginUseCase(repository), repository);
 
       final states = <AuthState>[];
       final subscription = bloc.stream.listen(states.add);

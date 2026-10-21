@@ -35,4 +35,30 @@ class AuthRepositoryImpl implements AuthRepositoryInterface {
       return const Left(UnexpectedFailure());
     }
   }
+
+  @override
+  Future<Either<Failure, Usuario>> obtenerUsuarioAutenticado() async {
+    final token = await _tokenStorage.readToken();
+    if (token == null || token.isEmpty) {
+      return const Left(AuthenticationFailure());
+    }
+
+    try {
+      final dto = await _remoteDataSource.me();
+      return Right(dto.toEntity());
+    } on DioException catch (error) {
+      if (error.response?.statusCode == 401) {
+        await _tokenStorage.clear();
+        return const Left(AuthenticationFailure());
+      }
+      return const Left(ServerFailure());
+    } catch (_) {
+      return const Left(UnexpectedFailure());
+    }
+  }
+
+  @override
+  Future<void> cerrarSesion() async {
+    await _tokenStorage.clear();
+  }
 }

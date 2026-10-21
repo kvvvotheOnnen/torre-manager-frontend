@@ -13,6 +13,10 @@ class ServerFailure extends Failure {
   const ServerFailure([super.message = 'Ocurrió un error en el servidor.']);
 }
 
+class AuthenticationFailure extends Failure {
+  const AuthenticationFailure([super.message = 'No autenticado.']);
+}
+
 class ValidationFailure extends Failure {
   const ValidationFailure(super.message);
 }

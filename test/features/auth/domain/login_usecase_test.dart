@@ -18,6 +18,14 @@ class _FakeAuthRepository implements AuthRepositoryInterface {
     lastPassword = password;
     return _result;
   }
+
+  @override
+  Future<Either<Failure, Usuario>> obtenerUsuarioAutenticado() async {
+    return const Left(AuthenticationFailure());
+  }
+
+  @override
+  Future<void> cerrarSesion() async {}
 }
 
 void main() {

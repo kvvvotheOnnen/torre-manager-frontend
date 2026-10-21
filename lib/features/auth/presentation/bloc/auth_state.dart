@@ -13,6 +13,11 @@ class AuthInitial extends AuthState {
   const AuthInitial();
 }
 
+/// Estado tras verificar el token almacenado y no haber sesión válida.
+class AuthUnauthenticated extends AuthState {
+  const AuthUnauthenticated();
+}
+
 class AuthLoading extends AuthState {
   const AuthLoading();
 }
