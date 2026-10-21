@@ -70,10 +70,12 @@ class InstalacionExtraDTO {
   final Map<String, dynamic> atributos;
 
   factory InstalacionExtraDTO.fromJson(Map<String, dynamic> json) {
+    final atributos = json['atributos'];
+
     return InstalacionExtraDTO(
       nombre: (json['nombre'] ?? '') as String,
       tipo: json['tipo'] as String?,
-      atributos: (json['atributos'] as Map<String, dynamic>?) ?? const {},
+      atributos: atributos is Map<String, dynamic> ? atributos : const {},
     );
   }
 
