@@ -18,6 +18,10 @@ import 'features/infraestructura/domain/usecases/obtener_arbol_infraestructura_u
 import 'features/infraestructura/domain/usecases/obtener_proyecto_del_usuario_usecase.dart';
 import 'features/infraestructura/domain/usecases/registrar_agrupacion_en_cascada_usecase.dart';
 import 'features/infraestructura/presentation/bloc/infraestructura_bloc.dart';
+import 'features/superadmin/data/datasources/superadmin_remote_data_source.dart';
+import 'features/superadmin/data/repositories/superadmin_repository_impl.dart';
+import 'features/superadmin/domain/usecases/listar_proyectos_usecase.dart';
+import 'features/superadmin/presentation/bloc/superadmin_bloc.dart';
 
 void main() {
   runApp(const TorreManagerApp());
@@ -33,6 +37,7 @@ class TorreManagerApp extends StatefulWidget {
 class _TorreManagerAppState extends State<TorreManagerApp> {
   late final AuthBloc _authBloc;
   late final InfraestructuraBloc _infraestructuraBloc;
+  late final SuperadminBloc _superadminBloc;
   late final GoRouter _router;
 
   @override
@@ -50,20 +55,33 @@ class _TorreManagerAppState extends State<TorreManagerApp> {
     _authBloc.add(const AuthCheckRequested());
 
     final infraestructuraDataSource = InfraestructuraRemoteDataSource(dio);
-    final infraestructuraRepository =
-        InfraestructuraRepositoryImpl(infraestructuraDataSource);
+    final infraestructuraRepository = InfraestructuraRepositoryImpl(
+      infraestructuraDataSource,
+    );
 
     _infraestructuraBloc = InfraestructuraBloc(
-      obtenerArbolUseCase: ObtenerArbolInfraestructuraUseCase(infraestructuraRepository),
+      obtenerArbolUseCase: ObtenerArbolInfraestructuraUseCase(
+        infraestructuraRepository,
+      ),
       registrarAgrupacionUseCase: RegistrarAgrupacionEnCascadaUseCase(
         infraestructuraRepository,
       ),
-      crearUnidadAccesoriaUseCase:
-          CrearUnidadAccesoriaUseCase(infraestructuraRepository),
-      asignarUnidadAccesoriaUseCase:
-          AsignarUnidadAccesoriaUseCase(infraestructuraRepository),
-      obtenerProyectoUseCase:
-          ObtenerProyectoDelUsuarioUseCase(infraestructuraRepository),
+      crearUnidadAccesoriaUseCase: CrearUnidadAccesoriaUseCase(
+        infraestructuraRepository,
+      ),
+      asignarUnidadAccesoriaUseCase: AsignarUnidadAccesoriaUseCase(
+        infraestructuraRepository,
+      ),
+      obtenerProyectoUseCase: ObtenerProyectoDelUsuarioUseCase(
+        infraestructuraRepository,
+      ),
+    );
+
+    final superadminDataSource = SuperadminRemoteDataSource(dio);
+    final superadminRepository = SuperadminRepositoryImpl(superadminDataSource);
+
+    _superadminBloc = SuperadminBloc(
+      ListarProyectosUseCase(superadminRepository),
     );
 
     _router = buildRouter(_authBloc);
@@ -73,6 +91,7 @@ class _TorreManagerAppState extends State<TorreManagerApp> {
   void dispose() {
     _authBloc.close();
     _infraestructuraBloc.close();
+    _superadminBloc.close();
     super.dispose();
   }
 
@@ -82,6 +101,7 @@ class _TorreManagerAppState extends State<TorreManagerApp> {
       providers: [
         BlocProvider.value(value: _authBloc),
         BlocProvider.value(value: _infraestructuraBloc),
+        BlocProvider.value(value: _superadminBloc),
       ],
       child: MaterialApp.router(
         title: 'Torre Manager',
