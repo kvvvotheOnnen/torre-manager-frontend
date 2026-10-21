@@ -13,6 +13,10 @@ class ServerFailure extends Failure {
   const ServerFailure([super.message = 'Ocurrió un error en el servidor.']);
 }
 
+class ValidationFailure extends Failure {
+  const ValidationFailure(super.message);
+}
+
 class CacheFailure extends Failure {
   const CacheFailure([super.message = 'No fue posible almacenar los datos.']);
 }
