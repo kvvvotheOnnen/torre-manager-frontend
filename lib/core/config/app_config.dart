@@ -14,4 +14,11 @@ class AppConfig {
   );
 
   static const String loginPath = '/api/login';
+  static const String infraestructuraBasePath = '/api/infraestructura';
+  static const String infraestructuraProyectoPath = '$infraestructuraBasePath/proyecto';
+  static const String infraestructuraProyectosPath = '$infraestructuraBasePath/proyectos';
+  static const String infraestructuraAgrupacionesPath = '$infraestructuraBasePath/agrupaciones';
+  static const String infraestructuraUnidadesAccesoriasPath = '$infraestructuraBasePath/unidades-accesorias';
+  static const String infraestructuraArbolPath = '$infraestructuraBasePath/arbol';
+  static const String infraestructuraVistaPreviaPath = '$infraestructuraBasePath/vista-previa-identificaciones';
 }
