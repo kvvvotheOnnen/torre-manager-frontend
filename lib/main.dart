@@ -23,11 +23,13 @@ import 'features/infraestructura/domain/usecases/registrar_agrupacion_en_cascada
 import 'features/infraestructura/presentation/bloc/infraestructura_bloc.dart';
 import 'features/superadmin/data/datasources/superadmin_remote_data_source.dart';
 import 'features/superadmin/data/repositories/superadmin_repository_impl.dart';
+import 'features/superadmin/domain/usecases/actualizar_proyecto_usecase.dart';
 import 'features/superadmin/domain/usecases/crear_administrador_usecase.dart';
 import 'features/superadmin/domain/usecases/crear_proyecto_usecase.dart';
 import 'features/superadmin/domain/usecases/listar_administradores_usecase.dart';
 import 'features/superadmin/domain/usecases/listar_mis_proyectos_usecase.dart';
 import 'features/superadmin/domain/usecases/listar_proyectos_usecase.dart';
+import 'features/superadmin/domain/usecases/obtener_proyecto_usecase.dart';
 import 'features/superadmin/presentation/bloc/administradores_bloc.dart';
 import 'features/superadmin/presentation/bloc/superadmin_bloc.dart';
 import 'features/tenant/presentation/bloc/tenant_bloc.dart';
@@ -95,6 +97,10 @@ class _TorreManagerAppState extends State<TorreManagerApp> {
     _superadminBloc = SuperadminBloc(
       listarProyectosUseCase: ListarProyectosUseCase(superadminRepository),
       crearProyectoUseCase: CrearProyectoUseCase(superadminRepository),
+      obtenerProyectoUseCase: ObtenerProyectoUseCase(superadminRepository),
+      actualizarProyectoUseCase: ActualizarProyectoUseCase(
+        superadminRepository,
+      ),
     );
 
     _administradoresBloc = AdministradoresBloc(

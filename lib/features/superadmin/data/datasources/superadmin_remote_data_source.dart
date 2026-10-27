@@ -104,6 +104,49 @@ class SuperadminRemoteDataSource {
     );
   }
 
+  Future<ProyectoDetalleDTO> obtenerProyecto(String id) async {
+    final response = await _dio.get<Map<String, dynamic>>(
+      AppConfig.superadminProyectoPath(id),
+    );
+
+    return ProyectoDetalleDTO.fromJson(
+      response.data ?? const <String, dynamic>{},
+    );
+  }
+
+  Future<ProyectoDetalleDTO> actualizarProyecto({
+    required String id,
+    required String nombre,
+    String? descripcion,
+    required List<ModuloSistema> modulos,
+    required List<InstalacionExtra> instalaciones,
+    required List<String> adminIds,
+  }) async {
+    final response = await _dio.put<Map<String, dynamic>>(
+      AppConfig.superadminProyectoPath(id),
+      data: {
+        'nombre': nombre,
+        'descripcion': ?descripcion,
+        'modulos': modulos.map((modulo) => modulo.valor).toList(),
+        'instalaciones': instalaciones
+            .map(
+              (instalacion) => {
+                'nombre': instalacion.nombre,
+                'tipo': ?instalacion.tipo,
+                if (instalacion.atributos.isNotEmpty)
+                  'atributos': instalacion.atributos,
+              },
+            )
+            .toList(),
+        'admin_ids': adminIds,
+      },
+    );
+
+    return ProyectoDetalleDTO.fromJson(
+      response.data ?? const <String, dynamic>{},
+    );
+  }
+
   Future<List<ProyectoDetalleDTO>> listarMisProyectos() async {
     final response = await _dio.get<Map<String, dynamic>>(
       AppConfig.misProyectosPath,

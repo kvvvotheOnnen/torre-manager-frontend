@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -5,6 +7,8 @@ import '../../../infraestructura/domain/entities/tipo_agrupacion.dart';
 import '../../domain/entities/definicion_agrupacion.dart';
 import '../../domain/entities/instalacion_extra.dart';
 import '../../domain/entities/modulo_sistema.dart';
+import '../../domain/entities/proyecto_detalle.dart';
+import '../../domain/entities/resumen_proyecto.dart';
 import '../../domain/entities/tipo_condominio.dart';
 import '../bloc/administradores_bloc.dart';
 import '../bloc/superadmin_bloc.dart';
@@ -17,9 +21,7 @@ class ProyectosScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(title: const Text('Gestión de Proyectos')),
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => Navigator.of(context).push(
-          MaterialPageRoute<void>(builder: (_) => const _CrearProyectoScreen()),
-        ),
+        onPressed: () => _abrirFormulario(context),
         icon: const Icon(Icons.add_business),
         label: const Text('Proyecto'),
       ),
@@ -69,27 +71,7 @@ class ProyectosScreen extends StatelessWidget {
                     child: Center(child: Text('No hay proyectos registrados.')),
                   ),
                 ...state.proyectos.map(
-                  (proyecto) => Card(
-                    child: ListTile(
-                      leading: const Icon(Icons.domain, size: 36),
-                      title: Text(
-                        proyecto.nombre,
-                        style: const TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                      subtitle: Text(
-                        proyecto.descripcion ?? 'Proyecto (tenant)',
-                      ),
-                      trailing: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        crossAxisAlignment: CrossAxisAlignment.end,
-                        children: [
-                          Text('${proyecto.agrupaciones} agrup.'),
-                          Text('${proyecto.unidadesPrincipales} unidades'),
-                          Text('${proyecto.unidadesAccesorias} accesorias'),
-                        ],
-                      ),
-                    ),
-                  ),
+                  (proyecto) => _TarjetaProyecto(proyecto: proyecto),
                 ),
               ],
             ),
@@ -100,17 +82,73 @@ class ProyectosScreen extends StatelessWidget {
   }
 }
 
-class _CrearProyectoScreen extends StatefulWidget {
-  const _CrearProyectoScreen();
-
-  @override
-  State<_CrearProyectoScreen> createState() => _CrearProyectoScreenState();
+void _abrirFormulario(BuildContext context, {String? proyectoId}) {
+  Navigator.of(context).push(
+    MaterialPageRoute<void>(
+      builder: (_) => _ProyectoFormScreen(proyectoId: proyectoId),
+    ),
+  );
 }
 
-class _CrearProyectoScreenState extends State<_CrearProyectoScreen> {
+class _TarjetaProyecto extends StatelessWidget {
+  const _TarjetaProyecto({required this.proyecto});
+
+  final ResumenProyecto proyecto;
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      child: ListTile(
+        leading: const Icon(Icons.domain, size: 36),
+        title: Text(
+          proyecto.nombre,
+          style: const TextStyle(fontWeight: FontWeight.bold),
+        ),
+        subtitle: Text(proyecto.descripcion ?? 'Proyecto (tenant)'),
+        onTap: () => _abrirFormulario(context, proyectoId: proyecto.id),
+        trailing: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Text('${proyecto.agrupaciones} agrup.'),
+                Text('${proyecto.unidadesPrincipales} unidades'),
+                Text('${proyecto.unidadesAccesorias} accesorias'),
+              ],
+            ),
+            IconButton(
+              tooltip: 'Editar proyecto',
+              icon: const Icon(Icons.edit_outlined),
+              onPressed: () =>
+                  _abrirFormulario(context, proyectoId: proyecto.id),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _ProyectoFormScreen extends StatefulWidget {
+  const _ProyectoFormScreen({this.proyectoId});
+
+  /// Si es `null` el formulario crea un proyecto; si tiene valor, lo edita.
+  final String? proyectoId;
+
+  @override
+  State<_ProyectoFormScreen> createState() => _ProyectoFormScreenState();
+}
+
+class _ProyectoFormScreenState extends State<_ProyectoFormScreen> {
   final _formKey = GlobalKey<FormState>();
   final _nombreController = TextEditingController();
   final _descripcionController = TextEditingController();
+
+  late final SuperadminBloc _superadminBloc;
+  StreamSubscription<SuperadminState>? _suscripcion;
+  bool _prefillHecho = false;
 
   TipoCondominio _tipo = TipoCondominio.torres;
   final Set<ModuloSistema> _modulos = {ModuloSistema.infraestructura};
@@ -125,14 +163,64 @@ class _CrearProyectoScreenState extends State<_CrearProyectoScreen> {
     nombre: 'Edificio',
   );
 
+  bool get _esEdicion => widget.proyectoId != null;
+
   @override
   void initState() {
     super.initState();
     context.read<AdministradoresBloc>().add(const AdministradoresSolicitados());
+
+    _superadminBloc = context.read<SuperadminBloc>();
+
+    if (_esEdicion) {
+      _superadminBloc.add(ProyectoEdicionSolicitada(widget.proyectoId!));
+      _suscripcion = _superadminBloc.stream.listen(_onEstado);
+    }
+  }
+
+  void _onEstado(SuperadminState state) {
+    if (_prefillHecho) return;
+
+    final detalle = state.proyectoEnEdicion;
+
+    if (detalle == null || detalle.id != widget.proyectoId) return;
+
+    _prefillHecho = true;
+
+    if (!mounted) return;
+
+    setState(() => _aplicarDetalle(detalle));
+  }
+
+  void _aplicarDetalle(ProyectoDetalle detalle) {
+    _nombreController.text = detalle.nombre;
+    _descripcionController.text = detalle.descripcion ?? '';
+    _tipo = detalle.tipoCondominio;
+
+    _modulos
+      ..clear()
+      ..addAll(detalle.modulos);
+
+    _adminIds
+      ..clear()
+      ..addAll(detalle.adminIds);
+
+    for (final instalacion in _instalaciones) {
+      instalacion.dispose();
+    }
+    _instalaciones.clear();
+
+    for (final instalacion in detalle.instalacionesExtra) {
+      _instalaciones.add(_InstalacionForm.desde(instalacion));
+    }
   }
 
   @override
   void dispose() {
+    _suscripcion?.cancel();
+    if (_esEdicion) {
+      _superadminBloc.add(const ProyectoEdicionFinalizada());
+    }
     _nombreController.dispose();
     _descripcionController.dispose();
     for (final instalacion in _instalaciones) {
@@ -194,6 +282,19 @@ class _CrearProyectoScreenState extends State<_CrearProyectoScreen> {
     return agrupaciones;
   }
 
+  List<InstalacionExtra> _construirInstalaciones() {
+    return _instalaciones
+        .where((form) => form.nombre.text.trim().isNotEmpty)
+        .map(
+          (form) => InstalacionExtra(
+            nombre: form.nombre.text.trim(),
+            tipo: form.tipo.text.trim().isEmpty ? null : form.tipo.text.trim(),
+            atributos: form.atributos,
+          ),
+        )
+        .toList();
+  }
+
   void _submit() {
     if (!_formKey.currentState!.validate()) return;
     if (_modulos.isEmpty) {
@@ -205,28 +306,36 @@ class _CrearProyectoScreenState extends State<_CrearProyectoScreen> {
       return;
     }
 
+    final descripcion = _descripcionController.text.trim().isEmpty
+        ? null
+        : _descripcionController.text;
+    final instalaciones = _construirInstalaciones();
+
+    if (_esEdicion) {
+      _superadminBloc.add(
+        ProyectoActualizado(
+          id: widget.proyectoId!,
+          nombre: _nombreController.text,
+          descripcion: descripcion,
+          modulos: _modulos.toList(),
+          instalaciones: instalaciones,
+          adminIds: _adminIds.toList(),
+        ),
+      );
+
+      return;
+    }
+
     final agrupaciones = _construirAgrupaciones();
     if (agrupaciones.isEmpty) {
       _snack('Debes definir al menos una agrupación.', error: true);
       return;
     }
 
-    final instalaciones = _instalaciones
-        .where((form) => form.nombre.text.trim().isNotEmpty)
-        .map(
-          (form) => InstalacionExtra(
-            nombre: form.nombre.text.trim(),
-            tipo: form.tipo.text.trim().isEmpty ? null : form.tipo.text.trim(),
-          ),
-        )
-        .toList();
-
-    context.read<SuperadminBloc>().add(
+    _superadminBloc.add(
       ProyectoCreado(
         nombre: _nombreController.text,
-        descripcion: _descripcionController.text.trim().isEmpty
-            ? null
-            : _descripcionController.text,
+        descripcion: descripcion,
         tipoCondominio: _tipo,
         modulos: _modulos.toList(),
         agrupaciones: agrupaciones,
@@ -252,200 +361,274 @@ class _CrearProyectoScreenState extends State<_CrearProyectoScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final titulo = _esEdicion ? 'Editar proyecto' : 'Nuevo proyecto';
 
-    return Scaffold(
-      appBar: AppBar(title: const Text('Nuevo proyecto')),
-      body: BlocBuilder<SuperadminBloc, SuperadminState>(
-        builder: (context, superadminState) {
-          return BlocBuilder<AdministradoresBloc, AdministradoresState>(
-            builder: (context, adminsState) {
-              return Form(
-                key: _formKey,
-                child: ListView(
-                  padding: const EdgeInsets.all(16),
+    return BlocListener<SuperadminBloc, SuperadminState>(
+      listenWhen: (previous, current) =>
+          _esEdicion && current.exito && current.mensaje != null,
+      listener: (context, state) {
+        if (Navigator.of(context).canPop()) {
+          Navigator.of(context).pop();
+        }
+      },
+      child: Scaffold(
+        appBar: AppBar(title: Text(titulo)),
+        body: BlocBuilder<SuperadminBloc, SuperadminState>(
+          builder: (context, superadminState) {
+            if (_esEdicion && superadminState.proyectoEnEdicion == null) {
+              if (superadminState.cargandoDetalle) {
+                return const Center(child: CircularProgressIndicator());
+              }
+
+              return Center(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
                   children: [
-                    TextFormField(
-                      controller: _nombreController,
-                      decoration: const InputDecoration(
-                        labelText: 'Nombre del proyecto',
-                        border: OutlineInputBorder(),
-                      ),
-                      validator: (value) => (value?.trim().isEmpty ?? true)
-                          ? 'Ingresa un nombre'
-                          : null,
-                    ),
+                    const Text('No se pudo cargar el proyecto.'),
                     const SizedBox(height: 12),
-                    TextFormField(
-                      controller: _descripcionController,
-                      maxLines: 2,
-                      decoration: const InputDecoration(
-                        labelText: 'Descripción (opcional)',
-                        border: OutlineInputBorder(),
+                    FilledButton.tonal(
+                      onPressed: () => _superadminBloc.add(
+                        ProyectoEdicionSolicitada(widget.proyectoId!),
                       ),
-                    ),
-                    const SizedBox(height: 20),
-                    Text(
-                      'Tipo de condominio',
-                      style: theme.textTheme.titleMedium,
-                    ),
-                    const SizedBox(height: 8),
-                    RadioGroup<TipoCondominio>(
-                      groupValue: _tipo,
-                      onChanged: (value) =>
-                          setState(() => _tipo = value ?? _tipo),
-                      child: Column(
-                        children: TipoCondominio.values
-                            .map(
-                              (tipo) => RadioListTile<TipoCondominio>(
-                                contentPadding: EdgeInsets.zero,
-                                value: tipo,
-                                title: Text(tipo.etiqueta),
-                                subtitle: Text(tipo.descripcion),
-                              ),
-                            )
-                            .toList(),
-                      ),
-                    ),
-                    const Divider(height: 32),
-                    Text(
-                      'Estructura del recinto',
-                      style: theme.textTheme.titleMedium,
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      'La estructura se crea junto con el proyecto.',
-                      style: theme.textTheme.bodySmall,
-                    ),
-                    const SizedBox(height: 12),
-                    ..._construirSeccionesEstructura(),
-                    const Divider(height: 32),
-                    Text(
-                      'Módulos habilitados',
-                      style: theme.textTheme.titleMedium,
-                    ),
-                    ...ModuloSistema.values.map(
-                      (modulo) => SwitchListTile(
-                        contentPadding: EdgeInsets.zero,
-                        title: Text(modulo.etiqueta),
-                        value: _modulos.contains(modulo),
-                        onChanged: (value) => setState(() {
-                          if (value) {
-                            _modulos.add(modulo);
-                          } else {
-                            _modulos.remove(modulo);
-                          }
-                        }),
-                      ),
-                    ),
-                    const Divider(height: 32),
-                    Row(
-                      children: [
-                        Text(
-                          'Instalaciones extra',
-                          style: theme.textTheme.titleMedium,
-                        ),
-                        const Spacer(),
-                        TextButton.icon(
-                          onPressed: _agregarInstalacion,
-                          icon: const Icon(Icons.add, size: 18),
-                          label: const Text('Añadir'),
-                        ),
-                      ],
-                    ),
-                    ...List.generate(_instalaciones.length, (index) {
-                      final form = _instalaciones[index];
-                      return Padding(
-                        padding: const EdgeInsets.only(bottom: 8),
-                        child: Row(
-                          children: [
-                            Expanded(
-                              flex: 2,
-                              child: TextFormField(
-                                controller: form.nombre,
-                                decoration: const InputDecoration(
-                                  labelText: 'Nombre (ej. Quincho)',
-                                  border: OutlineInputBorder(),
-                                  isDense: true,
-                                ),
-                              ),
-                            ),
-                            const SizedBox(width: 8),
-                            Expanded(
-                              child: TextFormField(
-                                controller: form.tipo,
-                                decoration: const InputDecoration(
-                                  labelText: 'Tipo',
-                                  border: OutlineInputBorder(),
-                                  isDense: true,
-                                ),
-                              ),
-                            ),
-                            IconButton(
-                              onPressed: () => _quitarInstalacion(index),
-                              icon: const Icon(Icons.delete_outline),
-                            ),
-                          ],
-                        ),
-                      );
-                    }),
-                    const Divider(height: 32),
-                    Text(
-                      'Administradores con acceso',
-                      style: theme.textTheme.titleMedium,
-                    ),
-                    if (adminsState.cargando)
-                      const Padding(
-                        padding: EdgeInsets.all(12),
-                        child: LinearProgressIndicator(),
-                      ),
-                    if (!adminsState.cargando &&
-                        adminsState.administradores.isEmpty)
-                      const Padding(
-                        padding: EdgeInsets.all(12),
-                        child: Text(
-                          'No hay administradores. Crea al menos uno en el '
-                          'módulo "Administradores".',
-                        ),
-                      ),
-                    ...adminsState.administradores.map(
-                      (administrador) => CheckboxListTile(
-                        contentPadding: EdgeInsets.zero,
-                        value: _adminIds.contains(administrador.id),
-                        title: Text(administrador.nombre),
-                        subtitle: Text(administrador.correo),
-                        onChanged: (value) => setState(() {
-                          if (value == true) {
-                            _adminIds.add(administrador.id);
-                          } else {
-                            _adminIds.remove(administrador.id);
-                          }
-                        }),
-                      ),
-                    ),
-                    const SizedBox(height: 24),
-                    SizedBox(
-                      height: 50,
-                      child: FilledButton(
-                        onPressed: superadminState.guardando ? null : _submit,
-                        child: superadminState.guardando
-                            ? const SizedBox(
-                                height: 20,
-                                width: 20,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                ),
-                              )
-                            : const Text('Crear proyecto'),
-                      ),
+                      child: const Text('Reintentar'),
                     ),
                   ],
                 ),
               );
-            },
-          );
-        },
+            }
+
+            return BlocBuilder<AdministradoresBloc, AdministradoresState>(
+              builder: (context, adminsState) {
+                return Form(
+                  key: _formKey,
+                  child: ListView(
+                    padding: const EdgeInsets.all(16),
+                    children: [
+                      TextFormField(
+                        controller: _nombreController,
+                        decoration: const InputDecoration(
+                          labelText: 'Nombre del proyecto',
+                          border: OutlineInputBorder(),
+                        ),
+                        validator: (value) => (value?.trim().isEmpty ?? true)
+                            ? 'Ingresa un nombre'
+                            : null,
+                      ),
+                      const SizedBox(height: 12),
+                      TextFormField(
+                        controller: _descripcionController,
+                        maxLines: 2,
+                        decoration: const InputDecoration(
+                          labelText: 'Descripción (opcional)',
+                          border: OutlineInputBorder(),
+                        ),
+                      ),
+                      const SizedBox(height: 20),
+                      ..._seccionTipoCondominio(theme),
+                      const Divider(height: 32),
+                      ..._seccionEstructura(theme),
+                      Text(
+                        'Módulos habilitados',
+                        style: theme.textTheme.titleMedium,
+                      ),
+                      ...ModuloSistema.values.map(
+                        (modulo) => SwitchListTile(
+                          contentPadding: EdgeInsets.zero,
+                          title: Text(modulo.etiqueta),
+                          value: _modulos.contains(modulo),
+                          onChanged: (value) => setState(() {
+                            if (value) {
+                              _modulos.add(modulo);
+                            } else {
+                              _modulos.remove(modulo);
+                            }
+                          }),
+                        ),
+                      ),
+                      const Divider(height: 32),
+                      Row(
+                        children: [
+                          Text(
+                            'Instalaciones extra',
+                            style: theme.textTheme.titleMedium,
+                          ),
+                          const Spacer(),
+                          TextButton.icon(
+                            onPressed: _agregarInstalacion,
+                            icon: const Icon(Icons.add, size: 18),
+                            label: const Text('Añadir'),
+                          ),
+                        ],
+                      ),
+                      ...List.generate(_instalaciones.length, (index) {
+                        final form = _instalaciones[index];
+                        return Padding(
+                          padding: const EdgeInsets.only(bottom: 8),
+                          child: Row(
+                            children: [
+                              Expanded(
+                                flex: 2,
+                                child: TextFormField(
+                                  controller: form.nombre,
+                                  decoration: const InputDecoration(
+                                    labelText: 'Nombre (ej. Quincho)',
+                                    border: OutlineInputBorder(),
+                                    isDense: true,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: TextFormField(
+                                  controller: form.tipo,
+                                  decoration: const InputDecoration(
+                                    labelText: 'Tipo',
+                                    border: OutlineInputBorder(),
+                                    isDense: true,
+                                  ),
+                                ),
+                              ),
+                              IconButton(
+                                onPressed: () => _quitarInstalacion(index),
+                                icon: const Icon(Icons.delete_outline),
+                              ),
+                            ],
+                          ),
+                        );
+                      }),
+                      const Divider(height: 32),
+                      Text(
+                        'Administradores con acceso',
+                        style: theme.textTheme.titleMedium,
+                      ),
+                      if (adminsState.cargando)
+                        const Padding(
+                          padding: EdgeInsets.all(12),
+                          child: LinearProgressIndicator(),
+                        ),
+                      if (!adminsState.cargando &&
+                          adminsState.administradores.isEmpty)
+                        const Padding(
+                          padding: EdgeInsets.all(12),
+                          child: Text(
+                            'No hay administradores. Crea al menos uno en el '
+                            'módulo "Administradores".',
+                          ),
+                        ),
+                      ...adminsState.administradores.map(
+                        (administrador) => CheckboxListTile(
+                          contentPadding: EdgeInsets.zero,
+                          value: _adminIds.contains(administrador.id),
+                          title: Text(administrador.nombre),
+                          subtitle: Text(administrador.correo),
+                          onChanged: (value) => setState(() {
+                            if (value == true) {
+                              _adminIds.add(administrador.id);
+                            } else {
+                              _adminIds.remove(administrador.id);
+                            }
+                          }),
+                        ),
+                      ),
+                      const SizedBox(height: 24),
+                      SizedBox(
+                        height: 50,
+                        child: FilledButton(
+                          onPressed: superadminState.guardando ? null : _submit,
+                          child: superadminState.guardando
+                              ? const SizedBox(
+                                  height: 20,
+                                  width: 20,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                  ),
+                                )
+                              : Text(
+                                  _esEdicion
+                                      ? 'Guardar cambios'
+                                      : 'Crear proyecto',
+                                ),
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              },
+            );
+          },
+        ),
       ),
     );
+  }
+
+  List<Widget> _seccionTipoCondominio(ThemeData theme) {
+    if (_esEdicion) {
+      return [
+        Text('Tipo de condominio', style: theme.textTheme.titleMedium),
+        const SizedBox(height: 8),
+        InputDecorator(
+          decoration: const InputDecoration(
+            border: OutlineInputBorder(),
+            isDense: true,
+          ),
+          child: Text(_tipo.etiqueta),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          'El tipo de condominio no se puede cambiar una vez creada '
+          'la estructura del recinto.',
+          style: theme.textTheme.bodySmall,
+        ),
+      ];
+    }
+
+    return [
+      Text('Tipo de condominio', style: theme.textTheme.titleMedium),
+      const SizedBox(height: 8),
+      RadioGroup<TipoCondominio>(
+        groupValue: _tipo,
+        onChanged: (value) => setState(() => _tipo = value ?? _tipo),
+        child: Column(
+          children: TipoCondominio.values
+              .map(
+                (tipo) => RadioListTile<TipoCondominio>(
+                  contentPadding: EdgeInsets.zero,
+                  value: tipo,
+                  title: Text(tipo.etiqueta),
+                  subtitle: Text(tipo.descripcion),
+                ),
+              )
+              .toList(),
+        ),
+      ),
+    ];
+  }
+
+  List<Widget> _seccionEstructura(ThemeData theme) {
+    if (_esEdicion) {
+      return [
+        Text('Estructura del recinto', style: theme.textTheme.titleMedium),
+        const SizedBox(height: 4),
+        Text(
+          'La estructura (agrupaciones, pisos y unidades) se administra desde '
+          'el módulo Infraestructura.',
+          style: theme.textTheme.bodySmall,
+        ),
+        const SizedBox(height: 20),
+      ];
+    }
+
+    return [
+      Text('Estructura del recinto', style: theme.textTheme.titleMedium),
+      const SizedBox(height: 4),
+      Text(
+        'La estructura se crea junto con el proyecto.',
+        style: theme.textTheme.bodySmall,
+      ),
+      const SizedBox(height: 12),
+      ..._construirSeccionesEstructura(),
+      const Divider(height: 32),
+    ];
   }
 
   List<Widget> _construirSeccionesEstructura() {
@@ -668,8 +851,24 @@ class _CrearProyectoScreenState extends State<_CrearProyectoScreen> {
 }
 
 class _InstalacionForm {
-  final nombre = TextEditingController();
-  final tipo = TextEditingController();
+  _InstalacionForm({
+    String nombre = '',
+    String tipo = '',
+    this.atributos = const {},
+  }) : nombre = TextEditingController(text: nombre),
+       tipo = TextEditingController(text: tipo);
+
+  factory _InstalacionForm.desde(InstalacionExtra instalacion) {
+    return _InstalacionForm(
+      nombre: instalacion.nombre,
+      tipo: instalacion.tipo ?? '',
+      atributos: instalacion.atributos,
+    );
+  }
+
+  final TextEditingController nombre;
+  final TextEditingController tipo;
+  final Map<String, dynamic> atributos;
 
   void dispose() {
     nombre.dispose();

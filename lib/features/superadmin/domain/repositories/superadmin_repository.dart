@@ -30,5 +30,16 @@ abstract interface class SuperadminRepositoryInterface {
     required List<String> adminIds,
   });
 
+  Future<Either<Failure, ProyectoDetalle>> obtenerProyecto(String id);
+
+  Future<Either<Failure, ProyectoDetalle>> actualizarProyecto({
+    required String id,
+    required String nombre,
+    String? descripcion,
+    required List<ModuloSistema> modulos,
+    required List<InstalacionExtra> instalaciones,
+    required List<String> adminIds,
+  });
+
   Future<Either<Failure, List<ProyectoDetalle>>> listarMisProyectos();
 }

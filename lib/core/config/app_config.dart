@@ -16,13 +16,22 @@ class AppConfig {
   static const String loginPath = '/api/login';
   static const String userPath = '/api/user';
   static const String infraestructuraBasePath = '/api/infraestructura';
-  static const String infraestructuraProyectoPath = '$infraestructuraBasePath/proyecto';
-  static const String infraestructuraProyectosPath = '$infraestructuraBasePath/proyectos';
-  static const String infraestructuraAgrupacionesPath = '$infraestructuraBasePath/agrupaciones';
-  static const String infraestructuraUnidadesAccesoriasPath = '$infraestructuraBasePath/unidades-accesorias';
-  static const String infraestructuraArbolPath = '$infraestructuraBasePath/arbol';
-  static const String infraestructuraVistaPreviaPath = '$infraestructuraBasePath/vista-previa-identificaciones';
+  static const String infraestructuraProyectoPath =
+      '$infraestructuraBasePath/proyecto';
+  static const String infraestructuraProyectosPath =
+      '$infraestructuraBasePath/proyectos';
+  static const String infraestructuraAgrupacionesPath =
+      '$infraestructuraBasePath/agrupaciones';
+  static const String infraestructuraUnidadesAccesoriasPath =
+      '$infraestructuraBasePath/unidades-accesorias';
+  static const String infraestructuraArbolPath =
+      '$infraestructuraBasePath/arbol';
+  static const String infraestructuraVistaPreviaPath =
+      '$infraestructuraBasePath/vista-previa-identificaciones';
   static const String superadminProyectosPath = '/api/superadmin/proyectos';
-  static const String superadminAdministradoresPath = '/api/superadmin/administradores';
+  static String superadminProyectoPath(String id) =>
+      '$superadminProyectosPath/${Uri.encodeComponent(id)}';
+  static const String superadminAdministradoresPath =
+      '/api/superadmin/administradores';
   static const String misProyectosPath = '/api/mis-proyectos';
 }

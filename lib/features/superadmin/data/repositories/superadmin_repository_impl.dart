@@ -78,6 +78,36 @@ class SuperadminRepositoryImpl implements SuperadminRepositoryInterface {
   }
 
   @override
+  Future<Either<Failure, ProyectoDetalle>> obtenerProyecto(String id) {
+    return _guard(
+      () => _remoteDataSource.obtenerProyecto(id).then((dto) => dto.toEntity()),
+    );
+  }
+
+  @override
+  Future<Either<Failure, ProyectoDetalle>> actualizarProyecto({
+    required String id,
+    required String nombre,
+    String? descripcion,
+    required List<ModuloSistema> modulos,
+    required List<InstalacionExtra> instalaciones,
+    required List<String> adminIds,
+  }) {
+    return _guard(
+      () => _remoteDataSource
+          .actualizarProyecto(
+            id: id,
+            nombre: nombre,
+            descripcion: descripcion,
+            modulos: modulos,
+            instalaciones: instalaciones,
+            adminIds: adminIds,
+          )
+          .then((dto) => dto.toEntity()),
+    );
+  }
+
+  @override
   Future<Either<Failure, List<ProyectoDetalle>>> listarMisProyectos() async {
     return _guard(
       () => _remoteDataSource.listarMisProyectos().then(

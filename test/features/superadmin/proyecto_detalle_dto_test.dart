@@ -5,7 +5,9 @@ import 'package:torre_manager_frontend/features/superadmin/domain/entities/tipo_
 
 void main() {
   group('ProyectoDetalleDTO', () {
-    Map<String, dynamic> baseJson({Object? atributos = const <String, dynamic>{}}) {
+    Map<String, dynamic> baseJson({
+      Object? atributos = const <String, dynamic>{},
+    }) {
       return {
         'id': 3,
         'nombre': 'Test',
@@ -13,7 +15,12 @@ void main() {
         'tipo_condominio': 'torres',
         'modulos': ['infraestructura'],
         'instalaciones_extra': [
-          {'id': 1, 'nombre': 'Quincho', 'tipo': 'quincho', 'atributos': atributos},
+          {
+            'id': 1,
+            'nombre': 'Quincho',
+            'tipo': 'quincho',
+            'atributos': atributos,
+          },
         ],
         'admin_ids': [2],
       };

@@ -8,7 +8,9 @@ import '../../domain/entities/modulo_sistema.dart';
 import '../../domain/entities/proyecto_detalle.dart';
 import '../../domain/entities/resumen_proyecto.dart';
 import '../../domain/entities/tipo_condominio.dart';
+import '../../domain/usecases/actualizar_proyecto_usecase.dart';
 import '../../domain/usecases/crear_proyecto_usecase.dart';
+import '../../domain/usecases/obtener_proyecto_usecase.dart';
 import '../../domain/usecases/listar_proyectos_usecase.dart';
 
 sealed class SuperadminEvent extends Equatable {
@@ -53,6 +55,47 @@ class ProyectoCreado extends SuperadminEvent {
   ];
 }
 
+class ProyectoEdicionSolicitada extends SuperadminEvent {
+  const ProyectoEdicionSolicitada(this.proyectoId);
+
+  final String proyectoId;
+
+  @override
+  List<Object?> get props => [proyectoId];
+}
+
+class ProyectoEdicionFinalizada extends SuperadminEvent {
+  const ProyectoEdicionFinalizada();
+}
+
+class ProyectoActualizado extends SuperadminEvent {
+  const ProyectoActualizado({
+    required this.id,
+    required this.nombre,
+    required this.descripcion,
+    required this.modulos,
+    required this.instalaciones,
+    required this.adminIds,
+  });
+
+  final String id;
+  final String nombre;
+  final String? descripcion;
+  final List<ModuloSistema> modulos;
+  final List<InstalacionExtra> instalaciones;
+  final List<String> adminIds;
+
+  @override
+  List<Object?> get props => [
+    id,
+    nombre,
+    descripcion,
+    modulos,
+    instalaciones,
+    adminIds,
+  ];
+}
+
 class SuperadminMensajeConsumido extends SuperadminEvent {
   const SuperadminMensajeConsumido();
 }
@@ -65,6 +108,8 @@ class SuperadminState extends Equatable {
     this.mensaje,
     this.exito = false,
     this.ultimoProyectoCreado,
+    this.cargandoDetalle = false,
+    this.proyectoEnEdicion,
   });
 
   final bool cargando;
@@ -73,6 +118,8 @@ class SuperadminState extends Equatable {
   final String? mensaje;
   final bool exito;
   final ProyectoDetalle? ultimoProyectoCreado;
+  final bool cargandoDetalle;
+  final ProyectoDetalle? proyectoEnEdicion;
 
   SuperadminState copyWith({
     bool? cargando,
@@ -81,7 +128,10 @@ class SuperadminState extends Equatable {
     String? mensaje,
     bool? exito,
     ProyectoDetalle? ultimoProyectoCreado,
+    bool? cargandoDetalle,
+    ProyectoDetalle? proyectoEnEdicion,
     bool limpiarMensaje = false,
+    bool limpiarDetalle = false,
   }) {
     return SuperadminState(
       cargando: cargando ?? this.cargando,
@@ -92,6 +142,10 @@ class SuperadminState extends Equatable {
       ultimoProyectoCreado: limpiarMensaje
           ? null
           : (ultimoProyectoCreado ?? this.ultimoProyectoCreado),
+      cargandoDetalle: cargandoDetalle ?? this.cargandoDetalle,
+      proyectoEnEdicion: limpiarDetalle
+          ? null
+          : (proyectoEnEdicion ?? this.proyectoEnEdicion),
     );
   }
 
@@ -103,6 +157,8 @@ class SuperadminState extends Equatable {
     mensaje,
     exito,
     ultimoProyectoCreado,
+    cargandoDetalle,
+    proyectoEnEdicion,
   ];
 }
 
@@ -110,16 +166,25 @@ class SuperadminBloc extends Bloc<SuperadminEvent, SuperadminState> {
   SuperadminBloc({
     required ListarProyectosUseCase listarProyectosUseCase,
     required CrearProyectoUseCase crearProyectoUseCase,
+    required ObtenerProyectoUseCase obtenerProyectoUseCase,
+    required ActualizarProyectoUseCase actualizarProyectoUseCase,
   }) : _listarProyectosUseCase = listarProyectosUseCase,
        _crearProyectoUseCase = crearProyectoUseCase,
+       _obtenerProyectoUseCase = obtenerProyectoUseCase,
+       _actualizarProyectoUseCase = actualizarProyectoUseCase,
        super(const SuperadminState()) {
     on<ProyectosSolicitados>(_onProyectosSolicitados);
     on<ProyectoCreado>(_onProyectoCreado);
+    on<ProyectoEdicionSolicitada>(_onEdicionSolicitada);
+    on<ProyectoEdicionFinalizada>(_onEdicionFinalizada);
+    on<ProyectoActualizado>(_onProyectoActualizado);
     on<SuperadminMensajeConsumido>(_onMensajeConsumido);
   }
 
   final ListarProyectosUseCase _listarProyectosUseCase;
   final CrearProyectoUseCase _crearProyectoUseCase;
+  final ObtenerProyectoUseCase _obtenerProyectoUseCase;
+  final ActualizarProyectoUseCase _actualizarProyectoUseCase;
 
   Future<void> _onProyectosSolicitados(
     ProyectosSolicitados event,
@@ -168,6 +233,70 @@ class SuperadminBloc extends Bloc<SuperadminEvent, SuperadminState> {
             mensaje: 'Proyecto "${proyecto.nombre}" creado.',
             exito: true,
             ultimoProyectoCreado: proyecto,
+          ),
+        );
+        add(const ProyectosSolicitados());
+      },
+    );
+  }
+
+  Future<void> _onEdicionSolicitada(
+    ProyectoEdicionSolicitada event,
+    Emitter<SuperadminState> emit,
+  ) async {
+    emit(
+      state.copyWith(
+        cargandoDetalle: true,
+        limpiarDetalle: true,
+        limpiarMensaje: true,
+      ),
+    );
+
+    final result = await _obtenerProyectoUseCase(event.proyectoId);
+
+    result.fold(
+      (failure) => emit(
+        state.copyWith(cargandoDetalle: false, mensaje: failure.message),
+      ),
+      (proyecto) => emit(
+        state.copyWith(cargandoDetalle: false, proyectoEnEdicion: proyecto),
+      ),
+    );
+  }
+
+  void _onEdicionFinalizada(
+    ProyectoEdicionFinalizada event,
+    Emitter<SuperadminState> emit,
+  ) {
+    emit(state.copyWith(limpiarDetalle: true, cargandoDetalle: false));
+  }
+
+  Future<void> _onProyectoActualizado(
+    ProyectoActualizado event,
+    Emitter<SuperadminState> emit,
+  ) async {
+    emit(state.copyWith(guardando: true, limpiarMensaje: true));
+
+    final result = await _actualizarProyectoUseCase(
+      id: event.id,
+      nombre: event.nombre,
+      descripcion: event.descripcion,
+      modulos: event.modulos,
+      instalaciones: event.instalaciones,
+      adminIds: event.adminIds,
+    );
+
+    await result.fold(
+      (failure) async {
+        emit(state.copyWith(guardando: false, mensaje: failure.message));
+      },
+      (proyecto) async {
+        emit(
+          state.copyWith(
+            guardando: false,
+            mensaje: 'Proyecto "${proyecto.nombre}" actualizado.',
+            exito: true,
+            limpiarDetalle: true,
           ),
         );
         add(const ProyectosSolicitados());
