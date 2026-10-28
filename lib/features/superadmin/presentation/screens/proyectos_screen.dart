@@ -314,7 +314,10 @@ class _ProyectoFormScreenState extends State<_ProyectoFormScreen> {
         .map(
           (form) => InstalacionExtra(
             nombre: form.nombre.text.trim(),
-            tipo: form.tipo.text.trim().isEmpty ? null : form.tipo.text.trim(),
+            capacidad: int.tryParse(form.capacidad.text.trim()) ?? 0,
+            descripcion: form.descripcion.text.trim().isEmpty
+                ? null
+                : form.descripcion.text.trim(),
             atributos: form.atributos,
           ),
         )
@@ -532,33 +535,49 @@ class _ProyectoFormScreenState extends State<_ProyectoFormScreen> {
                         final form = _instalaciones[index];
                         return Padding(
                           padding: const EdgeInsets.only(bottom: 8),
-                          child: Row(
+                          child: Column(
                             children: [
-                              Expanded(
-                                flex: 2,
-                                child: TextFormField(
-                                  controller: form.nombre,
-                                  decoration: const InputDecoration(
-                                    labelText: 'Nombre (ej. Quincho)',
-                                    border: OutlineInputBorder(),
-                                    isDense: true,
+                              Row(
+                                children: [
+                                  Expanded(
+                                    flex: 2,
+                                    child: TextFormField(
+                                      controller: form.nombre,
+                                      decoration: const InputDecoration(
+                                        labelText: 'Nombre (ej. Quincho)',
+                                        border: OutlineInputBorder(),
+                                        isDense: true,
+                                      ),
+                                    ),
                                   ),
-                                ),
-                              ),
-                              const SizedBox(width: 8),
-                              Expanded(
-                                child: TextFormField(
-                                  controller: form.tipo,
-                                  decoration: const InputDecoration(
-                                    labelText: 'Tipo',
-                                    border: OutlineInputBorder(),
-                                    isDense: true,
+                                  const SizedBox(width: 8),
+                                  Expanded(
+                                    child: TextFormField(
+                                      controller: form.capacidad,
+                                      keyboardType: TextInputType.number,
+                                      decoration: const InputDecoration(
+                                        labelText: 'Capacidad (1-500)',
+                                        border: OutlineInputBorder(),
+                                        isDense: true,
+                                      ),
+                                    ),
                                   ),
-                                ),
+                                  IconButton(
+                                    onPressed: () => _quitarInstalacion(index),
+                                    icon: const Icon(Icons.delete_outline),
+                                  ),
+                                ],
                               ),
-                              IconButton(
-                                onPressed: () => _quitarInstalacion(index),
-                                icon: const Icon(Icons.delete_outline),
+                              const SizedBox(height: 8),
+                              TextFormField(
+                                controller: form.descripcion,
+                                maxLength: 100,
+                                decoration: const InputDecoration(
+                                  labelText: 'Descripción (opcional)',
+                                  border: OutlineInputBorder(),
+                                  isDense: true,
+                                  counterText: '',
+                                ),
                               ),
                             ],
                           ),
@@ -1310,26 +1329,33 @@ class _ProyectoFormScreenState extends State<_ProyectoFormScreen> {
 class _InstalacionForm {
   _InstalacionForm({
     String nombre = '',
-    String tipo = '',
+    int? capacidad,
+    String descripcion = '',
     this.atributos = const {},
   }) : nombre = TextEditingController(text: nombre),
-       tipo = TextEditingController(text: tipo);
+       capacidad = TextEditingController(
+         text: capacidad == null ? '' : '$capacidad',
+       ),
+       descripcion = TextEditingController(text: descripcion);
 
   factory _InstalacionForm.desde(InstalacionExtra instalacion) {
     return _InstalacionForm(
       nombre: instalacion.nombre,
-      tipo: instalacion.tipo ?? '',
+      capacidad: instalacion.capacidad,
+      descripcion: instalacion.descripcion ?? '',
       atributos: instalacion.atributos,
     );
   }
 
   final TextEditingController nombre;
-  final TextEditingController tipo;
+  final TextEditingController capacidad;
+  final TextEditingController descripcion;
   final Map<String, dynamic> atributos;
 
   void dispose() {
     nombre.dispose();
-    tipo.dispose();
+    capacidad.dispose();
+    descripcion.dispose();
   }
 }
 

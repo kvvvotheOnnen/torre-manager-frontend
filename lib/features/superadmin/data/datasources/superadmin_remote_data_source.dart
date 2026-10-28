@@ -91,7 +91,8 @@ class SuperadminRemoteDataSource {
             .map(
               (instalacion) => {
                 'nombre': instalacion.nombre,
-                'tipo': ?instalacion.tipo,
+                'capacidad': instalacion.capacidad,
+                'descripcion': ?instalacion.descripcion,
                 if (instalacion.atributos.isNotEmpty)
                   'atributos': instalacion.atributos,
               },
@@ -136,7 +137,8 @@ class SuperadminRemoteDataSource {
             .map(
               (instalacion) => {
                 'nombre': instalacion.nombre,
-                'tipo': ?instalacion.tipo,
+                'capacidad': instalacion.capacidad,
+                'descripcion': ?instalacion.descripcion,
                 if (instalacion.atributos.isNotEmpty)
                   'atributos': instalacion.atributos,
               },

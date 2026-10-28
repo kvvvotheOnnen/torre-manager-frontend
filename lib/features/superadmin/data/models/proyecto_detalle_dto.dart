@@ -61,12 +61,14 @@ class ProyectoDetalleDTO {
 class InstalacionExtraDTO {
   const InstalacionExtraDTO({
     required this.nombre,
-    this.tipo,
+    required this.capacidad,
+    this.descripcion,
     this.atributos = const {},
   });
 
   final String nombre;
-  final String? tipo;
+  final int capacidad;
+  final String? descripcion;
   final Map<String, dynamic> atributos;
 
   factory InstalacionExtraDTO.fromJson(Map<String, dynamic> json) {
@@ -74,12 +76,18 @@ class InstalacionExtraDTO {
 
     return InstalacionExtraDTO(
       nombre: (json['nombre'] ?? '') as String,
-      tipo: json['tipo'] as String?,
+      capacidad: (json['capacidad'] ?? 0) as int,
+      descripcion: json['descripcion'] as String?,
       atributos: atributos is Map<String, dynamic> ? atributos : const {},
     );
   }
 
   InstalacionExtra toEntity() {
-    return InstalacionExtra(nombre: nombre, tipo: tipo, atributos: atributos);
+    return InstalacionExtra(
+      nombre: nombre,
+      capacidad: capacidad,
+      descripcion: descripcion,
+      atributos: atributos,
+    );
   }
 }

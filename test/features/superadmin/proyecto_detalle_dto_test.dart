@@ -18,7 +18,8 @@ void main() {
           {
             'id': 1,
             'nombre': 'Quincho',
-            'tipo': 'quincho',
+            'capacidad': 40,
+            'descripcion': 'Espacio para reuniones',
             'atributos': atributos,
           },
         ],
@@ -34,6 +35,11 @@ void main() {
 
       expect(entity.tipoCondominio, TipoCondominio.torres);
       expect(entity.modulos, [ModuloSistema.infraestructura]);
+      expect(entity.instalacionesExtra.single.capacidad, 40);
+      expect(
+        entity.instalacionesExtra.single.descripcion,
+        'Espacio para reuniones',
+      );
       expect(entity.instalacionesExtra.single.atributos, {'largo_m': 12});
     });
 
