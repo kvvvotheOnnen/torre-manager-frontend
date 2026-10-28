@@ -19,7 +19,10 @@ class ArbolUnidadPrincipal extends Equatable {
 }
 
 class ArbolAgrupacion extends Equatable {
-  const ArbolAgrupacion({required this.agrupacion, required this.unidadesPrincipales});
+  const ArbolAgrupacion({
+    required this.agrupacion,
+    required this.unidadesPrincipales,
+  });
 
   final Agrupacion agrupacion;
   final List<ArbolUnidadPrincipal> unidadesPrincipales;
@@ -29,11 +32,16 @@ class ArbolAgrupacion extends Equatable {
 }
 
 class ArbolInfraestructura extends Equatable {
-  const ArbolInfraestructura({required this.proyecto, required this.agrupaciones});
+  const ArbolInfraestructura({
+    required this.proyecto,
+    required this.agrupaciones,
+    this.unidadesAccesorias = const [],
+  });
 
   final Proyecto proyecto;
   final List<ArbolAgrupacion> agrupaciones;
+  final List<UnidadAccesoria> unidadesAccesorias;
 
   @override
-  List<Object?> get props => [proyecto, agrupaciones];
+  List<Object?> get props => [proyecto, agrupaciones, unidadesAccesorias];
 }

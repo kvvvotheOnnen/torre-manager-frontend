@@ -64,6 +64,8 @@ class SuperadminRemoteDataSource {
     required List<DefinicionAgrupacion> agrupaciones,
     required List<InstalacionExtra> instalaciones,
     required List<String> adminIds,
+    int estacionamientos = 0,
+    int bodegas = 0,
   }) async {
     final response = await _dio.post<Map<String, dynamic>>(
       AppConfig.superadminProyectosPath,
@@ -96,6 +98,8 @@ class SuperadminRemoteDataSource {
             )
             .toList(),
         'admin_ids': adminIds,
+        if (estacionamientos > 0) 'estacionamientos': estacionamientos,
+        if (bodegas > 0) 'bodegas': bodegas,
       },
     );
 

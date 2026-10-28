@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../domain/entities/arbol_infraestructura.dart';
 import '../../domain/entities/tipo_agrupacion.dart';
+import '../../domain/entities/tipo_asignacion.dart';
 import '../../domain/entities/tipo_unidad_accesoria.dart';
 import '../../domain/entities/unidad_accesoria.dart';
 import '../../domain/entities/unidad_principal.dart';
@@ -54,21 +55,22 @@ class _InfraestructuraBody extends StatelessWidget {
                     : null,
               ),
             );
-          context
-              .read<InfraestructuraBloc>()
-              .add(const InfraestructuraMensajeConsumido());
+          context.read<InfraestructuraBloc>().add(
+            const InfraestructuraMensajeConsumido(),
+          );
         }
       },
       builder: (context, state) {
         if (state.status == InfraestructuraStatus.inicial) {
           WidgetsBinding.instance.addPostFrameCallback((_) {
-            context
-                .read<InfraestructuraBloc>()
-                .add(const InfraestructuraIniciado());
+            context.read<InfraestructuraBloc>().add(
+              const InfraestructuraIniciado(),
+            );
           });
         }
 
-        if (state.status == InfraestructuraStatus.cargando && state.arbol == null) {
+        if (state.status == InfraestructuraStatus.cargando &&
+            state.arbol == null) {
           return const Center(child: CircularProgressIndicator());
         }
 
@@ -80,9 +82,9 @@ class _InfraestructuraBody extends StatelessWidget {
 
         return RefreshIndicator(
           onRefresh: () async {
-            context
-                .read<InfraestructuraBloc>()
-                .add(InfraestructuraArbolSolicitado(proyectoId: arbol.proyecto.id));
+            context.read<InfraestructuraBloc>().add(
+              InfraestructuraArbolSolicitado(proyectoId: arbol.proyecto.id),
+            );
           },
           child: ListView(
             padding: const EdgeInsets.all(12),
@@ -94,7 +96,9 @@ class _InfraestructuraBody extends StatelessWidget {
                     arbol.proyecto.nombre,
                     style: const TextStyle(fontWeight: FontWeight.bold),
                   ),
-                  subtitle: Text(arbol.proyecto.descripcion ?? 'Proyecto (tenant)'),
+                  subtitle: Text(
+                    arbol.proyecto.descripcion ?? 'Proyecto (tenant)',
+                  ),
                 ),
               ),
               if (state.tieneCarga)
@@ -103,7 +107,8 @@ class _InfraestructuraBody extends StatelessWidget {
                   child: LinearProgressIndicator(),
                 ),
               ...arbol.agrupaciones.map(
-                (item) => _AgrupacionCard(item: item, proyectoId: arbol.proyecto.id),
+                (item) =>
+                    _AgrupacionCard(item: item, proyectoId: arbol.proyecto.id),
               ),
               if (arbol.agrupaciones.isEmpty)
                 const Padding(
@@ -145,10 +150,8 @@ class _AgrupacionCard extends StatelessWidget {
         ),
         children: [
           ...item.unidadesPrincipales.map(
-            (unidad) => _UnidadPrincipalTile(
-              unidad: unidad,
-              proyectoId: proyectoId,
-            ),
+            (unidad) =>
+                _UnidadPrincipalTile(unidad: unidad, proyectoId: proyectoId),
           ),
           if (item.unidadesPrincipales.isEmpty)
             const ListTile(
@@ -178,8 +181,8 @@ class _UnidadPrincipalTile extends StatelessWidget {
         accesorias.isEmpty
             ? 'Sin unidades accesorias asignadas'
             : accesorias
-                .map((a) => '${_etiquetaTipo(a)} ${a.identificador}')
-                .join(' · '),
+                  .map((a) => '${_etiquetaTipo(a)} ${a.identificador}')
+                  .join(' · '),
       ),
       children: [
         ...accesorias.map(
@@ -191,7 +194,9 @@ class _UnidadPrincipalTile extends StatelessWidget {
                   : Icons.inventory_2,
               size: 20,
             ),
-            title: Text('${_etiquetaTipo(accesoria)} ${accesoria.identificador}'),
+            title: Text(
+              '${_etiquetaTipo(accesoria)} ${accesoria.identificador}',
+            ),
             subtitle: Text(
               accesoria.unidadPrincipalId == null
                   ? 'Libre disposición / comunitaria'
@@ -219,7 +224,9 @@ class _UnidadPrincipalTile extends StatelessWidget {
   }
 
   String _etiquetaTipo(UnidadAccesoria accesoria) =>
-      accesoria.tipo == TipoUnidadAccesoria.estacionamiento ? 'Estac.' : 'Bodega';
+      accesoria.tipo == TipoUnidadAccesoria.estacionamiento
+      ? 'Estac.'
+      : 'Bodega';
 
   void _mostrarDialogoAccesoria(BuildContext context) {
     showDialog<void>(
@@ -231,10 +238,7 @@ class _UnidadPrincipalTile extends StatelessWidget {
     );
   }
 
-  void _mostrarDialogoAsignar(
-    BuildContext context,
-    UnidadAccesoria accesoria,
-  ) {
+  void _mostrarDialogoAsignar(BuildContext context, UnidadAccesoria accesoria) {
     showDialog<void>(
       context: context,
       builder: (_) => _DialogoAsignarAccesoria(
@@ -251,7 +255,8 @@ class _DialogoNuevaAgrupacion extends StatefulWidget {
   final String proyectoId;
 
   @override
-  State<_DialogoNuevaAgrupacion> createState() => _DialogoNuevaAgrupacionState();
+  State<_DialogoNuevaAgrupacion> createState() =>
+      _DialogoNuevaAgrupacionState();
 }
 
 class _DialogoNuevaAgrupacionState extends State<_DialogoNuevaAgrupacion> {
@@ -311,8 +316,9 @@ class _DialogoNuevaAgrupacionState extends State<_DialogoNuevaAgrupacion> {
                   labelText: 'Nombre (ej. Torre A)',
                   border: OutlineInputBorder(),
                 ),
-                validator: (value) =>
-                    (value?.trim().isEmpty ?? true) ? 'Ingresa un nombre' : null,
+                validator: (value) => (value?.trim().isEmpty ?? true)
+                    ? 'Ingresa un nombre'
+                    : null,
               ),
               const SizedBox(height: 12),
               DropdownButtonFormField<TipoAgrupacion>(
@@ -428,6 +434,7 @@ class _DialogoNuevaAccesoriaState extends State<_DialogoNuevaAccesoria> {
         proyectoId: widget.proyectoId,
         identificador: identificador,
         tipo: _tipo,
+        asignacion: _asignar ? TipoAsignacion.departamento : null,
         unidadPrincipalId: _asignar ? widget.unidadPrincipal.id : null,
       ),
     );
@@ -509,7 +516,7 @@ class _DialogoAsignarAccesoriaState extends State<_DialogoAsignarAccesoria> {
   @override
   void initState() {
     super.initState();
-    _asignada = widget.accesoria.unidadPrincipalId != null;
+    _asignada = widget.accesoria.asignacion != null;
   }
 
   void _submit() {
@@ -517,7 +524,10 @@ class _DialogoAsignarAccesoriaState extends State<_DialogoAsignarAccesoria> {
       InfraestructuraAccesoriaAsignada(
         proyectoId: widget.proyectoId,
         unidadAccesoriaId: widget.accesoria.id,
-        unidadPrincipalId: _asignada ? widget.accesoria.unidadPrincipalId : null,
+        asignacion: _asignada ? TipoAsignacion.departamento : null,
+        unidadPrincipalId: _asignada
+            ? widget.accesoria.unidadPrincipalId
+            : null,
       ),
     );
 
@@ -530,9 +540,9 @@ class _DialogoAsignarAccesoriaState extends State<_DialogoAsignarAccesoria> {
       title: Text('Accesoria ${widget.accesoria.identificador}'),
       content: Text(
         _asignada
-            ? '¿Deseas liberarla (pasa a libre disposición)?'
+            ? '¿Deseas liberarla (pasa a sin asignación)?'
             : 'No está asignada a ninguna unidad principal. La asignación a '
-                'otra unidad se realiza desde esa unidad.',
+                  'otra unidad se realiza desde esa unidad.',
       ),
       actions: [
         TextButton(
@@ -540,10 +550,7 @@ class _DialogoAsignarAccesoriaState extends State<_DialogoAsignarAccesoria> {
           child: const Text('Cancelar'),
         ),
         if (_asignada)
-          FilledButton(
-            onPressed: _submit,
-            child: const Text('Liberar'),
-          ),
+          FilledButton(onPressed: _submit, child: const Text('Liberar')),
       ],
     );
   }

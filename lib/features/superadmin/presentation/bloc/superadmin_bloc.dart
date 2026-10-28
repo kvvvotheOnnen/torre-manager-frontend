@@ -2,6 +2,13 @@
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../infraestructura/domain/entities/arbol_infraestructura.dart';
+import '../../../infraestructura/domain/entities/asignacion_accesoria.dart';
+import '../../../infraestructura/domain/entities/tipo_asignacion.dart';
+import '../../../infraestructura/domain/entities/tipo_unidad_accesoria.dart';
+import '../../../infraestructura/domain/usecases/asignar_unidad_accesoria_usecase.dart';
+import '../../../infraestructura/domain/usecases/crear_unidades_accesorias_en_lote_usecase.dart';
+import '../../../infraestructura/domain/usecases/obtener_arbol_infraestructura_usecase.dart';
 import '../../domain/entities/definicion_agrupacion.dart';
 import '../../domain/entities/instalacion_extra.dart';
 import '../../domain/entities/modulo_sistema.dart';
@@ -33,6 +40,8 @@ class ProyectoCreado extends SuperadminEvent {
     required this.agrupaciones,
     required this.instalaciones,
     required this.adminIds,
+    this.estacionamientos = 0,
+    this.bodegas = 0,
   });
 
   final String nombre;
@@ -42,6 +51,8 @@ class ProyectoCreado extends SuperadminEvent {
   final List<DefinicionAgrupacion> agrupaciones;
   final List<InstalacionExtra> instalaciones;
   final List<String> adminIds;
+  final int estacionamientos;
+  final int bodegas;
 
   @override
   List<Object?> get props => [
@@ -52,7 +63,52 @@ class ProyectoCreado extends SuperadminEvent {
     agrupaciones,
     instalaciones,
     adminIds,
+    estacionamientos,
+    bodegas,
   ];
+}
+
+class AccesoriasLoteSolicitadas extends SuperadminEvent {
+  const AccesoriasLoteSolicitadas({
+    required this.proyectoId,
+    required this.tipo,
+    required this.cantidad,
+    this.asignacion,
+  });
+
+  final String proyectoId;
+  final TipoUnidadAccesoria tipo;
+  final int cantidad;
+  final TipoAsignacion? asignacion;
+
+  @override
+  List<Object?> get props => [proyectoId, tipo, cantidad, asignacion];
+}
+
+class AsignacionAccesoriaSolicitada extends SuperadminEvent {
+  const AsignacionAccesoriaSolicitada({
+    required this.proyectoId,
+    required this.asignacion,
+  });
+
+  final String proyectoId;
+  final AsignacionAccesoria asignacion;
+
+  @override
+  List<Object?> get props => [proyectoId, asignacion];
+}
+
+class AsignacionesAccesoriasSolicitadas extends SuperadminEvent {
+  const AsignacionesAccesoriasSolicitadas({
+    required this.proyectoId,
+    required this.asignaciones,
+  });
+
+  final String proyectoId;
+  final List<AsignacionAccesoria> asignaciones;
+
+  @override
+  List<Object?> get props => [proyectoId, asignaciones];
 }
 
 class ProyectoEdicionSolicitada extends SuperadminEvent {
@@ -66,6 +122,15 @@ class ProyectoEdicionSolicitada extends SuperadminEvent {
 
 class ProyectoEdicionFinalizada extends SuperadminEvent {
   const ProyectoEdicionFinalizada();
+}
+
+class EstructuraProyectoSolicitada extends SuperadminEvent {
+  const EstructuraProyectoSolicitada(this.proyectoId);
+
+  final String proyectoId;
+
+  @override
+  List<Object?> get props => [proyectoId];
 }
 
 class ProyectoActualizado extends SuperadminEvent {
@@ -100,6 +165,10 @@ class SuperadminMensajeConsumido extends SuperadminEvent {
   const SuperadminMensajeConsumido();
 }
 
+class UltimoProyectoCreadoConsumido extends SuperadminEvent {
+  const UltimoProyectoCreadoConsumido();
+}
+
 class SuperadminState extends Equatable {
   const SuperadminState({
     this.cargando = false,
@@ -110,6 +179,9 @@ class SuperadminState extends Equatable {
     this.ultimoProyectoCreado,
     this.cargandoDetalle = false,
     this.proyectoEnEdicion,
+    this.cargandoEstructura = false,
+    this.estructura,
+    this.errorEstructura,
   });
 
   final bool cargando;
@@ -120,6 +192,9 @@ class SuperadminState extends Equatable {
   final ProyectoDetalle? ultimoProyectoCreado;
   final bool cargandoDetalle;
   final ProyectoDetalle? proyectoEnEdicion;
+  final bool cargandoEstructura;
+  final ArbolInfraestructura? estructura;
+  final String? errorEstructura;
 
   SuperadminState copyWith({
     bool? cargando,
@@ -130,8 +205,14 @@ class SuperadminState extends Equatable {
     ProyectoDetalle? ultimoProyectoCreado,
     bool? cargandoDetalle,
     ProyectoDetalle? proyectoEnEdicion,
+    bool? cargandoEstructura,
+    ArbolInfraestructura? estructura,
+    String? errorEstructura,
     bool limpiarMensaje = false,
+    bool limpiarUltimoProyectoCreado = false,
     bool limpiarDetalle = false,
+    bool limpiarEstructura = false,
+    bool limpiarErrorEstructura = false,
   }) {
     return SuperadminState(
       cargando: cargando ?? this.cargando,
@@ -139,13 +220,18 @@ class SuperadminState extends Equatable {
       proyectos: proyectos ?? this.proyectos,
       mensaje: limpiarMensaje ? null : (mensaje ?? this.mensaje),
       exito: limpiarMensaje ? false : (exito ?? this.exito),
-      ultimoProyectoCreado: limpiarMensaje
+      ultimoProyectoCreado: limpiarUltimoProyectoCreado
           ? null
           : (ultimoProyectoCreado ?? this.ultimoProyectoCreado),
       cargandoDetalle: cargandoDetalle ?? this.cargandoDetalle,
       proyectoEnEdicion: limpiarDetalle
           ? null
           : (proyectoEnEdicion ?? this.proyectoEnEdicion),
+      cargandoEstructura: cargandoEstructura ?? this.cargandoEstructura,
+      estructura: limpiarEstructura ? null : (estructura ?? this.estructura),
+      errorEstructura: limpiarErrorEstructura
+          ? null
+          : (errorEstructura ?? this.errorEstructura),
     );
   }
 
@@ -159,6 +245,9 @@ class SuperadminState extends Equatable {
     ultimoProyectoCreado,
     cargandoDetalle,
     proyectoEnEdicion,
+    cargandoEstructura,
+    estructura,
+    errorEstructura,
   ];
 }
 
@@ -168,23 +257,40 @@ class SuperadminBloc extends Bloc<SuperadminEvent, SuperadminState> {
     required CrearProyectoUseCase crearProyectoUseCase,
     required ObtenerProyectoUseCase obtenerProyectoUseCase,
     required ActualizarProyectoUseCase actualizarProyectoUseCase,
+    required ObtenerArbolInfraestructuraUseCase obtenerEstructuraUseCase,
+    required CrearUnidadesAccesoriasEnLoteUseCase
+    crearUnidadesAccesoriasEnLoteUseCase,
+    required AsignarUnidadAccesoriaUseCase asignarUnidadAccesoriaUseCase,
   }) : _listarProyectosUseCase = listarProyectosUseCase,
        _crearProyectoUseCase = crearProyectoUseCase,
        _obtenerProyectoUseCase = obtenerProyectoUseCase,
        _actualizarProyectoUseCase = actualizarProyectoUseCase,
+       _obtenerEstructuraUseCase = obtenerEstructuraUseCase,
+       _crearUnidadesAccesoriasEnLoteUseCase =
+           crearUnidadesAccesoriasEnLoteUseCase,
+       _asignarUnidadAccesoriaUseCase = asignarUnidadAccesoriaUseCase,
        super(const SuperadminState()) {
     on<ProyectosSolicitados>(_onProyectosSolicitados);
     on<ProyectoCreado>(_onProyectoCreado);
     on<ProyectoEdicionSolicitada>(_onEdicionSolicitada);
     on<ProyectoEdicionFinalizada>(_onEdicionFinalizada);
+    on<EstructuraProyectoSolicitada>(_onEstructuraSolicitada);
     on<ProyectoActualizado>(_onProyectoActualizado);
+    on<AccesoriasLoteSolicitadas>(_onAccesoriasLoteSolicitadas);
+    on<AsignacionAccesoriaSolicitada>(_onAsignacionAccesoriaSolicitada);
+    on<AsignacionesAccesoriasSolicitadas>(_onAsignacionesAccesoriasSolicitadas);
     on<SuperadminMensajeConsumido>(_onMensajeConsumido);
+    on<UltimoProyectoCreadoConsumido>(_onUltimoProyectoCreadoConsumido);
   }
 
   final ListarProyectosUseCase _listarProyectosUseCase;
   final CrearProyectoUseCase _crearProyectoUseCase;
   final ObtenerProyectoUseCase _obtenerProyectoUseCase;
   final ActualizarProyectoUseCase _actualizarProyectoUseCase;
+  final ObtenerArbolInfraestructuraUseCase _obtenerEstructuraUseCase;
+  final CrearUnidadesAccesoriasEnLoteUseCase
+  _crearUnidadesAccesoriasEnLoteUseCase;
+  final AsignarUnidadAccesoriaUseCase _asignarUnidadAccesoriaUseCase;
 
   Future<void> _onProyectosSolicitados(
     ProyectosSolicitados event,
@@ -221,6 +327,8 @@ class SuperadminBloc extends Bloc<SuperadminEvent, SuperadminState> {
       agrupaciones: event.agrupaciones,
       instalaciones: event.instalaciones,
       adminIds: event.adminIds,
+      estacionamientos: event.estacionamientos,
+      bodegas: event.bodegas,
     );
 
     await result.fold(
@@ -249,6 +357,8 @@ class SuperadminBloc extends Bloc<SuperadminEvent, SuperadminState> {
         cargandoDetalle: true,
         limpiarDetalle: true,
         limpiarMensaje: true,
+        limpiarEstructura: true,
+        limpiarErrorEstructura: true,
       ),
     );
 
@@ -268,7 +378,43 @@ class SuperadminBloc extends Bloc<SuperadminEvent, SuperadminState> {
     ProyectoEdicionFinalizada event,
     Emitter<SuperadminState> emit,
   ) {
-    emit(state.copyWith(limpiarDetalle: true, cargandoDetalle: false));
+    emit(
+      state.copyWith(
+        limpiarDetalle: true,
+        cargandoDetalle: false,
+        limpiarEstructura: true,
+        limpiarErrorEstructura: true,
+        cargandoEstructura: false,
+      ),
+    );
+  }
+
+  Future<void> _onEstructuraSolicitada(
+    EstructuraProyectoSolicitada event,
+    Emitter<SuperadminState> emit,
+  ) async {
+    emit(
+      state.copyWith(
+        cargandoEstructura: true,
+        limpiarEstructura: true,
+        limpiarErrorEstructura: true,
+      ),
+    );
+
+    final result = await _obtenerEstructuraUseCase(
+      proyectoId: event.proyectoId,
+    );
+
+    result.fold(
+      (failure) => emit(
+        state.copyWith(
+          cargandoEstructura: false,
+          errorEstructura: failure.message,
+        ),
+      ),
+      (arbol) =>
+          emit(state.copyWith(cargandoEstructura: false, estructura: arbol)),
+    );
   }
 
   Future<void> _onProyectoActualizado(
@@ -304,10 +450,134 @@ class SuperadminBloc extends Bloc<SuperadminEvent, SuperadminState> {
     );
   }
 
+  Future<void> _onAccesoriasLoteSolicitadas(
+    AccesoriasLoteSolicitadas event,
+    Emitter<SuperadminState> emit,
+  ) async {
+    emit(state.copyWith(guardando: true, limpiarMensaje: true));
+
+    final result = await _crearUnidadesAccesoriasEnLoteUseCase(
+      proyectoId: event.proyectoId,
+      tipo: event.tipo,
+      cantidad: event.cantidad,
+      asignacion: event.asignacion,
+    );
+
+    result.fold(
+      (failure) =>
+          emit(state.copyWith(guardando: false, mensaje: failure.message)),
+      (unidades) {
+        emit(
+          state.copyWith(
+            guardando: false,
+            exito: true,
+            mensaje:
+                'Se crearon ${unidades.length} '
+                '${_nombreTipo(event.tipo)}.',
+          ),
+        );
+        add(EstructuraProyectoSolicitada(event.proyectoId));
+      },
+    );
+  }
+
+  Future<void> _onAsignacionAccesoriaSolicitada(
+    AsignacionAccesoriaSolicitada event,
+    Emitter<SuperadminState> emit,
+  ) async {
+    emit(state.copyWith(guardando: true, limpiarMensaje: true));
+
+    final result = await _asignarUnidadAccesoriaUseCase(
+      unidadAccesoriaId: event.asignacion.unidadAccesoriaId,
+      asignacion: event.asignacion.asignacion,
+      unidadPrincipalId: event.asignacion.unidadPrincipalId,
+    );
+
+    result.fold(
+      (failure) =>
+          emit(state.copyWith(guardando: false, mensaje: failure.message)),
+      (unidad) {
+        emit(
+          state.copyWith(
+            guardando: false,
+            exito: true,
+            mensaje: 'Asignación de ${unidad.identificador} actualizada.',
+          ),
+        );
+        add(EstructuraProyectoSolicitada(event.proyectoId));
+      },
+    );
+  }
+
+  Future<void> _onAsignacionesAccesoriasSolicitadas(
+    AsignacionesAccesoriasSolicitadas event,
+    Emitter<SuperadminState> emit,
+  ) async {
+    if (event.asignaciones.isEmpty) return;
+
+    emit(state.copyWith(guardando: true, limpiarMensaje: true));
+
+    final fallas = <String>[];
+    var actualizadas = 0;
+
+    for (final asignacion in event.asignaciones) {
+      final result = await _asignarUnidadAccesoriaUseCase(
+        unidadAccesoriaId: asignacion.unidadAccesoriaId,
+        asignacion: asignacion.asignacion,
+        unidadPrincipalId: asignacion.unidadPrincipalId,
+      );
+
+      result.fold(
+        (failure) => fallas.add(failure.message),
+        (_) => actualizadas++,
+      );
+    }
+
+    if (actualizadas > 0) {
+      add(EstructuraProyectoSolicitada(event.proyectoId));
+    }
+
+    if (fallas.isEmpty) {
+      emit(
+        state.copyWith(
+          guardando: false,
+          exito: true,
+          mensaje: 'Se actualizaron $actualizadas asignaciones.',
+        ),
+      );
+      return;
+    }
+
+    emit(
+      state.copyWith(
+        guardando: false,
+        exito: actualizadas > 0,
+        mensaje: actualizadas > 0
+            ? 'Se actualizaron $actualizadas asignaciones. '
+                  '${fallas.length} no se pudieron guardar.'
+            : fallas.first,
+      ),
+    );
+  }
+
   void _onMensajeConsumido(
     SuperadminMensajeConsumido event,
     Emitter<SuperadminState> emit,
   ) {
     emit(state.copyWith(limpiarMensaje: true));
+  }
+
+  void _onUltimoProyectoCreadoConsumido(
+    UltimoProyectoCreadoConsumido event,
+    Emitter<SuperadminState> emit,
+  ) {
+    emit(state.copyWith(limpiarUltimoProyectoCreado: true));
+  }
+
+  String _nombreTipo(TipoUnidadAccesoria tipo) {
+    return switch (tipo) {
+      TipoUnidadAccesoria.estacionamiento => 'estacionamientos',
+      TipoUnidadAccesoria.bodega => 'bodegas',
+    };
   }
 }

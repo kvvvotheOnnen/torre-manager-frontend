@@ -61,6 +61,8 @@ class SuperadminRepositoryImpl implements SuperadminRepositoryInterface {
     required List<DefinicionAgrupacion> agrupaciones,
     required List<InstalacionExtra> instalaciones,
     required List<String> adminIds,
+    int estacionamientos = 0,
+    int bodegas = 0,
   }) {
     return _guard(
       () => _remoteDataSource
@@ -72,6 +74,8 @@ class SuperadminRepositoryImpl implements SuperadminRepositoryInterface {
             agrupaciones: agrupaciones,
             instalaciones: instalaciones,
             adminIds: adminIds,
+            estacionamientos: estacionamientos,
+            bodegas: bodegas,
           )
           .then((dto) => dto.toEntity()),
     );

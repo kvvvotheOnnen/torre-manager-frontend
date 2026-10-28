@@ -28,6 +28,8 @@ abstract interface class SuperadminRepositoryInterface {
     required List<DefinicionAgrupacion> agrupaciones,
     required List<InstalacionExtra> instalaciones,
     required List<String> adminIds,
+    int estacionamientos = 0,
+    int bodegas = 0,
   });
 
   Future<Either<Failure, ProyectoDetalle>> obtenerProyecto(String id);

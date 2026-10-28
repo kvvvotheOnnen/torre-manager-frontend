@@ -6,12 +6,14 @@ import '../../domain/entities/agrupacion.dart';
 import '../../domain/entities/arbol_infraestructura.dart';
 import '../../domain/entities/proyecto.dart';
 import '../../domain/entities/tipo_agrupacion.dart';
+import '../../domain/entities/tipo_asignacion.dart';
 import '../../domain/entities/tipo_unidad_accesoria.dart';
 import '../../domain/entities/unidad_accesoria.dart';
 import '../../domain/repositories/infraestructura_repository.dart';
 import '../datasources/infraestructura_remote_data_source.dart';
 
-class InfraestructuraRepositoryImpl implements InfraestructuraRepositoryInterface {
+class InfraestructuraRepositoryImpl
+    implements InfraestructuraRepositoryInterface {
   const InfraestructuraRepositoryImpl(this._remoteDataSource);
 
   final InfraestructuraRemoteDataSource _remoteDataSource;
@@ -19,14 +21,18 @@ class InfraestructuraRepositoryImpl implements InfraestructuraRepositoryInterfac
   @override
   Future<Either<Failure, Proyecto>> obtenerProyectoDelUsuario() async {
     return _guard(
-      () => _remoteDataSource.obtenerProyectoDelUsuario().then((dto) => dto.toEntity()),
+      () => _remoteDataSource.obtenerProyectoDelUsuario().then(
+        (dto) => dto.toEntity(),
+      ),
     );
   }
 
   @override
   Future<Either<Failure, List<Proyecto>>> listarProyectos() async {
     return _guard(
-      () => _remoteDataSource.listarProyectos().then((dtos) => dtos.map((dto) => dto.toEntity()).toList()),
+      () => _remoteDataSource.listarProyectos().then(
+        (dtos) => dtos.map((dto) => dto.toEntity()).toList(),
+      ),
     );
   }
 
@@ -71,6 +77,7 @@ class InfraestructuraRepositoryImpl implements InfraestructuraRepositoryInterfac
     required String proyectoId,
     required String identificador,
     required TipoUnidadAccesoria tipo,
+    required TipoAsignacion? asignacion,
     String? unidadPrincipalId,
   }) {
     return _guard(
@@ -78,6 +85,7 @@ class InfraestructuraRepositoryImpl implements InfraestructuraRepositoryInterfac
           .crearUnidadAccesoria(
             identificador: identificador,
             tipo: tipo.name,
+            asignacion: asignacion?.name,
             unidadPrincipalId: unidadPrincipalId,
           )
           .then((dto) => dto.toEntity()),
@@ -85,14 +93,35 @@ class InfraestructuraRepositoryImpl implements InfraestructuraRepositoryInterfac
   }
 
   @override
+  Future<Either<Failure, List<UnidadAccesoria>>> crearUnidadesAccesoriasEnLote({
+    required String proyectoId,
+    required TipoUnidadAccesoria tipo,
+    required int cantidad,
+    TipoAsignacion? asignacion,
+  }) {
+    return _guard(
+      () => _remoteDataSource
+          .crearUnidadesAccesoriasEnLote(
+            proyectoId: proyectoId,
+            tipo: tipo.name,
+            cantidad: cantidad,
+            asignacion: asignacion?.name,
+          )
+          .then((dtos) => dtos.map((dto) => dto.toEntity()).toList()),
+    );
+  }
+
+  @override
   Future<Either<Failure, UnidadAccesoria>> asignarUnidadAccesoria({
     required String unidadAccesoriaId,
+    required TipoAsignacion? asignacion,
     String? unidadPrincipalId,
   }) {
     return _guard(
       () => _remoteDataSource
           .asignarUnidadAccesoria(
             unidadAccesoriaId: unidadAccesoriaId,
+            asignacion: asignacion?.name,
             unidadPrincipalId: unidadPrincipalId,
           )
           .then((dto) => dto.toEntity()),
@@ -104,7 +133,9 @@ class InfraestructuraRepositoryImpl implements InfraestructuraRepositoryInterfac
     required String proyectoId,
   }) {
     return _guard(
-      () => _remoteDataSource.obtenerArbol().then((dto) => dto.toEntity()),
+      () => _remoteDataSource
+          .obtenerArbol(proyectoId: proyectoId)
+          .then((dto) => dto.toEntity()),
     );
   }
 
@@ -134,11 +165,15 @@ class InfraestructuraRepositoryImpl implements InfraestructuraRepositoryInterfac
       }
 
       if (statusCode == 403) {
-        return const Left(ServerFailure('No tienes permisos para esta acción.'));
+        return const Left(
+          ServerFailure('No tienes permisos para esta acción.'),
+        );
       }
 
       if (statusCode == 401) {
-        return const Left(ServerFailure('Sesión expirada. Inicia sesión nuevamente.'));
+        return const Left(
+          ServerFailure('Sesión expirada. Inicia sesión nuevamente.'),
+        );
       }
 
       return const Left(ServerFailure());

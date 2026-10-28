@@ -24,6 +24,8 @@ class AppConfig {
       '$infraestructuraBasePath/agrupaciones';
   static const String infraestructuraUnidadesAccesoriasPath =
       '$infraestructuraBasePath/unidades-accesorias';
+  static const String infraestructuraUnidadesAccesoriasLotePath =
+      '$infraestructuraBasePath/unidades-accesorias/lote';
   static const String infraestructuraArbolPath =
       '$infraestructuraBasePath/arbol';
   static const String infraestructuraVistaPreviaPath =

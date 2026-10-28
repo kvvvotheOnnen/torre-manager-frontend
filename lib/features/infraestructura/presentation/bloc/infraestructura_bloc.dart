@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../domain/entities/arbol_infraestructura.dart';
 import '../../domain/entities/tipo_agrupacion.dart';
+import '../../domain/entities/tipo_asignacion.dart';
 import '../../domain/entities/tipo_unidad_accesoria.dart';
 import '../../domain/usecases/asignar_unidad_accesoria_usecase.dart';
 import '../../domain/usecases/crear_unidad_accesoria_usecase.dart';
@@ -150,6 +151,7 @@ class InfraestructuraBloc extends Bloc<InfraestructuraEvent, InfraestructuraStat
       proyectoId: event.proyectoId,
       identificador: event.identificador,
       tipo: event.tipo,
+      asignacion: event.asignacion,
       unidadPrincipalId: event.unidadPrincipalId,
     );
 
@@ -182,6 +184,7 @@ class InfraestructuraBloc extends Bloc<InfraestructuraEvent, InfraestructuraStat
 
     final result = await _asignarUnidadAccesoriaUseCase(
       unidadAccesoriaId: event.unidadAccesoriaId,
+      asignacion: event.asignacion,
       unidadPrincipalId: event.unidadPrincipalId,
     );
 

@@ -40,12 +40,14 @@ class InfraestructuraUnidadAccesoriaCreada extends InfraestructuraEvent {
     required this.proyectoId,
     required this.identificador,
     required this.tipo,
+    required this.asignacion,
     this.unidadPrincipalId,
   });
 
   final String proyectoId;
   final String identificador;
   final TipoUnidadAccesoria tipo;
+  final TipoAsignacion? asignacion;
   final String? unidadPrincipalId;
 }
 
@@ -53,11 +55,13 @@ class InfraestructuraAccesoriaAsignada extends InfraestructuraEvent {
   const InfraestructuraAccesoriaAsignada({
     required this.proyectoId,
     required this.unidadAccesoriaId,
+    required this.asignacion,
     this.unidadPrincipalId,
   });
 
   final String proyectoId;
   final String unidadAccesoriaId;
+  final TipoAsignacion? asignacion;
   final String? unidadPrincipalId;
 }
 

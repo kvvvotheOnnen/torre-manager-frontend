@@ -1,3 +1,4 @@
+import '../../domain/entities/tipo_asignacion.dart';
 import '../../domain/entities/tipo_unidad_accesoria.dart';
 import '../../domain/entities/unidad_accesoria.dart';
 
@@ -7,6 +8,7 @@ class UnidadAccesoriaDTO {
     required this.proyectoId,
     required this.identificador,
     required this.tipo,
+    required this.asignacion,
     this.unidadPrincipalId,
   });
 
@@ -14,6 +16,7 @@ class UnidadAccesoriaDTO {
   final String proyectoId;
   final String identificador;
   final String tipo;
+  final String? asignacion;
   final String? unidadPrincipalId;
 
   factory UnidadAccesoriaDTO.fromJson(Map<String, dynamic> json) {
@@ -22,6 +25,7 @@ class UnidadAccesoriaDTO {
       proyectoId: '${json['proyecto_id']}',
       identificador: (json['identificador'] ?? '') as String,
       tipo: (json['tipo'] ?? '') as String,
+      asignacion: json['asignacion'] as String?,
       unidadPrincipalId: json['unidad_principal_id'] == null
           ? null
           : '${json['unidad_principal_id']}',
@@ -34,6 +38,7 @@ class UnidadAccesoriaDTO {
       proyectoId: proyectoId,
       identificador: identificador,
       tipo: tipoUnidadAccesoriaFromString(tipo),
+      asignacion: tipoAsignacionFromStringOrNull(asignacion),
       unidadPrincipalId: unidadPrincipalId,
     );
   }

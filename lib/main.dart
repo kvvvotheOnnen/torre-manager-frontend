@@ -17,6 +17,7 @@ import 'features/infraestructura/data/datasources/infraestructura_remote_data_so
 import 'features/infraestructura/data/repositories/infraestructura_repository_impl.dart';
 import 'features/infraestructura/domain/usecases/asignar_unidad_accesoria_usecase.dart';
 import 'features/infraestructura/domain/usecases/crear_unidad_accesoria_usecase.dart';
+import 'features/infraestructura/domain/usecases/crear_unidades_accesorias_en_lote_usecase.dart';
 import 'features/infraestructura/domain/usecases/obtener_arbol_infraestructura_usecase.dart';
 import 'features/infraestructura/domain/usecases/obtener_proyecto_del_usuario_usecase.dart';
 import 'features/infraestructura/domain/usecases/registrar_agrupacion_en_cascada_usecase.dart';
@@ -100,6 +101,14 @@ class _TorreManagerAppState extends State<TorreManagerApp> {
       obtenerProyectoUseCase: ObtenerProyectoUseCase(superadminRepository),
       actualizarProyectoUseCase: ActualizarProyectoUseCase(
         superadminRepository,
+      ),
+      obtenerEstructuraUseCase: ObtenerArbolInfraestructuraUseCase(
+        infraestructuraRepository,
+      ),
+      crearUnidadesAccesoriasEnLoteUseCase:
+          CrearUnidadesAccesoriasEnLoteUseCase(infraestructuraRepository),
+      asignarUnidadAccesoriaUseCase: AsignarUnidadAccesoriaUseCase(
+        infraestructuraRepository,
       ),
     );
 

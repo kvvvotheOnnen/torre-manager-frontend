@@ -8,10 +8,12 @@ class ArbolInfraestructuraDTO {
   const ArbolInfraestructuraDTO({
     required this.proyecto,
     required this.agrupaciones,
+    required this.unidadesAccesorias,
   });
 
   final ProyectoDTO proyecto;
   final List<AgrupacionConUnidadesDTO> agrupaciones;
+  final List<UnidadAccesoriaDTO> unidadesAccesorias;
 
   factory ArbolInfraestructuraDTO.fromJson(Map<String, dynamic> json) {
     return ArbolInfraestructuraDTO(
@@ -23,6 +25,11 @@ class ArbolInfraestructuraDTO {
                 (item as Map<String, dynamic>),
               ))
           .toList(),
+      unidadesAccesorias: ((json['unidades_accesorias'] ?? const []) as List)
+          .map((item) => UnidadAccesoriaDTO.fromJson(
+                (item as Map<String, dynamic>),
+              ))
+          .toList(),
     );
   }
 
@@ -30,6 +37,7 @@ class ArbolInfraestructuraDTO {
     return ArbolInfraestructura(
       proyecto: proyecto.toEntity(),
       agrupaciones: agrupaciones.map((item) => item.toEntity()).toList(),
+      unidadesAccesorias: unidadesAccesorias.map((item) => item.toEntity()).toList(),
     );
   }
 }

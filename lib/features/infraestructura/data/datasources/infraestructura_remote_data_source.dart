@@ -35,10 +35,7 @@ class InfraestructuraRemoteDataSource {
   }) async {
     final response = await _dio.post<Map<String, dynamic>>(
       AppConfig.infraestructuraProyectosPath,
-      data: {
-        'nombre': nombre,
-        'descripcion': ?descripcion,
-      },
+      data: {'nombre': nombre, 'descripcion': ?descripcion},
     );
 
     return ProyectoDTO.fromJson(response.data ?? const <String, dynamic>{});
@@ -83,7 +80,8 @@ class InfraestructuraRemoteDataSource {
       },
     );
 
-    final identificadores = (response.data?['identificadores'] ?? const []) as List;
+    final identificadores =
+        (response.data?['identificadores'] ?? const []) as List;
 
     return identificadores.cast<String>();
   }
@@ -91,6 +89,7 @@ class InfraestructuraRemoteDataSource {
   Future<UnidadAccesoriaDTO> crearUnidadAccesoria({
     required String identificador,
     required String tipo,
+    required String? asignacion,
     String? unidadPrincipalId,
   }) async {
     final response = await _dio.post<Map<String, dynamic>>(
@@ -98,30 +97,69 @@ class InfraestructuraRemoteDataSource {
       data: {
         'identificador': identificador,
         'tipo': tipo,
+        'asignacion': ?asignacion,
         'unidad_principal_id': ?unidadPrincipalId,
       },
     );
 
-    return UnidadAccesoriaDTO.fromJson(response.data ?? const <String, dynamic>{});
+    return UnidadAccesoriaDTO.fromJson(
+      response.data ?? const <String, dynamic>{},
+    );
+  }
+
+  Future<List<UnidadAccesoriaDTO>> crearUnidadesAccesoriasEnLote({
+    required String proyectoId,
+    required String tipo,
+    required int cantidad,
+    String? asignacion,
+  }) async {
+    final response = await _dio.post<Map<String, dynamic>>(
+      AppConfig.infraestructuraUnidadesAccesoriasLotePath,
+      data: {
+        'proyecto_id': proyectoId,
+        'tipo': tipo,
+        'cantidad': cantidad,
+        'asignacion': ?asignacion,
+      },
+    );
+
+    final unidades = (response.data?['unidades'] ?? const []) as List;
+
+    return unidades
+        .map(
+          (item) => UnidadAccesoriaDTO.fromJson(item as Map<String, dynamic>),
+        )
+        .toList();
   }
 
   Future<UnidadAccesoriaDTO> asignarUnidadAccesoria({
     required String unidadAccesoriaId,
+    required String? asignacion,
     String? unidadPrincipalId,
   }) async {
     final response = await _dio.patch<Map<String, dynamic>>(
       '${AppConfig.infraestructuraUnidadesAccesoriasPath}/$unidadAccesoriaId/asignacion',
-      data: {'unidad_principal_id': unidadPrincipalId},
+      data: {
+        'asignacion': ?asignacion,
+        'unidad_principal_id': unidadPrincipalId,
+      },
     );
 
-    return UnidadAccesoriaDTO.fromJson(response.data ?? const <String, dynamic>{});
+    return UnidadAccesoriaDTO.fromJson(
+      response.data ?? const <String, dynamic>{},
+    );
   }
 
-  Future<ArbolInfraestructuraDTO> obtenerArbol() async {
+  Future<ArbolInfraestructuraDTO> obtenerArbol({
+    required String proyectoId,
+  }) async {
     final response = await _dio.get<Map<String, dynamic>>(
       AppConfig.infraestructuraArbolPath,
+      queryParameters: {'proyecto_id': proyectoId},
     );
 
-    return ArbolInfraestructuraDTO.fromJson(response.data ?? const <String, dynamic>{});
+    return ArbolInfraestructuraDTO.fromJson(
+      response.data ?? const <String, dynamic>{},
+    );
   }
 }

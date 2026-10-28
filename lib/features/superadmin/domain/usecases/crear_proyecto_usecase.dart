@@ -21,6 +21,8 @@ class CrearProyectoUseCase {
     required List<DefinicionAgrupacion> agrupaciones,
     required List<InstalacionExtra> instalaciones,
     required List<String> adminIds,
+    int estacionamientos = 0,
+    int bodegas = 0,
   }) {
     final nombreTrim = nombre.trim();
 
@@ -48,6 +50,18 @@ class CrearProyectoUseCase {
         Left(ValidationFailure('Debes asignar al menos un administrador.')),
       );
     }
+    if (estacionamientos < 0 || estacionamientos > 999) {
+      return Future.value(
+        Left(
+          ValidationFailure('Los estacionamientos deben estar entre 0 y 999.'),
+        ),
+      );
+    }
+    if (bodegas < 0 || bodegas > 999) {
+      return Future.value(
+        Left(ValidationFailure('Las bodegas deben estar entre 0 y 999.')),
+      );
+    }
 
     return _repository.crearProyecto(
       nombre: nombreTrim,
@@ -57,6 +71,8 @@ class CrearProyectoUseCase {
       agrupaciones: agrupaciones,
       instalaciones: instalaciones,
       adminIds: adminIds,
+      estacionamientos: estacionamientos,
+      bodegas: bodegas,
     );
   }
 }
