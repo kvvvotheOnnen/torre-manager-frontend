@@ -30,6 +30,7 @@ import 'package:torre_manager_frontend/features/superadmin/presentation/bloc/sup
 
 class _FakeSuperadminRepository implements SuperadminRepositoryInterface {
   String? proyectoActualizadoId;
+  Failure? crearProyectoFailure;
 
   @override
   Future<Either<Failure, ProyectoDetalle>> obtenerProyecto(String id) async {
@@ -92,6 +93,9 @@ class _FakeSuperadminRepository implements SuperadminRepositoryInterface {
     int estacionamientos = 0,
     int bodegas = 0,
   }) async {
+    final failure = crearProyectoFailure;
+    if (failure != null) return Left(failure);
+
     return Right(_detalle(nombre: nombre, id: '1'));
   }
 
@@ -298,6 +302,123 @@ void main() {
     );
 
     expect(repository.proyectoActualizadoId, '7');
+  });
+
+  test(
+    'al fallar la creacion emite el error y no marca el proyecto creado',
+    () async {
+      repository.crearProyectoFailure = const ValidationFailure(
+        'El nombre ya está registrado.',
+      );
+
+      bloc.add(
+        const ProyectoCreado(
+          nombre: 'Proyecto nuevo',
+          descripcion: null,
+          tipoCondominio: TipoCondominio.torres,
+          modulos: [ModuloSistema.infraestructura],
+          agrupaciones: [
+            DefinicionAgrupacion(
+              nombre: 'Torre A',
+              tipo: TipoAgrupacion.torre,
+              pisoDesde: 1,
+              pisoHasta: 1,
+              unidadesPorPiso: 2,
+            ),
+          ],
+          instalaciones: [],
+          adminIds: ['2'],
+        ),
+      );
+
+      await expectLater(
+        bloc.stream,
+        emitsThrough(
+          isA<SuperadminState>()
+              .having(
+                (s) => s.mensaje,
+                'mensaje',
+                'El nombre ya está registrado.',
+              )
+              .having((s) => s.exito, 'exito', false)
+              .having((s) => s.guardando, 'guardando', false)
+              .having(
+                (s) => s.ultimoProyectoCreado,
+                'ultimoProyectoCreado',
+                isNull,
+              ),
+        ),
+      );
+    },
+  );
+
+  test('permite reintentar la creacion despues de un fallo', () async {
+    repository.crearProyectoFailure = const ValidationFailure('Error previo.');
+
+    bloc.add(
+      const ProyectoCreado(
+        nombre: 'Proyecto nuevo',
+        descripcion: null,
+        tipoCondominio: TipoCondominio.torres,
+        modulos: [ModuloSistema.infraestructura],
+        agrupaciones: [
+          DefinicionAgrupacion(
+            nombre: 'Torre A',
+            tipo: TipoAgrupacion.torre,
+            pisoDesde: 1,
+            pisoHasta: 1,
+            unidadesPorPiso: 2,
+          ),
+        ],
+        instalaciones: [],
+        adminIds: ['2'],
+      ),
+    );
+
+    await expectLater(
+      bloc.stream,
+      emitsThrough(
+        isA<SuperadminState>()
+            .having((s) => s.mensaje, 'mensaje', 'Error previo.')
+            .having((s) => s.exito, 'exito', false),
+      ),
+    );
+
+    repository.crearProyectoFailure = null;
+
+    bloc.add(
+      const ProyectoCreado(
+        nombre: 'Proyecto nuevo',
+        descripcion: null,
+        tipoCondominio: TipoCondominio.torres,
+        modulos: [ModuloSistema.infraestructura],
+        agrupaciones: [
+          DefinicionAgrupacion(
+            nombre: 'Torre A',
+            tipo: TipoAgrupacion.torre,
+            pisoDesde: 1,
+            pisoHasta: 1,
+            unidadesPorPiso: 2,
+          ),
+        ],
+        instalaciones: [],
+        adminIds: ['2'],
+      ),
+    );
+
+    await expectLater(
+      bloc.stream,
+      emitsThrough(
+        isA<SuperadminState>()
+            .having((s) => s.mensaje, 'mensaje', contains('creado'))
+            .having((s) => s.exito, 'exito', true)
+            .having(
+              (s) => s.ultimoProyectoCreado?.id,
+              'ultimoProyectoCreado',
+              '1',
+            ),
+      ),
+    );
   });
 
   test('valida el nombre vacío sin llamar al repositorio', () async {

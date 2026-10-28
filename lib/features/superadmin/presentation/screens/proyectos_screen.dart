@@ -34,6 +34,15 @@ class ProyectosScreen extends StatelessWidget {
         listener: (context, state) {
           if (state.mensaje != null) {
             final theme = Theme.of(context);
+
+            // Cuando un formulario del superadmin está en primer plano y
+            // el mensaje es un error, la propia pantalla del formulario
+            // se encarga de mostrarlo y consumirlo.
+            final ocultaAtras = ModalRoute.of(context)?.isCurrent == false;
+            if (ocultaAtras && !state.exito) {
+              return;
+            }
+
             ScaffoldMessenger.of(context)
               ..hideCurrentSnackBar()
               ..showSnackBar(
@@ -401,12 +410,17 @@ class _ProyectoFormScreenState extends State<_ProyectoFormScreen> {
               !current.guardando &&
               current.mensaje != null;
         }
-        return current.ultimoProyectoCreado != null;
+        return current.ultimoProyectoCreado != null ||
+            (!current.guardando && !current.exito && current.mensaje != null);
       },
       listener: (context, state) {
         if (_esEdicion) {
           if (!state.exito) {
             setState(() => _guardandoProyecto = false);
+            if (state.mensaje != null) {
+              _snack(state.mensaje!, error: true);
+              _superadminBloc.add(const SuperadminMensajeConsumido());
+            }
             return;
           }
 
@@ -417,10 +431,18 @@ class _ProyectoFormScreenState extends State<_ProyectoFormScreen> {
           return;
         }
 
-        _navegacionHecha = true;
-
         final proyecto = state.ultimoProyectoCreado;
-        if (proyecto == null) return;
+        if (proyecto == null) {
+          // Fallo al crear: se queda en el formulario para corregir
+          // y volver a intentar sin perder los datos ingresados.
+          if (state.mensaje != null) {
+            _snack(state.mensaje!, error: true);
+            _superadminBloc.add(const SuperadminMensajeConsumido());
+          }
+          return;
+        }
+
+        _navegacionHecha = true;
 
         _superadminBloc.add(const UltimoProyectoCreadoConsumido());
 
@@ -560,6 +582,24 @@ class _ProyectoFormScreenState extends State<_ProyectoFormScreen> {
                                         border: OutlineInputBorder(),
                                         isDense: true,
                                       ),
+                                      validator: (value) {
+                                        final texto = value?.trim() ?? '';
+                                        if (texto.isEmpty) {
+                                          return form.nombre.text
+                                                  .trim()
+                                                  .isNotEmpty
+                                              ? 'Ingresa la capacidad'
+                                              : null;
+                                        }
+                                        final capacidad = int.tryParse(texto);
+                                        if (capacidad == null) {
+                                          return 'Debe ser un número';
+                                        }
+                                        if (capacidad < 1 || capacidad > 500) {
+                                          return 'Entre 1 y 500';
+                                        }
+                                        return null;
+                                      },
                                     ),
                                   ),
                                   IconButton(
@@ -578,6 +618,10 @@ class _ProyectoFormScreenState extends State<_ProyectoFormScreen> {
                                   isDense: true,
                                   counterText: '',
                                 ),
+                                validator: (value) =>
+                                    (value?.trim().length ?? 0) > 100
+                                    ? 'Máximo 100 caracteres'
+                                    : null,
                               ),
                             ],
                           ),

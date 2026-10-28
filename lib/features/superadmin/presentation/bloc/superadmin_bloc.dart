@@ -332,8 +332,13 @@ class SuperadminBloc extends Bloc<SuperadminEvent, SuperadminState> {
     );
 
     await result.fold(
-      (failure) async =>
-          emit(state.copyWith(guardando: false, mensaje: failure.message)),
+      (failure) async => emit(
+        state.copyWith(
+          guardando: false,
+          exito: false,
+          mensaje: failure.message,
+        ),
+      ),
       (proyecto) async {
         emit(
           state.copyWith(
@@ -434,7 +439,13 @@ class SuperadminBloc extends Bloc<SuperadminEvent, SuperadminState> {
 
     await result.fold(
       (failure) async {
-        emit(state.copyWith(guardando: false, mensaje: failure.message));
+        emit(
+          state.copyWith(
+            guardando: false,
+            exito: false,
+            mensaje: failure.message,
+          ),
+        );
       },
       (proyecto) async {
         emit(
