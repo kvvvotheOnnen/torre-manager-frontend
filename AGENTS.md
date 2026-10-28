@@ -1,6 +1,8 @@
 # Torre Manager - Contexto para el Agente de IA y Directrices de Arquitectura
 
 > **Regla de Sincronización (obligatoria):** este archivo es el **documento maestro** y vive en la raíz del monorepo (`/home/koke/code/torre-manager/AGENTS.md`). **Toda actualización que se realice aquí debe reflejarse de inmediato en el `AGENTS.md` de ambos repositorios** (`torre-manager-backend/AGENTS.md` y `torre_manager_frontend/AGENTS.md`). Los tres archivos deben permanecer **idénticos** y están versionados en Git; nunca editar el `AGENTS.md` de un repositorio de forma aislada. Tras cualquier cambio, copiar el maestro a ambos repos y commitear.
+> 
+> **Regla de ramas en git:** toda task encontrada en task.md en la ruta que contiene ambos repositorios debe tener su propia rama con el formato "feature/[nombredelusuario]/[nombretask]/[fechadeldia]'", si no hay antecedentes o seguridad del nombre del usuario, preguntar antes de crear de la rama. los push al repositorio se hacen manuales, todo lo demas como creacion de la rama, git adds, git commits, lo puede hacer el agente.
 
 ## 1. Visión General del Proyecto
 
@@ -37,6 +39,14 @@ Cada nueva funcionalidad (ej. `Paqueteria`, `Quincho`, `Auth`) debe seguir esta 
 * **Infraestructura:** El directorio `app/` por defecto de Laravel se usa estrictamente para la infraestructura del framework (Middlewares, Providers y Controladores HTTP delgados).
 * **Autenticación y Seguridad:** Gestionada vía Laravel Sanctum (JWT/Tokens).
 * **Base de Datos:** MySQL/PostgreSQL mediante Eloquent ORM.
+
+### 3.1 Gestión de Base de Datos, Datos de Prueba y Sincronización
+
+- **Estándar Obligatorio (Migrations, Factories y Seeders):** Para cualquier cambio estructural o inserción de datos (dummy o estáticos), el agente debe utilizar estrictamente el ecosistema nativo de Laravel. **Queda terminantemente prohibido** sugerir, generar o utilizar scripts `.sql` manuales para compartir datos entre los entornos de los desarrolladores.
+
+- **Sincronización Local:** Todo dato de prueba masivo debe programarse mediante **Factories** y ejecutarse a través de **Seeders**. El agente debe asumir que la sincronización de la base de datos local (PostgreSQL en Docker) entre desarrolladores se realiza exclusivamente mediante el comando `php artisan migrate:fresh --seed`.
+
+- **Seguridad y Credenciales:** Ningún Seeder versionado en el repositorio debe contener contraseñas o tokens sensibles en duro (hardcoded). Cualquier Seeder que cree usuarios administradores o requiera credenciales vitales debe inyectarlas leyendo el archivo de entorno, utilizando el formato `env('KEY', 'valor_default_desarrollo')`. Solo los datos "basura" (dummy) pueden generarse sin validación de entorno.
 
 ## 4. Especificaciones del Frontend (Flutter)
 
