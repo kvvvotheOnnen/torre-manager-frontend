@@ -7,7 +7,6 @@ import '../../../infraestructura/domain/entities/arbol_infraestructura.dart';
 import '../../../infraestructura/domain/entities/tipo_agrupacion.dart';
 import '../../../infraestructura/domain/entities/tipo_unidad_accesoria.dart';
 import '../../../infraestructura/domain/entities/unidad_accesoria.dart';
-import '../../domain/entities/definicion_agrupacion.dart';
 import '../../domain/entities/instalacion_extra.dart';
 import '../../domain/entities/modulo_sistema.dart';
 import '../../domain/entities/proyecto_detalle.dart';
@@ -17,6 +16,7 @@ import '../bloc/administradores_bloc.dart';
 import '../bloc/superadmin_bloc.dart';
 import '../widgets/cantidad_accesorias_dialog.dart';
 import 'accesorias_proyecto_screen.dart';
+import 'proyecto_wizard_screen.dart';
 
 class ProyectosScreen extends StatefulWidget {
   const ProyectosScreen({super.key});
@@ -107,7 +107,26 @@ class _ProyectosScreenState extends State<ProyectosScreen> {
   }
 }
 
-void _abrirFormulario(BuildContext context, {String? proyectoId}) {
+Future<void> _abrirFormulario(
+  BuildContext context, {
+  String? proyectoId,
+}) async {
+  if (proyectoId == null) {
+    final creado = await Navigator.of(context).push<bool>(
+      MaterialPageRoute<bool>(builder: (_) => const ProyectoWizardScreen()),
+    );
+
+    if (creado == true && context.mounted) {
+      context.read<SuperadminBloc>().add(const ProyectosSolicitados());
+      ScaffoldMessenger.of(context)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(
+          const SnackBar(content: Text('Proyecto creado correctamente.')),
+        );
+    }
+    return;
+  }
+
   Navigator.of(context).push(
     MaterialPageRoute<void>(
       builder: (_) => _ProyectoFormScreen(proyectoId: proyectoId),
@@ -157,13 +176,10 @@ class _TarjetaProyecto extends StatelessWidget {
 }
 
 class _ProyectoFormScreen extends StatefulWidget {
-  const _ProyectoFormScreen({this.proyectoId, this.tipoAccesoriasInicial});
+  const _ProyectoFormScreen({required this.proyectoId});
 
-  /// Si es `null` el formulario crea un proyecto; si tiene valor, lo edita.
-  final String? proyectoId;
-
-  /// Abre la gestión de accesorias al entrar en modo edición.
-  final TipoUnidadAccesoria? tipoAccesoriasInicial;
+  /// Proyecto que se edita.
+  final String proyectoId;
 
   @override
   State<_ProyectoFormScreen> createState() => _ProyectoFormScreenState();
@@ -180,23 +196,11 @@ class _ProyectoFormScreenState extends State<_ProyectoFormScreen> {
   bool _navegacionHecha = false;
   bool _guardandoProyecto = false;
   bool _eliminandoProyecto = false;
-  int _estacionamientosIniciales = 0;
-  int _bodegasIniciales = 0;
 
   TipoCondominio _tipo = TipoCondominio.torres;
   final Set<ModuloSistema> _modulos = {ModuloSistema.infraestructura};
   final List<_InstalacionForm> _instalaciones = [];
   final Set<String> _adminIds = {};
-
-  final List<_AgrupacionPisosForm> _torres = [
-    _AgrupacionPisosForm(nombre: 'Torre A'),
-  ];
-  final List<_ManzanaForm> _manzanas = [_ManzanaForm(nombre: 'Manzana 1')];
-  final _AgrupacionPisosForm _edificio = _AgrupacionPisosForm(
-    nombre: 'Edificio',
-  );
-
-  bool get _esEdicion => widget.proyectoId != null;
 
   @override
   void initState() {
@@ -204,25 +208,9 @@ class _ProyectoFormScreenState extends State<_ProyectoFormScreen> {
     context.read<AdministradoresBloc>().add(const AdministradoresSolicitados());
 
     _superadminBloc = context.read<SuperadminBloc>();
-
-    if (!_esEdicion) {
-      _superadminBloc.add(const UltimoProyectoCreadoConsumido());
-    }
-
-    if (_esEdicion) {
-      _superadminBloc.add(ProyectoEdicionSolicitada(widget.proyectoId!));
-      _superadminBloc.add(EstructuraProyectoSolicitada(widget.proyectoId!));
-      _suscripcion = _superadminBloc.stream.listen(_onEstado);
-
-      final tipoInicial = widget.tipoAccesoriasInicial;
-      if (tipoInicial != null) {
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (mounted) {
-            _abrirAccesorias(tipoInicial, expandir: true);
-          }
-        });
-      }
-    }
+    _superadminBloc.add(ProyectoEdicionSolicitada(widget.proyectoId));
+    _superadminBloc.add(EstructuraProyectoSolicitada(widget.proyectoId));
+    _suscripcion = _superadminBloc.stream.listen(_onEstado);
   }
 
   void _onEstado(SuperadminState state) {
@@ -265,21 +253,12 @@ class _ProyectoFormScreenState extends State<_ProyectoFormScreen> {
   @override
   void dispose() {
     _suscripcion?.cancel();
-    if (_esEdicion) {
-      _superadminBloc.add(const ProyectoEdicionFinalizada());
-    }
+    _superadminBloc.add(const ProyectoEdicionFinalizada());
     _nombreController.dispose();
     _descripcionController.dispose();
     for (final instalacion in _instalaciones) {
       instalacion.dispose();
     }
-    for (final torre in _torres) {
-      torre.dispose();
-    }
-    for (final manzana in _manzanas) {
-      manzana.dispose();
-    }
-    _edificio.dispose();
     super.dispose();
   }
 
@@ -289,44 +268,6 @@ class _ProyectoFormScreenState extends State<_ProyectoFormScreen> {
 
   void _quitarInstalacion(int index) {
     setState(() => _instalaciones.removeAt(index).dispose());
-  }
-
-  void _agregarTorre() {
-    setState(
-      () => _torres.add(
-        _AgrupacionPisosForm(nombre: 'Torre ${_torres.length + 1}'),
-      ),
-    );
-  }
-
-  void _agregarManzana() {
-    setState(
-      () => _manzanas.add(
-        _ManzanaForm(nombre: 'Manzana ${_manzanas.length + 1}'),
-      ),
-    );
-  }
-
-  List<DefinicionAgrupacion> _construirAgrupaciones() {
-    final agrupaciones = <DefinicionAgrupacion>[];
-
-    if (_tipo == TipoCondominio.torres || _tipo == TipoCondominio.mixto) {
-      for (final torre in _torres) {
-        agrupaciones.add(torre.toDefinicion(TipoAgrupacion.torre));
-      }
-    }
-
-    if (_tipo == TipoCondominio.casas || _tipo == TipoCondominio.mixto) {
-      for (final manzana in _manzanas) {
-        agrupaciones.add(manzana.toDefinicion());
-      }
-    }
-
-    if (_tipo == TipoCondominio.edificio) {
-      agrupaciones.add(_edificio.toDefinicion(TipoAgrupacion.edificio));
-    }
-
-    return agrupaciones;
   }
 
   List<InstalacionExtra> _construirInstalaciones() {
@@ -361,46 +302,21 @@ class _ProyectoFormScreenState extends State<_ProyectoFormScreen> {
         : _descripcionController.text;
     final instalaciones = _construirInstalaciones();
 
-    if (_esEdicion) {
-      setState(() => _guardandoProyecto = true);
-      _superadminBloc.add(
-        ProyectoActualizado(
-          id: widget.proyectoId!,
-          nombre: _nombreController.text,
-          descripcion: descripcion,
-          modulos: _modulos.toList(),
-          instalaciones: instalaciones,
-          adminIds: _adminIds.toList(),
-        ),
-      );
-
-      return;
-    }
-
-    final agrupaciones = _construirAgrupaciones();
-    if (agrupaciones.isEmpty) {
-      _snack('Debes definir al menos una agrupación.', error: true);
-      return;
-    }
-
+    setState(() => _guardandoProyecto = true);
     _superadminBloc.add(
-      ProyectoCreado(
+      ProyectoActualizado(
+        id: widget.proyectoId,
         nombre: _nombreController.text,
         descripcion: descripcion,
-        tipoCondominio: _tipo,
         modulos: _modulos.toList(),
-        agrupaciones: agrupaciones,
         instalaciones: instalaciones,
         adminIds: _adminIds.toList(),
-        estacionamientos: _estacionamientosIniciales,
-        bodegas: _bodegasIniciales,
       ),
     );
   }
 
   Future<void> _confirmarEliminacion() async {
     final proyectoId = widget.proyectoId;
-    if (proyectoId == null) return;
 
     final nombre = _nombreController.text.trim();
     final confirmacionController = TextEditingController();
@@ -484,70 +400,46 @@ class _ProyectoFormScreenState extends State<_ProyectoFormScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final titulo = _esEdicion ? 'Editar proyecto' : 'Nuevo proyecto';
 
     return BlocListener<SuperadminBloc, SuperadminState>(
       listenWhen: (previous, current) {
         if (_navegacionHecha) return false;
-        if (_esEdicion) {
-          final eliminado = current.proyectoEliminadoId == widget.proyectoId;
-          final falloEliminacion =
-              _eliminandoProyecto &&
-              !current.eliminando &&
-              current.mensaje != null;
-          return eliminado ||
-              falloEliminacion ||
-              (_guardandoProyecto &&
-                  !current.guardando &&
-                  current.mensaje != null);
-        }
-        return current.ultimoProyectoCreado != null ||
-            (!current.guardando && !current.exito && current.mensaje != null);
+        final eliminado = current.proyectoEliminadoId == widget.proyectoId;
+        final falloEliminacion =
+            _eliminandoProyecto &&
+            !current.eliminando &&
+            current.mensaje != null;
+        return eliminado ||
+            falloEliminacion ||
+            (_guardandoProyecto &&
+                !current.guardando &&
+                current.mensaje != null);
       },
       listener: (context, state) {
-        if (_esEdicion) {
-          if (state.proyectoEliminadoId == widget.proyectoId) {
-            _navegacionHecha = true;
-            final mensaje = state.mensaje;
-            if (mensaje != null) {
-              _snack(mensaje);
-              _superadminBloc.add(const SuperadminMensajeConsumido());
-            }
-            if (Navigator.of(context).canPop()) {
-              Navigator.of(context).pop();
-            }
-            return;
-          }
-
-          if (_eliminandoProyecto && !state.eliminando) {
-            _eliminandoProyecto = false;
-            if (state.mensaje != null) {
-              _snack(state.mensaje!, error: true);
-              _superadminBloc.add(const SuperadminMensajeConsumido());
-            }
-            return;
-          }
-
-          if (!state.exito) {
-            setState(() => _guardandoProyecto = false);
-            if (state.mensaje != null) {
-              _snack(state.mensaje!, error: true);
-              _superadminBloc.add(const SuperadminMensajeConsumido());
-            }
-            return;
-          }
-
+        if (state.proyectoEliminadoId == widget.proyectoId) {
           _navegacionHecha = true;
+          final mensaje = state.mensaje;
+          if (mensaje != null) {
+            _snack(mensaje);
+            _superadminBloc.add(const SuperadminMensajeConsumido());
+          }
           if (Navigator.of(context).canPop()) {
             Navigator.of(context).pop();
           }
           return;
         }
 
-        final proyecto = state.ultimoProyectoCreado;
-        if (proyecto == null) {
-          // Fallo al crear: se queda en el formulario para corregir
-          // y volver a intentar sin perder los datos ingresados.
+        if (_eliminandoProyecto && !state.eliminando) {
+          _eliminandoProyecto = false;
+          if (state.mensaje != null) {
+            _snack(state.mensaje!, error: true);
+            _superadminBloc.add(const SuperadminMensajeConsumido());
+          }
+          return;
+        }
+
+        if (!state.exito) {
+          setState(() => _guardandoProyecto = false);
           if (state.mensaje != null) {
             _snack(state.mensaje!, error: true);
             _superadminBloc.add(const SuperadminMensajeConsumido());
@@ -556,29 +448,15 @@ class _ProyectoFormScreenState extends State<_ProyectoFormScreen> {
         }
 
         _navegacionHecha = true;
-
-        _superadminBloc.add(const UltimoProyectoCreadoConsumido());
-
-        final tipoInicial = _estacionamientosIniciales > 0
-            ? TipoUnidadAccesoria.estacionamiento
-            : _bodegasIniciales > 0
-            ? TipoUnidadAccesoria.bodega
-            : null;
-
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute<void>(
-            builder: (_) => _ProyectoFormScreen(
-              proyectoId: proyecto.id,
-              tipoAccesoriasInicial: tipoInicial,
-            ),
-          ),
-        );
+        if (Navigator.of(context).canPop()) {
+          Navigator.of(context).pop();
+        }
       },
       child: Scaffold(
-        appBar: AppBar(title: Text(titulo)),
+        appBar: AppBar(title: const Text('Editar proyecto')),
         body: BlocBuilder<SuperadminBloc, SuperadminState>(
           builder: (context, superadminState) {
-            if (_esEdicion && superadminState.proyectoEnEdicion == null) {
+            if (superadminState.proyectoEnEdicion == null) {
               if (superadminState.cargandoDetalle) {
                 return const Center(child: CircularProgressIndicator());
               }
@@ -591,7 +469,7 @@ class _ProyectoFormScreenState extends State<_ProyectoFormScreen> {
                     const SizedBox(height: 12),
                     FilledButton.tonal(
                       onPressed: () => _superadminBloc.add(
-                        ProyectoEdicionSolicitada(widget.proyectoId!),
+                        ProyectoEdicionSolicitada(widget.proyectoId),
                       ),
                       child: const Text('Reintentar'),
                     ),
@@ -787,42 +665,36 @@ class _ProyectoFormScreenState extends State<_ProyectoFormScreen> {
                                     strokeWidth: 2,
                                   ),
                                 )
-                              : Text(
-                                  _esEdicion
-                                      ? 'Guardar cambios'
-                                      : 'Crear proyecto',
-                                ),
+                              : const Text('Guardar cambios'),
                         ),
                       ),
-                      if (_esEdicion) ...[
-                        const SizedBox(height: 24),
-                        const Divider(),
-                        const SizedBox(height: 8),
-                        SizedBox(
-                          height: 50,
-                          child: OutlinedButton.icon(
-                            onPressed:
-                                superadminState.eliminando ||
-                                    superadminState.guardando
-                                ? null
-                                : _confirmarEliminacion,
-                            style: OutlinedButton.styleFrom(
-                              foregroundColor: theme.colorScheme.error,
-                              side: BorderSide(color: theme.colorScheme.error),
-                            ),
-                            icon: superadminState.eliminando
-                                ? const SizedBox(
-                                    height: 18,
-                                    width: 18,
-                                    child: CircularProgressIndicator(
-                                      strokeWidth: 2,
-                                    ),
-                                  )
-                                : const Icon(Icons.delete_forever_outlined),
-                            label: const Text('Eliminar proyecto'),
+                      const SizedBox(height: 24),
+                      const Divider(),
+                      const SizedBox(height: 8),
+                      SizedBox(
+                        height: 50,
+                        child: OutlinedButton.icon(
+                          onPressed:
+                              superadminState.eliminando ||
+                                  superadminState.guardando
+                              ? null
+                              : _confirmarEliminacion,
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor: theme.colorScheme.error,
+                            side: BorderSide(color: theme.colorScheme.error),
                           ),
+                          icon: superadminState.eliminando
+                              ? const SizedBox(
+                                  height: 18,
+                                  width: 18,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                  ),
+                                )
+                              : const Icon(Icons.delete_forever_outlined),
+                          label: const Text('Eliminar proyecto'),
                         ),
-                      ],
+                      ),
                     ],
                   ),
                 );
@@ -835,44 +707,21 @@ class _ProyectoFormScreenState extends State<_ProyectoFormScreen> {
   }
 
   List<Widget> _seccionTipoCondominio(ThemeData theme) {
-    if (_esEdicion) {
-      return [
-        Text('Tipo de condominio', style: theme.textTheme.titleMedium),
-        const SizedBox(height: 8),
-        InputDecorator(
-          decoration: const InputDecoration(
-            border: OutlineInputBorder(),
-            isDense: true,
-          ),
-          child: Text(_tipo.etiqueta),
-        ),
-        const SizedBox(height: 4),
-        Text(
-          'El tipo de condominio no se puede cambiar una vez creada '
-          'la estructura del recinto.',
-          style: theme.textTheme.bodySmall,
-        ),
-      ];
-    }
-
     return [
       Text('Tipo de condominio', style: theme.textTheme.titleMedium),
       const SizedBox(height: 8),
-      RadioGroup<TipoCondominio>(
-        groupValue: _tipo,
-        onChanged: (value) => setState(() => _tipo = value ?? _tipo),
-        child: Column(
-          children: TipoCondominio.values
-              .map(
-                (tipo) => RadioListTile<TipoCondominio>(
-                  contentPadding: EdgeInsets.zero,
-                  value: tipo,
-                  title: Text(tipo.etiqueta),
-                  subtitle: Text(tipo.descripcion),
-                ),
-              )
-              .toList(),
+      InputDecorator(
+        decoration: const InputDecoration(
+          border: OutlineInputBorder(),
+          isDense: true,
         ),
+        child: Text(_tipo.etiqueta),
+      ),
+      const SizedBox(height: 4),
+      Text(
+        'El tipo de condominio no se puede cambiar una vez creada '
+        'la estructura del recinto.',
+        style: theme.textTheme.bodySmall,
       ),
     ];
   }
@@ -881,30 +730,16 @@ class _ProyectoFormScreenState extends State<_ProyectoFormScreen> {
     ThemeData theme,
     SuperadminState superadminState,
   ) {
-    if (_esEdicion) {
-      return [
-        Text('Estructura del recinto', style: theme.textTheme.titleMedium),
-        const SizedBox(height: 4),
-        Text(
-          'Vista de solo lectura. Para modificarla usa el módulo '
-          'Infraestructura.',
-          style: theme.textTheme.bodySmall,
-        ),
-        const SizedBox(height: 12),
-        ..._visorEstructura(theme, superadminState),
-        const SizedBox(height: 20),
-      ];
-    }
-
     return [
       Text('Estructura del recinto', style: theme.textTheme.titleMedium),
       const SizedBox(height: 4),
       Text(
-        'La estructura se crea junto con el proyecto.',
+        'Vista de solo lectura. Para modificarla usa el módulo '
+        'Infraestructura.',
         style: theme.textTheme.bodySmall,
       ),
       const SizedBox(height: 12),
-      ..._construirSeccionesEstructura(),
+      ..._visorEstructura(theme, superadminState),
       const SizedBox(height: 20),
     ];
   }
@@ -932,7 +767,7 @@ class _ProyectoFormScreenState extends State<_ProyectoFormScreen> {
           alignment: Alignment.centerLeft,
           child: FilledButton.tonalIcon(
             onPressed: () => _superadminBloc.add(
-              EstructuraProyectoSolicitada(widget.proyectoId!),
+              EstructuraProyectoSolicitada(widget.proyectoId),
             ),
             icon: const Icon(Icons.refresh),
             label: const Text('Reintentar'),
@@ -1088,42 +923,33 @@ class _ProyectoFormScreenState extends State<_ProyectoFormScreen> {
   ) {
     final arbol = superadminState.estructura;
     final accesorias = arbol?.unidadesAccesorias ?? const <UnidadAccesoria>[];
-    final estacionamientos = _esEdicion
-        ? accesorias
-              .where(
-                (accesoria) =>
-                    accesoria.tipo == TipoUnidadAccesoria.estacionamiento,
-              )
-              .length
-        : _estacionamientosIniciales;
-    final bodegas = _esEdicion
-        ? accesorias
-              .where(
-                (accesoria) => accesoria.tipo == TipoUnidadAccesoria.bodega,
-              )
-              .length
-        : _bodegasIniciales;
+    final estacionamientos = accesorias
+        .where(
+          (accesoria) => accesoria.tipo == TipoUnidadAccesoria.estacionamiento,
+        )
+        .length;
+    final bodegas = accesorias
+        .where((accesoria) => accesoria.tipo == TipoUnidadAccesoria.bodega)
+        .length;
 
     return [
       Text('Estacionamientos y bodegas', style: theme.textTheme.titleMedium),
       const SizedBox(height: 4),
       Text(
-        _esEdicion
-            ? 'Gestiona las accesorias del proyecto y su asignación.'
-            : 'Define cuántas accesorias se crearán junto con el proyecto.',
+        'Gestiona las accesorias del proyecto y su asignación.',
         style: theme.textTheme.bodySmall,
       ),
-      if (_esEdicion && superadminState.cargandoEstructura && arbol == null)
+      if (superadminState.cargandoEstructura && arbol == null)
         const Padding(
           padding: EdgeInsets.symmetric(vertical: 8),
           child: LinearProgressIndicator(),
         ),
-      if (_esEdicion && arbol == null && !superadminState.cargandoEstructura)
+      if (arbol == null && !superadminState.cargandoEstructura)
         Align(
           alignment: Alignment.centerLeft,
           child: FilledButton.tonalIcon(
             onPressed: () => _superadminBloc.add(
-              EstructuraProyectoSolicitada(widget.proyectoId!),
+              EstructuraProyectoSolicitada(widget.proyectoId),
             ),
             icon: const Icon(Icons.refresh),
             label: const Text('Reintentar carga de accesorias'),
@@ -1133,28 +959,16 @@ class _ProyectoFormScreenState extends State<_ProyectoFormScreen> {
       _tarjetaAccesorias(
         tipo: TipoUnidadAccesoria.estacionamiento,
         cantidad: estacionamientos,
-        onDefinir: _esEdicion
-            ? null
-            : () => _definirCantidad(TipoUnidadAccesoria.estacionamiento),
-        onGestionar: _esEdicion
-            ? () => _abrirAccesorias(TipoUnidadAccesoria.estacionamiento)
-            : null,
-        onAgregar: _esEdicion
-            ? () => _agregarAccesorias(TipoUnidadAccesoria.estacionamiento)
-            : null,
+        onGestionar: () =>
+            _abrirAccesorias(TipoUnidadAccesoria.estacionamiento),
+        onAgregar: () =>
+            _agregarAccesorias(TipoUnidadAccesoria.estacionamiento),
       ),
       _tarjetaAccesorias(
         tipo: TipoUnidadAccesoria.bodega,
         cantidad: bodegas,
-        onDefinir: _esEdicion
-            ? null
-            : () => _definirCantidad(TipoUnidadAccesoria.bodega),
-        onGestionar: _esEdicion
-            ? () => _abrirAccesorias(TipoUnidadAccesoria.bodega)
-            : null,
-        onAgregar: _esEdicion
-            ? () => _agregarAccesorias(TipoUnidadAccesoria.bodega)
-            : null,
+        onGestionar: () => _abrirAccesorias(TipoUnidadAccesoria.bodega),
+        onAgregar: () => _agregarAccesorias(TipoUnidadAccesoria.bodega),
       ),
     ];
   }
@@ -1162,7 +976,6 @@ class _ProyectoFormScreenState extends State<_ProyectoFormScreen> {
   Widget _tarjetaAccesorias({
     required TipoUnidadAccesoria tipo,
     required int cantidad,
-    VoidCallback? onDefinir,
     VoidCallback? onGestionar,
     VoidCallback? onAgregar,
   }) {
@@ -1210,14 +1023,6 @@ class _ProyectoFormScreenState extends State<_ProyectoFormScreen> {
                 runSpacing: 8,
                 alignment: WrapAlignment.end,
                 children: [
-                  if (onDefinir != null)
-                    TextButton.icon(
-                      onPressed: onDefinir,
-                      icon: const Icon(Icons.tune, size: 18),
-                      label: Text(
-                        cantidad == 0 ? 'Definir cantidad' : 'Cambiar cantidad',
-                      ),
-                    ),
                   if (onAgregar != null)
                     TextButton.icon(
                       onPressed: onAgregar,
@@ -1239,26 +1044,8 @@ class _ProyectoFormScreenState extends State<_ProyectoFormScreen> {
     );
   }
 
-  Future<void> _definirCantidad(TipoUnidadAccesoria tipo) async {
-    final esEstacionamiento = tipo == TipoUnidadAccesoria.estacionamiento;
-    final cantidad = await solicitarCantidadAccesorias(
-      context,
-      etiqueta: esEstacionamiento ? 'estacionamientos' : 'bodegas',
-    );
-    if (cantidad == null || !mounted) return;
-
-    setState(() {
-      if (esEstacionamiento) {
-        _estacionamientosIniciales = cantidad;
-      } else {
-        _bodegasIniciales = cantidad;
-      }
-    });
-  }
-
   void _abrirAccesorias(TipoUnidadAccesoria tipo, {bool expandir = false}) {
     final proyectoId = widget.proyectoId;
-    if (proyectoId == null) return;
 
     Navigator.of(context).push(
       MaterialPageRoute<void>(
@@ -1273,7 +1060,6 @@ class _ProyectoFormScreenState extends State<_ProyectoFormScreen> {
 
   Future<void> _agregarAccesorias(TipoUnidadAccesoria tipo) async {
     final proyectoId = widget.proyectoId;
-    if (proyectoId == null) return;
 
     final esEstacionamiento = tipo == TipoUnidadAccesoria.estacionamiento;
     final cantidad = await solicitarCantidadAccesorias(
@@ -1291,224 +1077,6 @@ class _ProyectoFormScreenState extends State<_ProyectoFormScreen> {
     );
 
     _abrirAccesorias(tipo, expandir: true);
-  }
-
-  List<Widget> _construirSeccionesEstructura() {
-    switch (_tipo) {
-      case TipoCondominio.torres:
-        return _seccionPisos(
-          titulo: 'Torres / bloques',
-          formularios: _torres,
-          onAgregar: _agregarTorre,
-          onQuitar: (index) =>
-              setState(() => _torres.removeAt(index).dispose()),
-        );
-      case TipoCondominio.casas:
-        return _seccionManzanas();
-      case TipoCondominio.edificio:
-        return [_cardPisos('Edificio (sin torres)', _edificio, onQuitar: null)];
-      case TipoCondominio.mixto:
-        return [
-          ..._seccionPisos(
-            titulo: 'Torres / bloques',
-            formularios: _torres,
-            onAgregar: _agregarTorre,
-            onQuitar: (index) =>
-                setState(() => _torres.removeAt(index).dispose()),
-          ),
-          const SizedBox(height: 8),
-          ..._seccionManzanas(),
-        ];
-    }
-  }
-
-  List<Widget> _seccionPisos({
-    required String titulo,
-    required List<_AgrupacionPisosForm> formularios,
-    required VoidCallback onAgregar,
-    required void Function(int) onQuitar,
-  }) {
-    return [
-      Row(
-        children: [
-          Text(titulo, style: const TextStyle(fontWeight: FontWeight.bold)),
-          const Spacer(),
-          TextButton.icon(
-            onPressed: onAgregar,
-            icon: const Icon(Icons.add, size: 18),
-            label: const Text('Agregar'),
-          ),
-        ],
-      ),
-      ...List.generate(
-        formularios.length,
-        (index) => _cardPisos(
-          null,
-          formularios[index],
-          onQuitar: formularios.length > 1 ? () => onQuitar(index) : null,
-        ),
-      ),
-    ];
-  }
-
-  List<Widget> _seccionManzanas() {
-    return [
-      Row(
-        children: [
-          const Text(
-            'Manzanas (casas)',
-            style: TextStyle(fontWeight: FontWeight.bold),
-          ),
-          const Spacer(),
-          TextButton.icon(
-            onPressed: _agregarManzana,
-            icon: const Icon(Icons.add, size: 18),
-            label: const Text('Agregar'),
-          ),
-        ],
-      ),
-      ...List.generate(
-        _manzanas.length,
-        (index) => Card(
-          margin: const EdgeInsets.only(bottom: 8),
-          child: Padding(
-            padding: const EdgeInsets.all(12),
-            child: Column(
-              children: [
-                Row(
-                  children: [
-                    Expanded(
-                      child: TextFormField(
-                        controller: _manzanas[index].nombre,
-                        decoration: const InputDecoration(
-                          labelText: 'Nombre (ej. Manzana 1)',
-                          border: OutlineInputBorder(),
-                          isDense: true,
-                        ),
-                        validator: (value) => (value?.trim().isEmpty ?? true)
-                            ? 'Requerido'
-                            : null,
-                      ),
-                    ),
-                    if (_manzanas.length > 1)
-                      IconButton(
-                        onPressed: () =>
-                            setState(() => _manzanas.removeAt(index).dispose()),
-                        icon: const Icon(Icons.delete_outline),
-                      ),
-                  ],
-                ),
-                const SizedBox(height: 8),
-                TextFormField(
-                  controller: _manzanas[index].cantidad,
-                  keyboardType: TextInputType.number,
-                  decoration: const InputDecoration(
-                    labelText: 'Cantidad de casas',
-                    border: OutlineInputBorder(),
-                    isDense: true,
-                  ),
-                  validator: (value) =>
-                      (int.tryParse(value ?? '') ?? 0) < 1 ? 'Mínimo 1' : null,
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    ];
-  }
-
-  Widget _cardPisos(
-    String? titulo,
-    _AgrupacionPisosForm form, {
-    VoidCallback? onQuitar,
-  }) {
-    return Card(
-      margin: const EdgeInsets.only(bottom: 8),
-      child: Padding(
-        padding: const EdgeInsets.all(12),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            if (titulo != null)
-              Padding(
-                padding: const EdgeInsets.only(bottom: 8),
-                child: Text(
-                  titulo,
-                  style: const TextStyle(fontWeight: FontWeight.bold),
-                ),
-              ),
-            Row(
-              children: [
-                Expanded(
-                  child: TextFormField(
-                    controller: form.nombre,
-                    decoration: const InputDecoration(
-                      labelText: 'Nombre (ej. Torre A)',
-                      border: OutlineInputBorder(),
-                      isDense: true,
-                    ),
-                    validator: (value) =>
-                        (value?.trim().isEmpty ?? true) ? 'Requerido' : null,
-                  ),
-                ),
-                if (onQuitar != null)
-                  IconButton(
-                    onPressed: onQuitar,
-                    icon: const Icon(Icons.delete_outline),
-                  ),
-              ],
-            ),
-            const SizedBox(height: 8),
-            Row(
-              children: [
-                Expanded(
-                  child: TextFormField(
-                    controller: form.pisoDesde,
-                    keyboardType: TextInputType.number,
-                    decoration: const InputDecoration(
-                      labelText: 'Piso desde',
-                      border: OutlineInputBorder(),
-                      isDense: true,
-                    ),
-                    validator: (value) =>
-                        int.tryParse(value ?? '') == null ? 'Inválido' : null,
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: TextFormField(
-                    controller: form.pisoHasta,
-                    keyboardType: TextInputType.number,
-                    decoration: const InputDecoration(
-                      labelText: 'Piso hasta',
-                      border: OutlineInputBorder(),
-                      isDense: true,
-                    ),
-                    validator: (value) =>
-                        int.tryParse(value ?? '') == null ? 'Inválido' : null,
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: TextFormField(
-                    controller: form.unidadesPorPiso,
-                    keyboardType: TextInputType.number,
-                    decoration: const InputDecoration(
-                      labelText: 'Unid./piso',
-                      border: OutlineInputBorder(),
-                      isDense: true,
-                    ),
-                    validator: (value) =>
-                        (int.tryParse(value ?? '') ?? 0) < 1 ? 'Mín. 1' : null,
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
   }
 }
 
@@ -1542,61 +1110,5 @@ class _InstalacionForm {
     nombre.dispose();
     capacidad.dispose();
     descripcion.dispose();
-  }
-}
-
-class _AgrupacionPisosForm {
-  _AgrupacionPisosForm({
-    required String nombre,
-    String pisoDesde = '1',
-    String pisoHasta = '1',
-    String unidadesPorPiso = '4',
-  }) : nombre = TextEditingController(text: nombre),
-       pisoDesde = TextEditingController(text: pisoDesde),
-       pisoHasta = TextEditingController(text: pisoHasta),
-       unidadesPorPiso = TextEditingController(text: unidadesPorPiso);
-
-  final TextEditingController nombre;
-  final TextEditingController pisoDesde;
-  final TextEditingController pisoHasta;
-  final TextEditingController unidadesPorPiso;
-
-  DefinicionAgrupacion toDefinicion(TipoAgrupacion tipo) {
-    return DefinicionAgrupacion(
-      nombre: nombre.text.trim(),
-      tipo: tipo,
-      pisoDesde: int.tryParse(pisoDesde.text) ?? 1,
-      pisoHasta: int.tryParse(pisoHasta.text) ?? 1,
-      unidadesPorPiso: int.tryParse(unidadesPorPiso.text) ?? 1,
-    );
-  }
-
-  void dispose() {
-    nombre.dispose();
-    pisoDesde.dispose();
-    pisoHasta.dispose();
-    unidadesPorPiso.dispose();
-  }
-}
-
-class _ManzanaForm {
-  _ManzanaForm({required String nombre, String cantidad = '6'})
-    : nombre = TextEditingController(text: nombre),
-      cantidad = TextEditingController(text: cantidad);
-
-  final TextEditingController nombre;
-  final TextEditingController cantidad;
-
-  DefinicionAgrupacion toDefinicion() {
-    return DefinicionAgrupacion(
-      nombre: nombre.text.trim(),
-      tipo: TipoAgrupacion.manzana,
-      cantidad: int.tryParse(cantidad.text) ?? 0,
-    );
-  }
-
-  void dispose() {
-    nombre.dispose();
-    cantidad.dispose();
   }
 }

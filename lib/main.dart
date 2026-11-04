@@ -27,12 +27,16 @@ import 'features/superadmin/data/repositories/superadmin_repository_impl.dart';
 import 'features/superadmin/domain/usecases/actualizar_proyecto_usecase.dart';
 import 'features/superadmin/domain/usecases/crear_administrador_usecase.dart';
 import 'features/superadmin/domain/usecases/crear_proyecto_usecase.dart';
+import 'features/superadmin/domain/usecases/descartar_proyecto_borrador_usecase.dart';
 import 'features/superadmin/domain/usecases/eliminar_proyecto_usecase.dart';
+import 'features/superadmin/domain/usecases/guardar_paso_proyecto_usecase.dart';
+import 'features/superadmin/domain/usecases/iniciar_proyecto_borrador_usecase.dart';
 import 'features/superadmin/domain/usecases/listar_administradores_usecase.dart';
 import 'features/superadmin/domain/usecases/listar_mis_proyectos_usecase.dart';
 import 'features/superadmin/domain/usecases/listar_proyectos_usecase.dart';
 import 'features/superadmin/domain/usecases/obtener_proyecto_usecase.dart';
 import 'features/superadmin/presentation/bloc/administradores_bloc.dart';
+import 'features/superadmin/presentation/bloc/proyecto_wizard_bloc.dart';
 import 'features/superadmin/presentation/bloc/superadmin_bloc.dart';
 import 'features/tenant/presentation/bloc/tenant_bloc.dart';
 
@@ -51,6 +55,7 @@ class _TorreManagerAppState extends State<TorreManagerApp> {
   late final AuthBloc _authBloc;
   late final InfraestructuraBloc _infraestructuraBloc;
   late final SuperadminBloc _superadminBloc;
+  late final ProyectoWizardBloc _proyectoWizardBloc;
   late final AdministradoresBloc _administradoresBloc;
   late final TenantBloc _tenantBloc;
   late final GoRouter _router;
@@ -123,6 +128,18 @@ class _TorreManagerAppState extends State<TorreManagerApp> {
       ),
     );
 
+    _proyectoWizardBloc = ProyectoWizardBloc(
+      iniciarProyectoBorradorUseCase: IniciarProyectoBorradorUseCase(
+        superadminRepository,
+      ),
+      guardarPasoProyectoUseCase: GuardarPasoProyectoUseCase(
+        superadminRepository,
+      ),
+      descartarProyectoBorradorUseCase: DescartarProyectoBorradorUseCase(
+        superadminRepository,
+      ),
+    );
+
     _tenantBloc = TenantBloc(
       listarMisProyectosUseCase: ListarMisProyectosUseCase(
         superadminRepository,
@@ -146,6 +163,7 @@ class _TorreManagerAppState extends State<TorreManagerApp> {
     _authBloc.close();
     _infraestructuraBloc.close();
     _superadminBloc.close();
+    _proyectoWizardBloc.close();
     _administradoresBloc.close();
     _tenantBloc.close();
     super.dispose();
@@ -158,6 +176,7 @@ class _TorreManagerAppState extends State<TorreManagerApp> {
         BlocProvider.value(value: _authBloc),
         BlocProvider.value(value: _infraestructuraBloc),
         BlocProvider.value(value: _superadminBloc),
+        BlocProvider.value(value: _proyectoWizardBloc),
         BlocProvider.value(value: _administradoresBloc),
         BlocProvider.value(value: _tenantBloc),
       ],

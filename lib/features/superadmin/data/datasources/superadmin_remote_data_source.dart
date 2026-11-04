@@ -109,6 +109,81 @@ class SuperadminRemoteDataSource {
     );
   }
 
+  Future<ProyectoDetalleDTO> iniciarProyectoBorrador({
+    required String nombre,
+    String? descripcion,
+  }) async {
+    final response = await _dio.post<Map<String, dynamic>>(
+      AppConfig.superadminProyectosBorradorPath,
+      data: {'nombre': nombre, 'descripcion': descripcion},
+    );
+
+    return ProyectoDetalleDTO.fromJson(
+      response.data ?? const <String, dynamic>{},
+    );
+  }
+
+  Future<ProyectoDetalleDTO> guardarPasoProyecto({
+    required String id,
+    required String nombre,
+    String? descripcion,
+    TipoCondominio? tipoCondominio,
+    List<DefinicionAgrupacion>? agrupaciones,
+    List<InstalacionExtra>? instalaciones,
+    List<ModuloSistema>? modulos,
+    List<String>? adminIds,
+    bool resetEstructura = false,
+    bool finalizar = false,
+  }) async {
+    final response = await _dio.patch<Map<String, dynamic>>(
+      AppConfig.superadminProyectoBorradorPath(id),
+      data: {
+        'nombre': nombre,
+        'descripcion': descripcion,
+        if (tipoCondominio != null) 'tipo_condominio': tipoCondominio.name,
+        if (agrupaciones != null)
+          'agrupaciones': agrupaciones
+              .map(
+                (agrupacion) => {
+                  'nombre': agrupacion.nombre,
+                  'tipo': agrupacion.tipo.name,
+                  'prefijo': ?agrupacion.prefijo,
+                  'piso_desde': ?agrupacion.pisoDesde,
+                  'piso_hasta': ?agrupacion.pisoHasta,
+                  'unidades_por_piso': ?agrupacion.unidadesPorPiso,
+                  'cantidad': ?agrupacion.cantidad,
+                },
+              )
+              .toList(),
+        if (instalaciones != null)
+          'instalaciones': instalaciones
+              .map(
+                (instalacion) => {
+                  'nombre': instalacion.nombre,
+                  'capacidad': instalacion.capacidad,
+                  'descripcion': ?instalacion.descripcion,
+                  if (instalacion.atributos.isNotEmpty)
+                    'atributos': instalacion.atributos,
+                },
+              )
+              .toList(),
+        if (modulos != null)
+          'modulos': modulos.map((modulo) => modulo.valor).toList(),
+        'admin_ids': ?adminIds,
+        if (resetEstructura) 'reset_estructura': true,
+        if (finalizar) 'finalizar': true,
+      },
+    );
+
+    return ProyectoDetalleDTO.fromJson(
+      response.data ?? const <String, dynamic>{},
+    );
+  }
+
+  Future<void> descartarProyectoBorrador(String id) async {
+    await _dio.delete<void>(AppConfig.superadminProyectoBorradorPath(id));
+  }
+
   Future<ProyectoDetalleDTO> obtenerProyecto(String id) async {
     final response = await _dio.get<Map<String, dynamic>>(
       AppConfig.superadminProyectoPath(id),

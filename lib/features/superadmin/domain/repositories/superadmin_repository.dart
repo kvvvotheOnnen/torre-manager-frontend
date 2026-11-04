@@ -34,6 +34,26 @@ abstract interface class SuperadminRepositoryInterface {
 
   Future<Either<Failure, ProyectoDetalle>> obtenerProyecto(String id);
 
+  Future<Either<Failure, ProyectoDetalle>> iniciarProyectoBorrador({
+    required String nombre,
+    String? descripcion,
+  });
+
+  Future<Either<Failure, ProyectoDetalle>> guardarPasoProyecto({
+    required String id,
+    required String nombre,
+    String? descripcion,
+    TipoCondominio? tipoCondominio,
+    List<DefinicionAgrupacion>? agrupaciones,
+    List<InstalacionExtra>? instalaciones,
+    List<ModuloSistema>? modulos,
+    List<String>? adminIds,
+    bool resetEstructura = false,
+    bool finalizar = false,
+  });
+
+  Future<Either<Failure, void>> descartarProyectoBorrador(String id);
+
   Future<Either<Failure, ProyectoDetalle>> actualizarProyecto({
     required String id,
     required String nombre,

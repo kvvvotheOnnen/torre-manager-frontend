@@ -89,6 +89,54 @@ class SuperadminRepositoryImpl implements SuperadminRepositoryInterface {
   }
 
   @override
+  Future<Either<Failure, ProyectoDetalle>> iniciarProyectoBorrador({
+    required String nombre,
+    String? descripcion,
+  }) {
+    return _guard(
+      () => _remoteDataSource
+          .iniciarProyectoBorrador(nombre: nombre, descripcion: descripcion)
+          .then((dto) => dto.toEntity()),
+    );
+  }
+
+  @override
+  Future<Either<Failure, ProyectoDetalle>> guardarPasoProyecto({
+    required String id,
+    required String nombre,
+    String? descripcion,
+    TipoCondominio? tipoCondominio,
+    List<DefinicionAgrupacion>? agrupaciones,
+    List<InstalacionExtra>? instalaciones,
+    List<ModuloSistema>? modulos,
+    List<String>? adminIds,
+    bool resetEstructura = false,
+    bool finalizar = false,
+  }) {
+    return _guard(
+      () => _remoteDataSource
+          .guardarPasoProyecto(
+            id: id,
+            nombre: nombre,
+            descripcion: descripcion,
+            tipoCondominio: tipoCondominio,
+            agrupaciones: agrupaciones,
+            instalaciones: instalaciones,
+            modulos: modulos,
+            adminIds: adminIds,
+            resetEstructura: resetEstructura,
+            finalizar: finalizar,
+          )
+          .then((dto) => dto.toEntity()),
+    );
+  }
+
+  @override
+  Future<Either<Failure, void>> descartarProyectoBorrador(String id) {
+    return _guard(() => _remoteDataSource.descartarProyectoBorrador(id));
+  }
+
+  @override
   Future<Either<Failure, ProyectoDetalle>> actualizarProyecto({
     required String id,
     required String nombre,

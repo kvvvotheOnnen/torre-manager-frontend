@@ -116,6 +116,35 @@ class _FakeSuperadminRepository implements SuperadminRepositoryInterface {
     return const Right([]);
   }
 
+  @override
+  Future<Either<Failure, ProyectoDetalle>> iniciarProyectoBorrador({
+    required String nombre,
+    String? descripcion,
+  }) async {
+    return Right(_detalle(nombre: nombre, id: '1'));
+  }
+
+  @override
+  Future<Either<Failure, ProyectoDetalle>> guardarPasoProyecto({
+    required String id,
+    required String nombre,
+    String? descripcion,
+    TipoCondominio? tipoCondominio,
+    List<DefinicionAgrupacion>? agrupaciones,
+    List<InstalacionExtra>? instalaciones,
+    List<ModuloSistema>? modulos,
+    List<String>? adminIds,
+    bool resetEstructura = false,
+    bool finalizar = false,
+  }) async {
+    return Right(_detalle(nombre: nombre, id: id));
+  }
+
+  @override
+  Future<Either<Failure, void>> descartarProyectoBorrador(String id) async {
+    return const Right(null);
+  }
+
   ProyectoDetalle _detalle({
     required String id,
     required String nombre,

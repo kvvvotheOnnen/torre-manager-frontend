@@ -31,8 +31,12 @@ class AppConfig {
   static const String infraestructuraVistaPreviaPath =
       '$infraestructuraBasePath/vista-previa-identificaciones';
   static const String superadminProyectosPath = '/api/superadmin/proyectos';
+  static const String superadminProyectosBorradorPath =
+      '$superadminProyectosPath/borrador';
   static String superadminProyectoPath(String id) =>
       '$superadminProyectosPath/${Uri.encodeComponent(id)}';
+  static String superadminProyectoBorradorPath(String id) =>
+      '${superadminProyectoPath(id)}/borrador';
   static const String superadminAdministradoresPath =
       '/api/superadmin/administradores';
   static const String misProyectosPath = '/api/mis-proyectos';
