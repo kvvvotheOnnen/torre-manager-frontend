@@ -10,6 +10,7 @@ class ProyectoWizardState extends Equatable {
     this.pasoActual = 0,
     this.guardando = false,
     this.descartando = false,
+    this.descartado = false,
     this.finalizado = false,
     this.mensaje,
     this.mensajeEsError = false,
@@ -22,6 +23,7 @@ class ProyectoWizardState extends Equatable {
   final int pasoActual;
   final bool guardando;
   final bool descartando;
+  final bool descartado;
   final bool finalizado;
   final String? mensaje;
   final bool mensajeEsError;
@@ -34,6 +36,7 @@ class ProyectoWizardState extends Equatable {
     int? pasoActual,
     bool? guardando,
     bool? descartando,
+    bool? descartado,
     bool? finalizado,
     String? mensaje,
     bool? mensajeEsError,
@@ -47,6 +50,7 @@ class ProyectoWizardState extends Equatable {
       pasoActual: pasoActual ?? this.pasoActual,
       guardando: guardando ?? this.guardando,
       descartando: descartando ?? this.descartando,
+      descartado: descartado ?? this.descartado,
       finalizado: finalizado ?? this.finalizado,
       mensaje: limpiarMensaje ? null : (mensaje ?? this.mensaje),
       mensajeEsError: limpiarMensaje
@@ -64,6 +68,7 @@ class ProyectoWizardState extends Equatable {
     pasoActual,
     guardando,
     descartando,
+    descartado,
     finalizado,
     mensaje,
     mensajeEsError,

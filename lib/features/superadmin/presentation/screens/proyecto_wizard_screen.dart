@@ -49,7 +49,6 @@ class _ProyectoWizardScreenState extends State<ProyectoWizardScreen> {
   final Set<ModuloSistema> _modulos = {ModuloSistema.infraestructura};
 
   late final ProyectoWizardBloc _bloc;
-  bool _salidaSolicitada = false;
 
   @override
   void initState() {
@@ -291,7 +290,6 @@ class _ProyectoWizardScreenState extends State<ProyectoWizardScreen> {
 
     if (segundoPaso != true || !mounted) return;
 
-    setState(() => _salidaSolicitada = true);
     _bloc.add(const WizardDescartado());
   }
 
@@ -302,6 +300,7 @@ class _ProyectoWizardScreenState extends State<ProyectoWizardScreen> {
           previous.pasoActual != current.pasoActual ||
           previous.guardando != current.guardando ||
           previous.descartando != current.descartando ||
+          previous.descartado != current.descartado ||
           previous.finalizado != current.finalizado ||
           previous.proyectoId != current.proyectoId ||
           previous.mensaje != current.mensaje,
@@ -311,24 +310,27 @@ class _ProyectoWizardScreenState extends State<ProyectoWizardScreen> {
           return;
         }
 
+        if (state.descartado) {
+          Navigator.of(context).pop(false);
+          return;
+        }
+
         if (state.mensaje != null) {
           _snack(state.mensaje!);
           _bloc.add(const WizardMensajeConsumido());
-        }
-
-        if (_salidaSolicitada &&
-            !state.descartando &&
-            state.proyectoId == null &&
-            state.mensaje == null) {
-          _salidaSolicitada = false;
-          Navigator.of(context).pop(false);
         }
       },
       builder: (context, state) {
         return PopScope(
           canPop: false,
           onPopInvokedWithResult: (didPop, _) {
-            if (!didPop) _confirmarSalida();
+            if (didPop) return;
+            if (_bloc.state.guardando || _bloc.state.descartando) return;
+            if (_bloc.state.pasoActual > 0) {
+              _bloc.add(const WizardPasoRetrocedido());
+              return;
+            }
+            _confirmarSalida();
           },
           child: Scaffold(
             appBar: AppBar(

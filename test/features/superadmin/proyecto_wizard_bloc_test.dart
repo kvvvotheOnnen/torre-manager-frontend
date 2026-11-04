@@ -225,7 +225,7 @@ void main() {
     await inicio;
 
     final future = bloc.stream.firstWhere(
-      (s) => !s.descartando && s.proyectoId == null,
+      (s) => !s.descartando && s.descartado,
     );
     bloc.add(const WizardDescartado());
 
@@ -234,6 +234,19 @@ void main() {
     expect(repositorio.borradorDescartadoId, '1');
     expect(state.pasoActual, 0);
   });
+
+  test(
+    'descarta sin borrador aunque el wizard esté en el paso inicial',
+    () async {
+      final future = bloc.stream.firstWhere((s) => s.descartado);
+      bloc.add(const WizardDescartado());
+
+      final state = await future;
+
+      expect(state.descartado, isTrue);
+      expect(repositorio.borradorDescartadoId, isNull);
+    },
+  );
 
   test('finaliza el proyecto con módulos y administradores', () async {
     final inicio = bloc.stream.firstWhere(

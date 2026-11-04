@@ -283,7 +283,7 @@ class ProyectoWizardBloc
     final proyectoId = state.proyectoId;
 
     if (proyectoId == null) {
-      emit(const ProyectoWizardState());
+      emit(const ProyectoWizardState(descartado: true));
       return;
     }
 
@@ -299,7 +299,7 @@ class ProyectoWizardBloc
           mensajeEsError: true,
         ),
       ),
-      (_) => emit(const ProyectoWizardState()),
+      (_) => emit(const ProyectoWizardState(descartado: true)),
     );
   }
 

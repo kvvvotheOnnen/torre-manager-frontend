@@ -46,3 +46,16 @@ asistente de 7 pasos con guardado incremental. La edición se mantiene igual.
 ## Pendientes
 
 - Limpieza de borradores huérfanos ante cierres abruptos del cliente.
+
+## Corrección de bugs (2026-11-04)
+
+- `ProyectoWizardState` incorpora `descartado` para garantizar una transición de
+  estado al salir, incluso cuando no existe borrador creado.
+- `WizardDescartado` emite `descartado: true` sin llamar al backend cuando no
+  hay borrador, y reinicia el estado al descartar uno existente.
+- `ProyectoWizardScreen` cierra el asistente al recibir `descartado`; se elimina
+  la bandera local `_salidaSolicitada`.
+- El botón/gesto atrás del sistema retrocede de paso cuando `pasoActual > 0` y
+  solo pide confirmación en el paso inicial.
+- Test de regresión: descartar sin borrador en el paso inicial.
+- Verificación: `flutter analyze` sin issues; `flutter test` 27 tests en verde.
