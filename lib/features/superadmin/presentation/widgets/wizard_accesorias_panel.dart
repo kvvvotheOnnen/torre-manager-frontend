@@ -146,6 +146,15 @@ class _TipoAccesoriasTabState extends State<_TipoAccesoriasTab> {
     return true;
   }
 
+  bool _departamentoDeshabilitado(
+    UnidadAccesoria accesoria,
+    _BorradorAsignacion? borrador,
+  ) {
+    final asignacion = borrador?.asignacion ?? accesoria.asignacion;
+    return asignacion == TipoAsignacion.visita ||
+        asignacion == TipoAsignacion.otro;
+  }
+
   bool _puedeActualizar(UnidadAccesoria accesoria) {
     return _cambio(accesoria) && _valido(_borradores[accesoria.id]);
   }
@@ -370,6 +379,10 @@ class _TipoAccesoriasTabState extends State<_TipoAccesoriasTab> {
   ) {
     final borrador = _borradores[accesoria.id];
     final expandida = _expandidas.contains(accesoria.id);
+    final departamentoDeshabilitado = _departamentoDeshabilitado(
+      accesoria,
+      borrador,
+    );
     final mostrarError =
         borrador?.errorDepartamento == true ||
         (borrador?.asignacion == TipoAsignacion.departamento &&
@@ -462,10 +475,12 @@ class _TipoAccesoriasTabState extends State<_TipoAccesoriasTab> {
                           return TextField(
                             controller: controller,
                             focusNode: focusNode,
-                            enabled: !guardando,
+                            enabled: !guardando && !departamentoDeshabilitado,
                             decoration: InputDecoration(
                               labelText: 'Departamento',
-                              hintText: 'Escribe para buscar',
+                              hintText: departamentoDeshabilitado
+                                  ? 'No aplica para visita u otro'
+                                  : 'Escribe para buscar',
                               border: const OutlineInputBorder(),
                               isDense: true,
                               errorText: mostrarError

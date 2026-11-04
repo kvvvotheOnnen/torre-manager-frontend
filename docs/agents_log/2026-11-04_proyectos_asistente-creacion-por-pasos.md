@@ -59,3 +59,12 @@ asistente de 7 pasos con guardado incremental. La edición se mantiene igual.
   solo pide confirmación en el paso inicial.
 - Test de regresión: descartar sin borrador en el paso inicial.
 - Verificación: `flutter analyze` sin issues; `flutter test` 27 tests en verde.
+
+## Ajuste de asignación de accesorias (2026-11-04)
+
+- En estacionamientos y bodegas, al marcar “Visita” u “Otro” se deshabilita el
+  campo de departamento y se muestra la leyenda “No aplica para visita u otro”.
+- Se mantiene “Otro” disponible en la pestaña de bodegas.
+- El mismo comportamiento se aplica en la pantalla de gestión de accesorias para
+  mantener consistencia.
+- Verificación: `flutter analyze` sin issues; `flutter test` 27 tests en verde.
