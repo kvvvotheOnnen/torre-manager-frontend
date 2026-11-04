@@ -43,5 +43,7 @@ abstract interface class SuperadminRepositoryInterface {
     required List<String> adminIds,
   });
 
+  Future<Either<Failure, void>> eliminarProyecto(String id);
+
   Future<Either<Failure, List<ProyectoDetalle>>> listarMisProyectos();
 }

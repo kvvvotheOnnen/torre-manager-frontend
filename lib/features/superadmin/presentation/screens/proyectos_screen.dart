@@ -18,8 +18,27 @@ import '../bloc/superadmin_bloc.dart';
 import '../widgets/cantidad_accesorias_dialog.dart';
 import 'accesorias_proyecto_screen.dart';
 
-class ProyectosScreen extends StatelessWidget {
+class ProyectosScreen extends StatefulWidget {
   const ProyectosScreen({super.key});
+
+  @override
+  State<ProyectosScreen> createState() => _ProyectosScreenState();
+}
+
+class _ProyectosScreenState extends State<ProyectosScreen> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+
+      final bloc = context.read<SuperadminBloc>();
+      final state = bloc.state;
+      if (state.proyectos.isEmpty && !state.cargando) {
+        bloc.add(const ProyectosSolicitados());
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -59,14 +78,6 @@ class ProyectosScreen extends StatelessWidget {
           }
         },
         builder: (context, state) {
-          if (state.proyectos.isEmpty &&
-              !state.cargando &&
-              state.mensaje == null) {
-            WidgetsBinding.instance.addPostFrameCallback((_) {
-              context.read<SuperadminBloc>().add(const ProyectosSolicitados());
-            });
-          }
-
           if (state.cargando && state.proyectos.isEmpty) {
             return const Center(child: CircularProgressIndicator());
           }
@@ -168,6 +179,7 @@ class _ProyectoFormScreenState extends State<_ProyectoFormScreen> {
   bool _prefillHecho = false;
   bool _navegacionHecha = false;
   bool _guardandoProyecto = false;
+  bool _eliminandoProyecto = false;
   int _estacionamientosIniciales = 0;
   int _bodegasIniciales = 0;
 
@@ -386,6 +398,78 @@ class _ProyectoFormScreenState extends State<_ProyectoFormScreen> {
     );
   }
 
+  Future<void> _confirmarEliminacion() async {
+    final proyectoId = widget.proyectoId;
+    if (proyectoId == null) return;
+
+    final nombre = _nombreController.text.trim();
+    final confirmacionController = TextEditingController();
+
+    final confirmado = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) {
+        return StatefulBuilder(
+          builder: (context, setStateDialog) {
+            final coincide = confirmacionController.text.trim() == nombre;
+
+            return AlertDialog(
+              title: const Text('Eliminar proyecto'),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Esta acción eliminará el proyecto junto con su '
+                    'estructura, estacionamientos, bodegas, instalaciones '
+                    'extra y accesos de administradores. No se puede deshacer.',
+                  ),
+                  const SizedBox(height: 16),
+                  Text('Escribe "$nombre" para confirmar:'),
+                  const SizedBox(height: 8),
+                  TextField(
+                    controller: confirmacionController,
+                    autofocus: true,
+                    decoration: const InputDecoration(
+                      border: OutlineInputBorder(),
+                      isDense: true,
+                    ),
+                    onChanged: (_) => setStateDialog(() {}),
+                  ),
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(dialogContext).pop(false),
+                  child: const Text('Cancelar'),
+                ),
+                FilledButton(
+                  style: FilledButton.styleFrom(
+                    backgroundColor: Theme.of(context).colorScheme.error,
+                    foregroundColor: Theme.of(context).colorScheme.onError,
+                  ),
+                  onPressed: coincide
+                      ? () => Navigator.of(dialogContext).pop(true)
+                      : null,
+                  child: const Text('Eliminar'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+
+    confirmacionController.dispose();
+
+    if (confirmado != true || !mounted) return;
+
+    setState(() => _eliminandoProyecto = true);
+
+    _superadminBloc.add(
+      ProyectoEliminado(proyectoId: proyectoId, nombre: nombre),
+    );
+  }
+
   void _snack(String message, {bool error = false}) {
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
@@ -406,15 +490,44 @@ class _ProyectoFormScreenState extends State<_ProyectoFormScreen> {
       listenWhen: (previous, current) {
         if (_navegacionHecha) return false;
         if (_esEdicion) {
-          return _guardandoProyecto &&
-              !current.guardando &&
+          final eliminado = current.proyectoEliminadoId == widget.proyectoId;
+          final falloEliminacion =
+              _eliminandoProyecto &&
+              !current.eliminando &&
               current.mensaje != null;
+          return eliminado ||
+              falloEliminacion ||
+              (_guardandoProyecto &&
+                  !current.guardando &&
+                  current.mensaje != null);
         }
         return current.ultimoProyectoCreado != null ||
             (!current.guardando && !current.exito && current.mensaje != null);
       },
       listener: (context, state) {
         if (_esEdicion) {
+          if (state.proyectoEliminadoId == widget.proyectoId) {
+            _navegacionHecha = true;
+            final mensaje = state.mensaje;
+            if (mensaje != null) {
+              _snack(mensaje);
+              _superadminBloc.add(const SuperadminMensajeConsumido());
+            }
+            if (Navigator.of(context).canPop()) {
+              Navigator.of(context).pop();
+            }
+            return;
+          }
+
+          if (_eliminandoProyecto && !state.eliminando) {
+            _eliminandoProyecto = false;
+            if (state.mensaje != null) {
+              _snack(state.mensaje!, error: true);
+              _superadminBloc.add(const SuperadminMensajeConsumido());
+            }
+            return;
+          }
+
           if (!state.exito) {
             setState(() => _guardandoProyecto = false);
             if (state.mensaje != null) {
@@ -681,6 +794,35 @@ class _ProyectoFormScreenState extends State<_ProyectoFormScreen> {
                                 ),
                         ),
                       ),
+                      if (_esEdicion) ...[
+                        const SizedBox(height: 24),
+                        const Divider(),
+                        const SizedBox(height: 8),
+                        SizedBox(
+                          height: 50,
+                          child: OutlinedButton.icon(
+                            onPressed:
+                                superadminState.eliminando ||
+                                    superadminState.guardando
+                                ? null
+                                : _confirmarEliminacion,
+                            style: OutlinedButton.styleFrom(
+                              foregroundColor: theme.colorScheme.error,
+                              side: BorderSide(color: theme.colorScheme.error),
+                            ),
+                            icon: superadminState.eliminando
+                                ? const SizedBox(
+                                    height: 18,
+                                    width: 18,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                    ),
+                                  )
+                                : const Icon(Icons.delete_forever_outlined),
+                            label: const Text('Eliminar proyecto'),
+                          ),
+                        ),
+                      ],
                     ],
                   ),
                 );

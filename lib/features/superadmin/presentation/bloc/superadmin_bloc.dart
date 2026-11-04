@@ -17,6 +17,7 @@ import '../../domain/entities/resumen_proyecto.dart';
 import '../../domain/entities/tipo_condominio.dart';
 import '../../domain/usecases/actualizar_proyecto_usecase.dart';
 import '../../domain/usecases/crear_proyecto_usecase.dart';
+import '../../domain/usecases/eliminar_proyecto_usecase.dart';
 import '../../domain/usecases/obtener_proyecto_usecase.dart';
 import '../../domain/usecases/listar_proyectos_usecase.dart';
 
@@ -165,6 +166,16 @@ class SuperadminMensajeConsumido extends SuperadminEvent {
   const SuperadminMensajeConsumido();
 }
 
+class ProyectoEliminado extends SuperadminEvent {
+  const ProyectoEliminado({required this.proyectoId, required this.nombre});
+
+  final String proyectoId;
+  final String nombre;
+
+  @override
+  List<Object?> get props => [proyectoId, nombre];
+}
+
 class UltimoProyectoCreadoConsumido extends SuperadminEvent {
   const UltimoProyectoCreadoConsumido();
 }
@@ -173,6 +184,7 @@ class SuperadminState extends Equatable {
   const SuperadminState({
     this.cargando = false,
     this.guardando = false,
+    this.eliminando = false,
     this.proyectos = const [],
     this.mensaje,
     this.exito = false,
@@ -182,10 +194,12 @@ class SuperadminState extends Equatable {
     this.cargandoEstructura = false,
     this.estructura,
     this.errorEstructura,
+    this.proyectoEliminadoId,
   });
 
   final bool cargando;
   final bool guardando;
+  final bool eliminando;
   final List<ResumenProyecto> proyectos;
   final String? mensaje;
   final bool exito;
@@ -195,10 +209,12 @@ class SuperadminState extends Equatable {
   final bool cargandoEstructura;
   final ArbolInfraestructura? estructura;
   final String? errorEstructura;
+  final String? proyectoEliminadoId;
 
   SuperadminState copyWith({
     bool? cargando,
     bool? guardando,
+    bool? eliminando,
     List<ResumenProyecto>? proyectos,
     String? mensaje,
     bool? exito,
@@ -208,15 +224,18 @@ class SuperadminState extends Equatable {
     bool? cargandoEstructura,
     ArbolInfraestructura? estructura,
     String? errorEstructura,
+    String? proyectoEliminadoId,
     bool limpiarMensaje = false,
     bool limpiarUltimoProyectoCreado = false,
     bool limpiarDetalle = false,
     bool limpiarEstructura = false,
     bool limpiarErrorEstructura = false,
+    bool limpiarProyectoEliminado = false,
   }) {
     return SuperadminState(
       cargando: cargando ?? this.cargando,
       guardando: guardando ?? this.guardando,
+      eliminando: eliminando ?? this.eliminando,
       proyectos: proyectos ?? this.proyectos,
       mensaje: limpiarMensaje ? null : (mensaje ?? this.mensaje),
       exito: limpiarMensaje ? false : (exito ?? this.exito),
@@ -232,6 +251,9 @@ class SuperadminState extends Equatable {
       errorEstructura: limpiarErrorEstructura
           ? null
           : (errorEstructura ?? this.errorEstructura),
+      proyectoEliminadoId: limpiarProyectoEliminado
+          ? null
+          : (proyectoEliminadoId ?? this.proyectoEliminadoId),
     );
   }
 
@@ -239,6 +261,7 @@ class SuperadminState extends Equatable {
   List<Object?> get props => [
     cargando,
     guardando,
+    eliminando,
     proyectos,
     mensaje,
     exito,
@@ -248,6 +271,7 @@ class SuperadminState extends Equatable {
     cargandoEstructura,
     estructura,
     errorEstructura,
+    proyectoEliminadoId,
   ];
 }
 
@@ -257,6 +281,7 @@ class SuperadminBloc extends Bloc<SuperadminEvent, SuperadminState> {
     required CrearProyectoUseCase crearProyectoUseCase,
     required ObtenerProyectoUseCase obtenerProyectoUseCase,
     required ActualizarProyectoUseCase actualizarProyectoUseCase,
+    required EliminarProyectoUseCase eliminarProyectoUseCase,
     required ObtenerArbolInfraestructuraUseCase obtenerEstructuraUseCase,
     required CrearUnidadesAccesoriasEnLoteUseCase
     crearUnidadesAccesoriasEnLoteUseCase,
@@ -265,6 +290,7 @@ class SuperadminBloc extends Bloc<SuperadminEvent, SuperadminState> {
        _crearProyectoUseCase = crearProyectoUseCase,
        _obtenerProyectoUseCase = obtenerProyectoUseCase,
        _actualizarProyectoUseCase = actualizarProyectoUseCase,
+       _eliminarProyectoUseCase = eliminarProyectoUseCase,
        _obtenerEstructuraUseCase = obtenerEstructuraUseCase,
        _crearUnidadesAccesoriasEnLoteUseCase =
            crearUnidadesAccesoriasEnLoteUseCase,
@@ -276,6 +302,7 @@ class SuperadminBloc extends Bloc<SuperadminEvent, SuperadminState> {
     on<ProyectoEdicionFinalizada>(_onEdicionFinalizada);
     on<EstructuraProyectoSolicitada>(_onEstructuraSolicitada);
     on<ProyectoActualizado>(_onProyectoActualizado);
+    on<ProyectoEliminado>(_onProyectoEliminado);
     on<AccesoriasLoteSolicitadas>(_onAccesoriasLoteSolicitadas);
     on<AsignacionAccesoriaSolicitada>(_onAsignacionAccesoriaSolicitada);
     on<AsignacionesAccesoriasSolicitadas>(_onAsignacionesAccesoriasSolicitadas);
@@ -287,6 +314,7 @@ class SuperadminBloc extends Bloc<SuperadminEvent, SuperadminState> {
   final CrearProyectoUseCase _crearProyectoUseCase;
   final ObtenerProyectoUseCase _obtenerProyectoUseCase;
   final ActualizarProyectoUseCase _actualizarProyectoUseCase;
+  final EliminarProyectoUseCase _eliminarProyectoUseCase;
   final ObtenerArbolInfraestructuraUseCase _obtenerEstructuraUseCase;
   final CrearUnidadesAccesoriasEnLoteUseCase
   _crearUnidadesAccesoriasEnLoteUseCase;
@@ -454,6 +482,44 @@ class SuperadminBloc extends Bloc<SuperadminEvent, SuperadminState> {
             mensaje: 'Proyecto "${proyecto.nombre}" actualizado.',
             exito: true,
             limpiarDetalle: true,
+          ),
+        );
+        add(const ProyectosSolicitados());
+      },
+    );
+  }
+
+  Future<void> _onProyectoEliminado(
+    ProyectoEliminado event,
+    Emitter<SuperadminState> emit,
+  ) async {
+    emit(
+      state.copyWith(
+        eliminando: true,
+        limpiarMensaje: true,
+        limpiarProyectoEliminado: true,
+      ),
+    );
+
+    final result = await _eliminarProyectoUseCase(event.proyectoId);
+
+    await result.fold(
+      (failure) async {
+        emit(
+          state.copyWith(
+            eliminando: false,
+            exito: false,
+            mensaje: failure.message,
+          ),
+        );
+      },
+      (_) async {
+        emit(
+          state.copyWith(
+            eliminando: false,
+            exito: true,
+            mensaje: 'Proyecto "${event.nombre}" eliminado.',
+            proyectoEliminadoId: event.proyectoId,
           ),
         );
         add(const ProyectosSolicitados());

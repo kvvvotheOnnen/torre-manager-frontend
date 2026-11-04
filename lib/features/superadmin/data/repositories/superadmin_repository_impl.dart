@@ -112,6 +112,11 @@ class SuperadminRepositoryImpl implements SuperadminRepositoryInterface {
   }
 
   @override
+  Future<Either<Failure, void>> eliminarProyecto(String id) {
+    return _guard(() => _remoteDataSource.eliminarProyecto(id));
+  }
+
+  @override
   Future<Either<Failure, List<ProyectoDetalle>>> listarMisProyectos() async {
     return _guard(
       () => _remoteDataSource.listarMisProyectos().then(

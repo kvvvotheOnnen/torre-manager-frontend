@@ -153,6 +153,10 @@ class SuperadminRemoteDataSource {
     );
   }
 
+  Future<void> eliminarProyecto(String id) async {
+    await _dio.delete<void>(AppConfig.superadminProyectoPath(id));
+  }
+
   Future<List<ProyectoDetalleDTO>> listarMisProyectos() async {
     final response = await _dio.get<Map<String, dynamic>>(
       AppConfig.misProyectosPath,

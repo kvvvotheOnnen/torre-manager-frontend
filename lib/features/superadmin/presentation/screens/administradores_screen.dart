@@ -3,8 +3,27 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../bloc/administradores_bloc.dart';
 
-class AdministradoresScreen extends StatelessWidget {
+class AdministradoresScreen extends StatefulWidget {
   const AdministradoresScreen({super.key});
+
+  @override
+  State<AdministradoresScreen> createState() => _AdministradoresScreenState();
+}
+
+class _AdministradoresScreenState extends State<AdministradoresScreen> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+
+      final bloc = context.read<AdministradoresBloc>();
+      final state = bloc.state;
+      if (state.administradores.isEmpty && !state.cargando) {
+        bloc.add(const AdministradoresSolicitados());
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -38,16 +57,6 @@ class AdministradoresScreen extends StatelessWidget {
           }
         },
         builder: (context, state) {
-          if (state.administradores.isEmpty &&
-              !state.cargando &&
-              state.mensaje == null) {
-            WidgetsBinding.instance.addPostFrameCallback((_) {
-              context.read<AdministradoresBloc>().add(
-                const AdministradoresSolicitados(),
-              );
-            });
-          }
-
           if (state.cargando && state.administradores.isEmpty) {
             return const Center(child: CircularProgressIndicator());
           }

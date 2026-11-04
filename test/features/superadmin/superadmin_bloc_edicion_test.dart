@@ -24,13 +24,16 @@ import 'package:torre_manager_frontend/features/superadmin/domain/entities/tipo_
 import 'package:torre_manager_frontend/features/superadmin/domain/repositories/superadmin_repository.dart';
 import 'package:torre_manager_frontend/features/superadmin/domain/usecases/actualizar_proyecto_usecase.dart';
 import 'package:torre_manager_frontend/features/superadmin/domain/usecases/crear_proyecto_usecase.dart';
+import 'package:torre_manager_frontend/features/superadmin/domain/usecases/eliminar_proyecto_usecase.dart';
 import 'package:torre_manager_frontend/features/superadmin/domain/usecases/listar_proyectos_usecase.dart';
 import 'package:torre_manager_frontend/features/superadmin/domain/usecases/obtener_proyecto_usecase.dart';
 import 'package:torre_manager_frontend/features/superadmin/presentation/bloc/superadmin_bloc.dart';
 
 class _FakeSuperadminRepository implements SuperadminRepositoryInterface {
   String? proyectoActualizadoId;
+  String? proyectoEliminadoId;
   Failure? crearProyectoFailure;
+  Failure? eliminarProyectoFailure;
 
   @override
   Future<Either<Failure, ProyectoDetalle>> obtenerProyecto(String id) async {
@@ -58,6 +61,15 @@ class _FakeSuperadminRepository implements SuperadminRepositoryInterface {
         adminIds: adminIds,
       ),
     );
+  }
+
+  @override
+  Future<Either<Failure, void>> eliminarProyecto(String id) async {
+    final failure = eliminarProyectoFailure;
+    if (failure != null) return Left(failure);
+
+    proyectoEliminadoId = id;
+    return const Right(null);
   }
 
   @override
@@ -249,6 +261,7 @@ void main() {
       crearProyectoUseCase: CrearProyectoUseCase(repository),
       obtenerProyectoUseCase: ObtenerProyectoUseCase(repository),
       actualizarProyectoUseCase: ActualizarProyectoUseCase(repository),
+      eliminarProyectoUseCase: EliminarProyectoUseCase(repository),
       obtenerEstructuraUseCase: ObtenerArbolInfraestructuraUseCase(
         infraestructuraRepository,
       ),
@@ -302,6 +315,51 @@ void main() {
     );
 
     expect(repository.proyectoActualizadoId, '7');
+  });
+
+  test('elimina el proyecto y ordena recargar el listado', () async {
+    bloc.add(
+      const ProyectoEliminado(proyectoId: '7', nombre: 'Proyecto original'),
+    );
+
+    await expectLater(
+      bloc.stream,
+      emitsThrough(
+        isA<SuperadminState>()
+            .having(
+              (s) => s.mensaje,
+              'mensaje',
+              'Proyecto "Proyecto original" eliminado.',
+            )
+            .having((s) => s.exito, 'exito', true)
+            .having((s) => s.eliminando, 'eliminando', false)
+            .having((s) => s.proyectoEliminadoId, 'proyectoEliminadoId', '7'),
+      ),
+    );
+
+    expect(repository.proyectoEliminadoId, '7');
+  });
+
+  test('al fallar la eliminacion emite el error', () async {
+    repository.eliminarProyectoFailure = const ValidationFailure(
+      'No se pudo eliminar.',
+    );
+
+    bloc.add(
+      const ProyectoEliminado(proyectoId: '7', nombre: 'Proyecto original'),
+    );
+
+    await expectLater(
+      bloc.stream,
+      emitsThrough(
+        isA<SuperadminState>()
+            .having((s) => s.mensaje, 'mensaje', 'No se pudo eliminar.')
+            .having((s) => s.exito, 'exito', false)
+            .having((s) => s.eliminando, 'eliminando', false),
+      ),
+    );
+
+    expect(repository.proyectoEliminadoId, isNull);
   });
 
   test(

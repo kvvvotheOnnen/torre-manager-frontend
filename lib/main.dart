@@ -27,6 +27,7 @@ import 'features/superadmin/data/repositories/superadmin_repository_impl.dart';
 import 'features/superadmin/domain/usecases/actualizar_proyecto_usecase.dart';
 import 'features/superadmin/domain/usecases/crear_administrador_usecase.dart';
 import 'features/superadmin/domain/usecases/crear_proyecto_usecase.dart';
+import 'features/superadmin/domain/usecases/eliminar_proyecto_usecase.dart';
 import 'features/superadmin/domain/usecases/listar_administradores_usecase.dart';
 import 'features/superadmin/domain/usecases/listar_mis_proyectos_usecase.dart';
 import 'features/superadmin/domain/usecases/listar_proyectos_usecase.dart';
@@ -102,6 +103,7 @@ class _TorreManagerAppState extends State<TorreManagerApp> {
       actualizarProyectoUseCase: ActualizarProyectoUseCase(
         superadminRepository,
       ),
+      eliminarProyectoUseCase: EliminarProyectoUseCase(superadminRepository),
       obtenerEstructuraUseCase: ObtenerArbolInfraestructuraUseCase(
         infraestructuraRepository,
       ),
