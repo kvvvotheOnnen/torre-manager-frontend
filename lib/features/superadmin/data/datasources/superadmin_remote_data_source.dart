@@ -74,19 +74,7 @@ class SuperadminRemoteDataSource {
         'descripcion': ?descripcion,
         'tipo_condominio': tipoCondominio.name,
         'modulos': modulos.map((modulo) => modulo.valor).toList(),
-        'agrupaciones': agrupaciones
-            .map(
-              (agrupacion) => {
-                'nombre': agrupacion.nombre,
-                'tipo': agrupacion.tipo.name,
-                'prefijo': ?agrupacion.prefijo,
-                'piso_desde': ?agrupacion.pisoDesde,
-                'piso_hasta': ?agrupacion.pisoHasta,
-                'unidades_por_piso': ?agrupacion.unidadesPorPiso,
-                'cantidad': ?agrupacion.cantidad,
-              },
-            )
-            .toList(),
+        'agrupaciones': _agrupacionesJson(agrupaciones),
         'instalaciones': instalaciones
             .map(
               (instalacion) => {
@@ -142,19 +130,7 @@ class SuperadminRemoteDataSource {
         'descripcion': descripcion,
         if (tipoCondominio != null) 'tipo_condominio': tipoCondominio.name,
         if (agrupaciones != null)
-          'agrupaciones': agrupaciones
-              .map(
-                (agrupacion) => {
-                  'nombre': agrupacion.nombre,
-                  'tipo': agrupacion.tipo.name,
-                  'prefijo': ?agrupacion.prefijo,
-                  'piso_desde': ?agrupacion.pisoDesde,
-                  'piso_hasta': ?agrupacion.pisoHasta,
-                  'unidades_por_piso': ?agrupacion.unidadesPorPiso,
-                  'cantidad': ?agrupacion.cantidad,
-                },
-              )
-              .toList(),
+          'agrupaciones': _agrupacionesJson(agrupaciones),
         if (instalaciones != null)
           'instalaciones': instalaciones
               .map(
@@ -226,6 +202,42 @@ class SuperadminRemoteDataSource {
     return ProyectoDetalleDTO.fromJson(
       response.data ?? const <String, dynamic>{},
     );
+  }
+
+  List<Map<String, dynamic>> _agrupacionesJson(
+    List<DefinicionAgrupacion> agrupaciones,
+  ) {
+    return agrupaciones
+        .map(
+          (agrupacion) => {
+            'nombre': agrupacion.nombre,
+            'tipo': agrupacion.tipo.name,
+            'prefijo': ?agrupacion.prefijo,
+            'piso_desde': ?agrupacion.pisoDesde,
+            'piso_hasta': ?agrupacion.pisoHasta,
+            'unidades_por_piso': ?agrupacion.unidadesPorPiso,
+            'cantidad': ?agrupacion.cantidad,
+            if (agrupacion.pisosExcepcion.isNotEmpty)
+              'pisos_excepcion': agrupacion.pisosExcepcion
+                  .map(
+                    (piso) => {
+                      'piso': piso.piso,
+                      'unidades': piso.unidades
+                          .map(
+                            (unidad) => {
+                              'identificador': unidad.identificador,
+                              'tipo': unidad.tipo == TipoUnidadExcepcion.simple
+                                  ? 'simple'
+                                  : 'instalacion',
+                            },
+                          )
+                          .toList(),
+                    },
+                  )
+                  .toList(),
+          },
+        )
+        .toList();
   }
 
   Future<void> eliminarProyecto(String id) async {
