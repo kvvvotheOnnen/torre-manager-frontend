@@ -30,13 +30,18 @@ class UnidadExcepcion extends Equatable {
 /// Piso que reemplaza la generación automática de unidades por unidades
 /// creadas manualmente.
 class PisoExcepcion extends Equatable {
-  const PisoExcepcion({required this.piso, required this.unidades});
+  const PisoExcepcion({
+    required this.piso,
+    required this.unidades,
+    this.sinUnidades = false,
+  });
 
   final int piso;
   final List<UnidadExcepcion> unidades;
+  final bool sinUnidades;
 
   @override
-  List<Object?> get props => [piso, unidades];
+  List<Object?> get props => [piso, unidades, sinUnidades];
 }
 
 /// Extrae las instalaciones extra definidas en los pisos con excepción.

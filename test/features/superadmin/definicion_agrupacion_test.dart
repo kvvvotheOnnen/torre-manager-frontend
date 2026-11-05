@@ -58,5 +58,11 @@ void main() {
 
       expect(instalacionesDePisosExcepcion(pisos), isEmpty);
     });
+
+    test('ignora los pisos marcados como sin unidades', () {
+      const pisos = [PisoExcepcion(piso: 2, unidades: [], sinUnidades: true)];
+
+      expect(instalacionesDePisosExcepcion(pisos), isEmpty);
+    });
   });
 }

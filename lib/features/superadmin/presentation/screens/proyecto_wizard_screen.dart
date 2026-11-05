@@ -201,26 +201,9 @@ class _ProyectoWizardScreenState extends State<ProyectoWizardScreen> {
     final hasta = int.tryParse(_edificio.pisoHasta.text.trim());
     if (desde == null || hasta == null || hasta < desde) return null;
 
-    final unidadesPorPiso =
-        int.tryParse(_edificio.unidadesPorPiso.text.trim()) ?? 0;
-    final excepciones = _edificio.excepciones;
-
-    final generados = <String>{};
-    for (var piso = desde; piso <= hasta; piso++) {
-      final esExcepcion = excepciones.any((e) => e.piso == piso);
-      if (esExcepcion) continue;
-
-      for (var n = 1; n <= unidadesPorPiso; n++) {
-        generados.add(
-          _identificadorUnidad(_edificio.nombre.text.trim(), piso, n),
-        );
-      }
-    }
-
     final pisos = <int>{};
-    final manuales = <String>{};
 
-    for (final excepcion in excepciones) {
+    for (final excepcion in _edificio.excepciones) {
       if (excepcion.piso < desde || excepcion.piso > hasta) {
         return 'El piso ${excepcion.piso} está fuera del rango configurado.';
       }
@@ -229,36 +212,31 @@ class _ProyectoWizardScreenState extends State<ProyectoWizardScreen> {
         return 'El piso ${excepcion.piso} está repetido en las excepciones.';
       }
 
+      if (excepcion.sinUnidades) continue;
+
       if (excepcion.unidades.isEmpty) {
         return 'El piso ${excepcion.piso} debe tener al menos una unidad.';
       }
 
       for (final unidad in excepcion.unidades) {
-        final identificador = unidad.identificador.text.trim();
-
-        if (identificador.isEmpty) {
-          return 'Completa el identificador de las unidades del piso ${excepcion.piso}.';
-        }
-
         if (unidad.tipo == null) {
-          return 'Selecciona unidad simple o instalación extra en "$identificador".';
+          return 'Selecciona unidad simple o instalación extra en el piso ${excepcion.piso}.';
         }
 
-        if (unidad.tipo == TipoUnidadExcepcion.simple) {
-          if (generados.contains(identificador) ||
-              !manuales.add(identificador)) {
-            return 'El identificador "$identificador" está duplicado.';
-          }
-          continue;
+        if (unidad.tipo == TipoUnidadExcepcion.simple) continue;
+
+        final nombre = unidad.identificador.text.trim();
+        if (nombre.isEmpty) {
+          return 'Completa el nombre de la instalación del piso ${excepcion.piso}.';
         }
 
         final capacidad = int.tryParse(unidad.capacidad.text.trim());
         if (capacidad == null || capacidad < 1 || capacidad > 500) {
-          return 'La capacidad de "$identificador" debe estar entre 1 y 500.';
+          return 'La capacidad de "$nombre" debe estar entre 1 y 500.';
         }
 
         if (unidad.descripcion.text.trim().length > 100) {
-          return 'La descripción de "$identificador" no puede superar 100 caracteres.';
+          return 'La descripción de "$nombre" no puede superar 100 caracteres.';
         }
       }
     }
@@ -877,8 +855,9 @@ class _ProyectoWizardScreenState extends State<ProyectoWizardScreen> {
           ],
         ),
         Text(
-          'Las unidades de estos pisos se crean manualmente. Puedes crear '
-          'unidades simples o instalaciones extra.',
+          'Las unidades de estos pisos se crean manualmente y respetan la '
+          'numeración del piso. Marca "Piso sin unidades" si el piso queda '
+          'vacío.',
           style: Theme.of(context).textTheme.bodySmall,
         ),
         if (form.excepciones.isEmpty)
@@ -922,29 +901,75 @@ class _ProyectoWizardScreenState extends State<ProyectoWizardScreen> {
                 ),
               ],
             ),
-            ...List.generate(
-              excepcion.unidades.length,
-              (index) => _cardUnidadExcepcion(excepcion, index),
-            ),
-            Align(
-              alignment: Alignment.centerLeft,
-              child: TextButton.icon(
-                onPressed: () => setState(
-                  () => excepcion.unidades.add(_UnidadExcepcionForm()),
-                ),
-                icon: const Icon(Icons.add, size: 18),
-                label: const Text('Agregar unidad'),
+            CheckboxListTile(
+              contentPadding: EdgeInsets.zero,
+              dense: true,
+              title: const Text('Piso sin unidades'),
+              subtitle: const Text(
+                'El piso quedará vacío, sin unidades ni instalaciones.',
               ),
+              value: excepcion.sinUnidades,
+              onChanged: (value) => setState(() {
+                excepcion.sinUnidades = value ?? false;
+                if (!excepcion.sinUnidades && excepcion.unidades.isEmpty) {
+                  excepcion.unidades.add(_UnidadExcepcionForm());
+                }
+              }),
             ),
+            if (excepcion.sinUnidades)
+              const Padding(
+                padding: EdgeInsets.only(top: 4),
+                child: Text('Este piso no tendrá unidades.'),
+              )
+            else ...[
+              ..._cardsUnidadesExcepcion(excepcion),
+              Align(
+                alignment: Alignment.centerLeft,
+                child: TextButton.icon(
+                  onPressed: () => setState(
+                    () => excepcion.unidades.add(_UnidadExcepcionForm()),
+                  ),
+                  icon: const Icon(Icons.add, size: 18),
+                  label: const Text('Agregar unidad'),
+                ),
+              ),
+            ],
           ],
         ),
       ),
     );
   }
 
-  Widget _cardUnidadExcepcion(_PisoExcepcionForm excepcion, int index) {
+  List<Widget> _cardsUnidadesExcepcion(_PisoExcepcionForm excepcion) {
+    var secuenciaSimple = 0;
+    final cards = <Widget>[];
+
+    for (var index = 0; index < excepcion.unidades.length; index++) {
+      final unidad = excepcion.unidades[index];
+
+      if (unidad.tipo == TipoUnidadExcepcion.simple) {
+        secuenciaSimple++;
+      }
+
+      cards.add(_cardUnidadExcepcion(excepcion, index, secuenciaSimple));
+    }
+
+    return cards;
+  }
+
+  Widget _cardUnidadExcepcion(
+    _PisoExcepcionForm excepcion,
+    int index,
+    int secuenciaSimple,
+  ) {
     final unidad = excepcion.unidades[index];
     final esInstalacion = unidad.tipo == TipoUnidadExcepcion.instalacionExtra;
+    final esSimple = unidad.tipo == TipoUnidadExcepcion.simple;
+    final identificadorSugerido = _identificadorUnidad(
+      _edificio.nombre.text.trim(),
+      excepcion.piso,
+      secuenciaSimple,
+    );
 
     return Card(
       key: ObjectKey(unidad),
@@ -957,17 +982,13 @@ class _ProyectoWizardScreenState extends State<ProyectoWizardScreen> {
             Row(
               children: [
                 Expanded(
-                  child: TextFormField(
-                    controller: unidad.identificador,
-                    decoration: InputDecoration(
-                      labelText: esInstalacion
-                          ? 'Nombre de la instalación'
-                          : 'Identificador de la unidad',
-                      border: const OutlineInputBorder(),
-                      isDense: true,
-                    ),
-                    validator: (value) =>
-                        (value?.trim().isEmpty ?? true) ? 'Requerido' : null,
+                  child: Text(
+                    esInstalacion
+                        ? 'Instalación extra'
+                        : esSimple
+                        ? 'Unidad simple'
+                        : 'Unidad ${index + 1}',
+                    style: const TextStyle(fontWeight: FontWeight.bold),
                   ),
                 ),
                 IconButton(
@@ -992,7 +1013,7 @@ class _ProyectoWizardScreenState extends State<ProyectoWizardScreen> {
                       contentPadding: EdgeInsets.zero,
                       dense: true,
                       title: const Text('Unidad simple'),
-                      value: unidad.tipo == TipoUnidadExcepcion.simple,
+                      value: esSimple,
                       onChanged: (value) => setState(() {
                         unidad.tipo = (value ?? false)
                             ? TipoUnidadExcepcion.simple
@@ -1027,7 +1048,27 @@ class _ProyectoWizardScreenState extends State<ProyectoWizardScreen> {
                 );
               },
             ),
+            if (esSimple)
+              InputDecorator(
+                decoration: const InputDecoration(
+                  labelText: 'Identificador asignado',
+                  border: OutlineInputBorder(),
+                  isDense: true,
+                ),
+                child: Text(identificadorSugerido),
+              ),
             if (esInstalacion) ...[
+              const SizedBox(height: 8),
+              TextFormField(
+                controller: unidad.identificador,
+                decoration: const InputDecoration(
+                  labelText: 'Nombre de la instalación',
+                  border: OutlineInputBorder(),
+                  isDense: true,
+                ),
+                validator: (value) =>
+                    (value?.trim().isEmpty ?? true) ? 'Requerido' : null,
+              ),
               const SizedBox(height: 8),
               TextFormField(
                 controller: unidad.capacidad,
@@ -1323,18 +1364,25 @@ class _AgrupacionPisosForm {
         .map(
           (excepcion) => PisoExcepcion(
             piso: excepcion.piso,
-            unidades: excepcion.unidades
-                .map(
-                  (unidad) => UnidadExcepcion(
-                    identificador: unidad.identificador.text.trim(),
-                    tipo: unidad.tipo ?? TipoUnidadExcepcion.simple,
-                    capacidad: int.tryParse(unidad.capacidad.text.trim()),
-                    descripcion: unidad.descripcion.text.trim().isEmpty
-                        ? null
-                        : unidad.descripcion.text.trim(),
-                  ),
-                )
-                .toList(),
+            sinUnidades: excepcion.sinUnidades,
+            unidades: excepcion.sinUnidades
+                ? const []
+                : excepcion.unidades
+                      .map(
+                        (unidad) => UnidadExcepcion(
+                          identificador:
+                              unidad.tipo ==
+                                  TipoUnidadExcepcion.instalacionExtra
+                              ? unidad.identificador.text.trim()
+                              : '',
+                          tipo: unidad.tipo ?? TipoUnidadExcepcion.simple,
+                          capacidad: int.tryParse(unidad.capacidad.text.trim()),
+                          descripcion: unidad.descripcion.text.trim().isEmpty
+                              ? null
+                              : unidad.descripcion.text.trim(),
+                        ),
+                      )
+                      .toList(),
           ),
         )
         .toList();
@@ -1363,6 +1411,7 @@ class _PisoExcepcionForm {
 
   final int piso;
   final List<_UnidadExcepcionForm> unidades = [];
+  bool sinUnidades = false;
 
   void dispose() {
     for (final unidad in unidades) {

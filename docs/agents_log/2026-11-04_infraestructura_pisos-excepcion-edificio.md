@@ -49,3 +49,12 @@ extra con capacidad y descripción.
 ## Pendientes
 
 - Ninguno para esta tarea.
+
+## Ajuste posterior: piso sin unidades y numeración automática
+
+- Se agregó la casilla “Piso sin unidades” a nivel de piso; al marcarla se
+  ocultan las unidades y no se exige identificador.
+- Las unidades simples de un piso con excepción muestran el identificador
+  calculado automáticamente (`201`, `202`, ...) y ya no se editan manualmente.
+- La numeración respeta el número de piso y salta los pisos sin unidades.
+- Verificación: `flutter analyze` sin issues; `flutter test` 30 tests en verde.

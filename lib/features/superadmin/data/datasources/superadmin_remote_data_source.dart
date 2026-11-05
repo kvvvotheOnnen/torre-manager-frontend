@@ -222,16 +222,23 @@ class SuperadminRemoteDataSource {
                   .map(
                     (piso) => {
                       'piso': piso.piso,
-                      'unidades': piso.unidades
-                          .map(
-                            (unidad) => {
-                              'identificador': unidad.identificador,
-                              'tipo': unidad.tipo == TipoUnidadExcepcion.simple
-                                  ? 'simple'
-                                  : 'instalacion',
-                            },
-                          )
-                          .toList(),
+                      if (piso.sinUnidades) 'sin_unidades': true,
+                      'unidades': piso.sinUnidades
+                          ? const []
+                          : piso.unidades
+                                .map(
+                                  (unidad) => {
+                                    'tipo':
+                                        unidad.tipo ==
+                                            TipoUnidadExcepcion.simple
+                                        ? 'simple'
+                                        : 'instalacion',
+                                    if (unidad.tipo ==
+                                        TipoUnidadExcepcion.instalacionExtra)
+                                      'identificador': unidad.identificador,
+                                  },
+                                )
+                                .toList(),
                     },
                   )
                   .toList(),
