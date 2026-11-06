@@ -7,6 +7,7 @@ import '../../features/auth/presentation/bloc/auth_bloc.dart';
 import '../../features/auth/presentation/bloc/auth_state.dart';
 import '../../features/auth/presentation/screens/login_screen.dart';
 import '../../features/dashboard/presentation/screens/dashboard_screen.dart';
+import '../../features/dashboard/presentation/screens/modulo_proximamente_screen.dart';
 import '../../features/infraestructura/presentation/screens/infraestructura_screen.dart';
 import '../../features/superadmin/presentation/screens/administradores_screen.dart';
 import '../../features/superadmin/presentation/screens/proyectos_screen.dart';
@@ -21,6 +22,9 @@ class AppRoutes {
   static const String dashboard = '/dashboard';
   static const String selectorProyecto = '/selector-proyecto';
   static const String adminInfraestructura = '/admin/infraestructura';
+  static const String adminModulos = '/admin/modulos';
+  static String adminModulo(String id) =>
+      '$adminModulos/${Uri.encodeComponent(id)}';
   static const String superadminProyectos = '/superadmin/proyectos';
   static const String superadminAdministradores = '/superadmin/administradores';
 
@@ -40,7 +44,7 @@ GoRouter buildRouter(AuthBloc authBloc, TenantBloc tenantBloc) {
       final isSplash = location == AppRoutes.splash;
       final isLogin = location == AppRoutes.login;
       final isSelector = location == AppRoutes.selectorProyecto;
-      final isInfraestructura = location == AppRoutes.adminInfraestructura;
+      final isAdminRoute = location.startsWith('/admin');
       final isSuperadminRoute = location.startsWith('/superadmin');
 
       switch (authState) {
@@ -51,7 +55,7 @@ GoRouter buildRouter(AuthBloc authBloc, TenantBloc tenantBloc) {
           final rol = authState.usuario.rol;
           if (isSplash || isLogin) return AppRoutes.dashboard;
 
-          if (isInfraestructura &&
+          if (isAdminRoute &&
               rol != Rol.administrador &&
               rol != Rol.superadmin) {
             return AppRoutes.dashboard;
@@ -103,6 +107,12 @@ GoRouter buildRouter(AuthBloc authBloc, TenantBloc tenantBloc) {
       GoRoute(
         path: AppRoutes.adminInfraestructura,
         builder: (context, state) => const InfraestructuraScreen(),
+      ),
+      GoRoute(
+        path: '${AppRoutes.adminModulos}/:id',
+        builder: (context, state) => ModuloProximamenteScreen(
+          moduloId: state.pathParameters['id'] ?? '',
+        ),
       ),
       GoRoute(
         path: AppRoutes.superadminProyectos,

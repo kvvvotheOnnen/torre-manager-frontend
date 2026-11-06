@@ -32,6 +32,31 @@ Cada nueva funcionalidad (ej. `Paqueteria`, `Quincho`, `Auth`) debe seguir esta 
   * `/Repositories` (Implementaciones)
 * `/Presentation` (UI y Estado / Controladores HTTP)
 
+### 2.3 Taxonomía de Módulos y Feature Flags por Proyecto
+
+El sistema distingue dos tipos de módulos y no deben mezclarse:
+
+1. **Módulos por defecto o globales**
+   - Están disponibles para todos los proyectos existentes y futuros.
+   - No se persisten en `proyectos.modulos`.
+   - No pueden deshabilitarse por proyecto.
+   - Su fuente de verdad es el catálogo backend (`ModuloGeneral`).
+   - Agregar uno nuevo requiere modificar el catálogo backend y su entrada visual/ruta en el frontend; no requiere migración de base de datos.
+
+2. **Módulos configurables por proyecto**
+   - Se persisten exclusivamente en `proyectos.modulos`.
+   - Se habilitan o deshabilitan durante la creación o edición del proyecto.
+   - Su fuente de verdad de definición es `ModuloSistema`.
+   - Un módulo configurable ausente del proyecto se muestra bloqueado en el dashboard y no debe permitir navegación funcional.
+
+**Reglas obligatorias:**
+
+- No agregar módulos globales a `ModuloSistema`.
+- El catálogo canónico se expone desde backend mediante `GET /api/dashboard/modulos`; el frontend no debe hardcodear la lista.
+- El dashboard muestra siempre los módulos globales y muestra los configurables habilitados o bloqueados según el proyecto activo.
+- Ocultar o bloquear un módulo en el frontend no es un control de seguridad. Todo endpoint de un módulo configurable debe validar en backend que el módulo esté habilitado para el proyecto activo.
+- Los módulos globales no requieren validación de habilitación por proyecto.
+
 ## 3. Especificaciones del Backend (Laravel 11 API RESTful)
 
 * **Rol:** Proveedor de API puro. Sin vistas web (Vite/Blade eliminados).

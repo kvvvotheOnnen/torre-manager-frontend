@@ -8,6 +8,7 @@ import '../../../auth/presentation/bloc/auth_event.dart';
 import '../../../auth/presentation/bloc/auth_state.dart';
 import '../../../superadmin/domain/entities/modulo_sistema.dart';
 import '../../../tenant/presentation/bloc/tenant_bloc.dart';
+import 'admin_dashboard_screen.dart';
 
 /// Descriptor de un módulo visible en el dashboard.
 class _Modulo {
@@ -83,6 +84,10 @@ class DashboardScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (usuario.rol == Rol.administrador) {
+      return AdminDashboardScreen(usuario: usuario);
+    }
+
     final theme = Theme.of(context);
     final modulos = _modulosFiltrados(context, usuario.rol);
 
