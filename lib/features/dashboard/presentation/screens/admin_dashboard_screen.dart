@@ -344,28 +344,32 @@ class _PanelModulos extends StatelessWidget {
               child: ListView(
                 padding: const EdgeInsets.symmetric(horizontal: 12),
                 children: [
-                  _TituloSeccion(texto: 'Módulos del proyecto'),
-                  ...modulosState.modulosProyecto.map(
-                    (modulo) => _ItemModulo(
-                      modulo: modulo,
-                      seleccionado:
-                          GoRouterState.of(context).matchedLocation ==
-                          _rutaPara(modulo),
+                  if (modulosState.modulosProyecto.isNotEmpty) ...[
+                    _TituloSeccion(texto: 'Módulos del proyecto'),
+                    ...modulosState.modulosProyecto.map(
+                      (modulo) => _ItemModulo(
+                        modulo: modulo,
+                        seleccionado:
+                            GoRouterState.of(context).matchedLocation ==
+                            _rutaPara(modulo),
+                      ),
                     ),
-                  ),
-                  const Padding(
-                    padding: EdgeInsets.symmetric(vertical: 8),
-                    child: Divider(),
-                  ),
-                  _TituloSeccion(texto: 'Módulos generales'),
-                  ...modulosState.modulosGenerales.map(
-                    (modulo) => _ItemModulo(
-                      modulo: modulo,
-                      seleccionado:
-                          GoRouterState.of(context).matchedLocation ==
-                          _rutaPara(modulo),
+                    const Padding(
+                      padding: EdgeInsets.symmetric(vertical: 8),
+                      child: Divider(),
                     ),
-                  ),
+                  ],
+                  if (modulosState.modulosGenerales.isNotEmpty) ...[
+                    _TituloSeccion(texto: 'Módulos generales'),
+                    ...modulosState.modulosGenerales.map(
+                      (modulo) => _ItemModulo(
+                        modulo: modulo,
+                        seleccionado:
+                            GoRouterState.of(context).matchedLocation ==
+                            _rutaPara(modulo),
+                      ),
+                    ),
+                  ],
                   if (modulosState.status == ModulosDashboardStatus.error)
                     Padding(
                       padding: const EdgeInsets.all(12),
@@ -633,7 +637,7 @@ String _rutaPara(ModuloDashboard modulo) {
 IconData _iconoPara(String id) {
   return switch (id) {
     'paqueteria' => Icons.inventory_2_outlined,
-    'quincho' => Icons.pool,
+    'instalaciones_extra' => Icons.event_available_outlined,
     'gastos_comunes' => Icons.receipt_long,
     'control_acceso' => Icons.security,
     'registro_conserjes' => Icons.badge_outlined,

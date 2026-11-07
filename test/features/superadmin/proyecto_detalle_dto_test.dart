@@ -63,5 +63,13 @@ void main() {
 
       expect(dto.toEntity().tipoCondominio, TipoCondominio.edificio);
     });
+
+    test('ignora módulos que ya no son configurables', () {
+      final json = baseJson()
+        ..['modulos'] = ['infraestructura', 'paqueteria', 'quincho'];
+      final entity = ProyectoDetalleDTO.fromJson(json).toEntity();
+
+      expect(entity.modulos, [ModuloSistema.infraestructura]);
+    });
   });
 }

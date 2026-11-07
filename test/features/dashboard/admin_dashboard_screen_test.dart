@@ -36,7 +36,7 @@ class _FakeSuperadminRepository implements SuperadminRepositoryInterface {
         nombre: 'Proyecto Dos',
         descripcion: 'Segundo',
         tipoCondominio: TipoCondominio.casas,
-        modulos: [ModuloSistema.paqueteria],
+        modulos: [ModuloSistema.infraestructura],
         instalacionesExtra: [],
         adminIds: [],
       ),
@@ -62,8 +62,29 @@ class _FakeDashboardRepository implements DashboardRepository {
         id: 'paqueteria',
         nombre: 'Paquetería',
         descripcion: 'Encomiendas',
-        tipo: TipoModuloDashboard.proyecto,
-        habilitado: false,
+        tipo: TipoModuloDashboard.general,
+        habilitado: true,
+      ),
+      ModuloDashboard(
+        id: 'instalaciones_extra',
+        nombre: 'Instalaciones extra',
+        descripcion: 'Reserva de instalaciones',
+        tipo: TipoModuloDashboard.general,
+        habilitado: true,
+      ),
+      ModuloDashboard(
+        id: 'gastos_comunes',
+        nombre: 'Gastos comunes',
+        descripcion: 'Pago de gastos comunes',
+        tipo: TipoModuloDashboard.general,
+        habilitado: true,
+      ),
+      ModuloDashboard(
+        id: 'control_acceso',
+        nombre: 'Control de acceso',
+        descripcion: 'Control de accesos',
+        tipo: TipoModuloDashboard.general,
+        habilitado: true,
       ),
       ModuloDashboard(
         id: 'registro_conserjes',
@@ -71,6 +92,13 @@ class _FakeDashboardRepository implements DashboardRepository {
         descripcion: 'Gestión de conserjes',
         tipo: TipoModuloDashboard.general,
         habilitado: true,
+      ),
+      ModuloDashboard(
+        id: 'modulo_bloqueado',
+        nombre: 'Módulo bloqueado',
+        descripcion: 'Módulo de prueba',
+        tipo: TipoModuloDashboard.proyecto,
+        habilitado: false,
       ),
     ]);
   }
@@ -172,6 +200,9 @@ void main() {
     expect(find.text('MÓDULOS GENERALES'), findsOneWidget);
     expect(find.text('Infraestructura'), findsNothing);
     expect(find.text('Paquetería'), findsWidgets);
+    expect(find.text('Instalaciones extra'), findsWidgets);
+    expect(find.text('Gastos comunes'), findsWidgets);
+    expect(find.text('Control de acceso'), findsWidgets);
     expect(find.text('No habilitado para este proyecto.'), findsOneWidget);
     expect(find.byIcon(Icons.lock_outline), findsWidgets);
   });

@@ -32,7 +32,7 @@ void main() {
       id: 'paqueteria',
       nombre: 'Paquetería',
       descripcion: 'Encomiendas',
-      tipo: TipoModuloDashboard.proyecto,
+      tipo: TipoModuloDashboard.general,
       habilitado: true,
     ),
     ModuloDashboard(
@@ -61,8 +61,8 @@ void main() {
     expect(states.first.status, ModulosDashboardStatus.cargando);
     expect(states.last.status, ModulosDashboardStatus.cargado);
     expect(states.last.modulos, [modulos[1], modulos[2]]);
-    expect(states.last.modulosProyecto, [modulos[1]]);
-    expect(states.last.modulosGenerales, [modulos[2]]);
+    expect(states.last.modulosProyecto, isEmpty);
+    expect(states.last.modulosGenerales, [modulos[1], modulos[2]]);
     expect(
       states.last.modulos.any((modulo) => modulo.id == 'infraestructura'),
       isFalse,
