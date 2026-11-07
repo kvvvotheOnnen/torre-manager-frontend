@@ -56,6 +56,7 @@ El sistema distingue dos tipos de módulos y no deben mezclarse:
 - El dashboard muestra siempre los módulos globales y muestra los configurables habilitados o bloqueados según el proyecto activo.
 - Ocultar o bloquear un módulo en el frontend no es un control de seguridad. Todo endpoint de un módulo configurable debe validar en backend que el módulo esté habilitado para el proyecto activo.
 - Los módulos globales no requieren validación de habilitación por proyecto.
+- La gestión de infraestructura es una capacidad exclusiva de superadmin. No debe incluirse en el catálogo ni en el dashboard de administrador, y todos sus endpoints deben exigir el rol `superadmin` en backend.
 
 ## 3. Especificaciones del Backend (Laravel 11 API RESTful)
 

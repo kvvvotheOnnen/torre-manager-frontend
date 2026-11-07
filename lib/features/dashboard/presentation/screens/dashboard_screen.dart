@@ -6,8 +6,6 @@ import '../../../auth/domain/entities/usuario.dart';
 import '../../../auth/presentation/bloc/auth_bloc.dart';
 import '../../../auth/presentation/bloc/auth_event.dart';
 import '../../../auth/presentation/bloc/auth_state.dart';
-import '../../../superadmin/domain/entities/modulo_sistema.dart';
-import '../../../tenant/presentation/bloc/tenant_bloc.dart';
 import 'admin_dashboard_screen.dart';
 
 /// Descriptor de un módulo visible en el dashboard.
@@ -17,14 +15,12 @@ class _Modulo {
     required this.descripcion,
     required this.icono,
     required this.ruta,
-    this.modulo,
   });
 
   final String titulo;
   final String descripcion;
   final IconData icono;
   final String ruta;
-  final ModuloSistema? modulo;
 }
 
 class DashboardScreen extends StatelessWidget {
@@ -35,13 +31,6 @@ class DashboardScreen extends StatelessWidget {
   /// Define qué módulos ve cada rol. Es el único punto a editar cuando se
   /// agreguen módulos nuevos por perfil.
   List<_Modulo> _modulosPara(Rol rol) {
-    const infraestructura = _Modulo(
-      titulo: 'Infraestructura',
-      descripcion: 'Proyecto, agrupaciones, unidades principales y accesorias',
-      icono: Icons.domain,
-      ruta: '/admin/infraestructura',
-      modulo: ModuloSistema.infraestructura,
-    );
     const gestionProyectos = _Modulo(
       titulo: 'Gestión de Proyectos',
       descripcion:
@@ -59,27 +48,10 @@ class DashboardScreen extends StatelessWidget {
 
     return switch (rol) {
       Rol.superadmin => const [gestionProyectos, gestionAdministradores],
-      Rol.administrador => const [infraestructura],
+      Rol.administrador => const [],
       Rol.residente => const [],
       Rol.conserje => const [],
     };
-  }
-
-  List<_Modulo> _modulosFiltrados(BuildContext context, Rol rol) {
-    final modulos = _modulosPara(rol);
-
-    if (rol != Rol.administrador) return modulos;
-
-    final proyectoActivo = context.watch<TenantBloc>().state.proyectoActivo;
-    if (proyectoActivo == null) return const [];
-
-    return modulos
-        .where(
-          (modulo) =>
-              modulo.modulo == null ||
-              proyectoActivo.modulos.contains(modulo.modulo),
-        )
-        .toList();
   }
 
   @override
@@ -89,7 +61,7 @@ class DashboardScreen extends StatelessWidget {
     }
 
     final theme = Theme.of(context);
-    final modulos = _modulosFiltrados(context, usuario.rol);
+    final modulos = _modulosPara(usuario.rol);
 
     return Scaffold(
       appBar: AppBar(

@@ -21,7 +21,7 @@ class AppRoutes {
   static const String login = '/login';
   static const String dashboard = '/dashboard';
   static const String selectorProyecto = '/selector-proyecto';
-  static const String adminInfraestructura = '/admin/infraestructura';
+  static const String superadminInfraestructura = '/superadmin/infraestructura';
   static const String adminModulos = '/admin/modulos';
   static String adminModulo(String id) =>
       '$adminModulos/${Uri.encodeComponent(id)}';
@@ -105,7 +105,7 @@ GoRouter buildRouter(AuthBloc authBloc, TenantBloc tenantBloc) {
         builder: (context, state) => const SelectorProyectoScreen(),
       ),
       GoRoute(
-        path: AppRoutes.adminInfraestructura,
+        path: AppRoutes.superadminInfraestructura,
         builder: (context, state) => const InfraestructuraScreen(),
       ),
       GoRoute(

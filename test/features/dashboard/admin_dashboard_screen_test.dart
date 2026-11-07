@@ -170,7 +170,7 @@ void main() {
     expect(find.text('Bienvenido, Admin Demo'), findsOneWidget);
     expect(find.text('MÓDULOS DEL PROYECTO'), findsOneWidget);
     expect(find.text('MÓDULOS GENERALES'), findsOneWidget);
-    expect(find.text('Infraestructura'), findsWidgets);
+    expect(find.text('Infraestructura'), findsNothing);
     expect(find.text('Paquetería'), findsWidgets);
     expect(find.text('No habilitado para este proyecto.'), findsOneWidget);
     expect(find.byIcon(Icons.lock_outline), findsWidgets);

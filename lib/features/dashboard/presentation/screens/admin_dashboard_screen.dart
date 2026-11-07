@@ -627,15 +627,11 @@ void _abrirModulo(BuildContext context, ModuloDashboard modulo) {
 }
 
 String _rutaPara(ModuloDashboard modulo) {
-  return switch (modulo.id) {
-    'infraestructura' => AppRoutes.adminInfraestructura,
-    _ => AppRoutes.adminModulo(modulo.id),
-  };
+  return AppRoutes.adminModulo(modulo.id);
 }
 
 IconData _iconoPara(String id) {
   return switch (id) {
-    'infraestructura' => Icons.domain,
     'paqueteria' => Icons.inventory_2_outlined,
     'quincho' => Icons.pool,
     'gastos_comunes' => Icons.receipt_long,

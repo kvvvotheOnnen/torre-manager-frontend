@@ -74,7 +74,9 @@ class ModulosDashboardBloc
       (modulos) => emit(
         ModulosDashboardState(
           status: ModulosDashboardStatus.cargado,
-          modulos: modulos,
+          modulos: modulos
+              .where((modulo) => modulo.id != 'infraestructura')
+              .toList(),
         ),
       ),
     );
