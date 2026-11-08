@@ -4,16 +4,35 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../domain/entities/modulo_dashboard.dart';
 import '../bloc/modulos_dashboard_bloc.dart';
 
+/// Argumentos opcionales para personalizar la pantalla "Próximamente"
+/// (usado, por ejemplo, por el dashboard preventivo del residente).
+class ProximamenteArgs {
+  const ProximamenteArgs({this.titulo, this.descripcion});
+
+  final String? titulo;
+  final String? descripcion;
+}
+
 class ModuloProximamenteScreen extends StatelessWidget {
-  const ModuloProximamenteScreen({super.key, required this.moduloId});
+  const ModuloProximamenteScreen({
+    super.key,
+    required this.moduloId,
+    this.titulo,
+    this.descripcion,
+  });
 
   final String moduloId;
+  final String? titulo;
+  final String? descripcion;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final modulo = _buscarModulo(context, moduloId);
-    final nombre = modulo?.nombre ?? _tituloDesdeId(moduloId);
+    final nombre = titulo ?? modulo?.nombre ?? _tituloDesdeId(moduloId);
+    final detalle = descripcion ??
+        modulo?.descripcion ??
+        'Este módulo estará disponible próximamente.';
 
     return Scaffold(
       appBar: AppBar(title: Text(nombre)),
@@ -40,8 +59,7 @@ class ModuloProximamenteScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  modulo?.descripcion ??
-                      'Este módulo estará disponible próximamente.',
+                  detalle,
                   textAlign: TextAlign.center,
                   style: theme.textTheme.bodyMedium?.copyWith(
                     color: theme.colorScheme.onSurfaceVariant,

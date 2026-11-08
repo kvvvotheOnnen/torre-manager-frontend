@@ -7,6 +7,7 @@ import '../../../auth/presentation/bloc/auth_bloc.dart';
 import '../../../auth/presentation/bloc/auth_event.dart';
 import '../../../auth/presentation/bloc/auth_state.dart';
 import 'admin_dashboard_screen.dart';
+import 'resident_dashboard_screen.dart';
 
 /// Descriptor de un módulo visible en el dashboard.
 class _Modulo {
@@ -58,6 +59,10 @@ class DashboardScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     if (usuario.rol == Rol.administrador) {
       return AdminDashboardScreen(usuario: usuario);
+    }
+
+    if (usuario.rol == Rol.residente) {
+      return ResidentDashboardScreen(usuario: usuario);
     }
 
     final theme = Theme.of(context);

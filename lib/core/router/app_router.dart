@@ -55,7 +55,9 @@ GoRouter buildRouter(AuthBloc authBloc, TenantBloc tenantBloc) {
           final rol = authState.usuario.rol;
           if (isSplash || isLogin) return AppRoutes.dashboard;
 
+          final esModuloProximamente = location.startsWith('/admin/modulos');
           if (isAdminRoute &&
+              !esModuloProximamente &&
               rol != Rol.administrador &&
               rol != Rol.superadmin) {
             return AppRoutes.dashboard;
@@ -110,9 +112,16 @@ GoRouter buildRouter(AuthBloc authBloc, TenantBloc tenantBloc) {
       ),
       GoRoute(
         path: '${AppRoutes.adminModulos}/:id',
-        builder: (context, state) => ModuloProximamenteScreen(
-          moduloId: state.pathParameters['id'] ?? '',
-        ),
+        builder: (context, state) {
+          final args = state.extra is ProximamenteArgs
+              ? state.extra! as ProximamenteArgs
+              : null;
+          return ModuloProximamenteScreen(
+            moduloId: state.pathParameters['id'] ?? '',
+            titulo: args?.titulo,
+            descripcion: args?.descripcion,
+          );
+        },
       ),
       GoRoute(
         path: AppRoutes.superadminProyectos,
