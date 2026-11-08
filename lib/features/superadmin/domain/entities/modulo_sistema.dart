@@ -1,31 +1,21 @@
 enum ModuloSistema {
-  infraestructura,
-  paqueteria,
-  quincho,
-  gastosComunes,
-  controlAcceso;
+  infraestructura;
 
   /// Valor de API (snake_case).
   String get valor => switch (this) {
     ModuloSistema.infraestructura => 'infraestructura',
-    ModuloSistema.paqueteria => 'paqueteria',
-    ModuloSistema.quincho => 'quincho',
-    ModuloSistema.gastosComunes => 'gastos_comunes',
-    ModuloSistema.controlAcceso => 'control_acceso',
   };
 
   String get etiqueta => switch (this) {
     ModuloSistema.infraestructura => 'Infraestructura',
-    ModuloSistema.paqueteria => 'Paquetería',
-    ModuloSistema.quincho => 'Quincho',
-    ModuloSistema.gastosComunes => 'Gastos comunes',
-    ModuloSistema.controlAcceso => 'Control de acceso',
   };
 }
 
-ModuloSistema moduloSistemaFromString(String value) {
-  return ModuloSistema.values.firstWhere(
-    (modulo) => modulo.valor == value,
-    orElse: () => throw ArgumentError('Módulo desconocido: $value'),
-  );
+/// Retorna `null` para IDs que ya no son módulos configurables por proyecto,
+/// permitiendo seguir leyendo respuestas antiguas de la API.
+ModuloSistema? moduloSistemaFromString(String value) {
+  for (final modulo in ModuloSistema.values) {
+    if (modulo.valor == value) return modulo;
+  }
+  return null;
 }

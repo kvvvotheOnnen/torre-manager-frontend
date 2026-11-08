@@ -13,6 +13,10 @@ import 'features/auth/data/repositories/auth_repository_impl.dart';
 import 'features/auth/domain/usecases/login_usecase.dart';
 import 'features/auth/presentation/bloc/auth_bloc.dart';
 import 'features/auth/presentation/bloc/auth_event.dart';
+import 'features/dashboard/data/datasources/dashboard_remote_data_source.dart';
+import 'features/dashboard/data/repositories/dashboard_repository_impl.dart';
+import 'features/dashboard/domain/usecases/obtener_modulos_dashboard_usecase.dart';
+import 'features/dashboard/presentation/bloc/modulos_dashboard_bloc.dart';
 import 'features/infraestructura/data/datasources/infraestructura_remote_data_source.dart';
 import 'features/infraestructura/data/repositories/infraestructura_repository_impl.dart';
 import 'features/infraestructura/domain/usecases/asignar_unidad_accesoria_usecase.dart';
@@ -58,6 +62,7 @@ class _TorreManagerAppState extends State<TorreManagerApp> {
   late final ProyectoWizardBloc _proyectoWizardBloc;
   late final AdministradoresBloc _administradoresBloc;
   late final TenantBloc _tenantBloc;
+  late final ModulosDashboardBloc _modulosDashboardBloc;
   late final GoRouter _router;
 
   @override
@@ -147,6 +152,14 @@ class _TorreManagerAppState extends State<TorreManagerApp> {
       proyectoActivoStore: proyectoActivoStore,
     );
 
+    final dashboardDataSource = DashboardRemoteDataSource(dio);
+    final dashboardRepository = DashboardRepositoryImpl(dashboardDataSource);
+    _modulosDashboardBloc = ModulosDashboardBloc(
+      obtenerModulosUseCase: ObtenerModulosDashboardUseCase(
+        dashboardRepository,
+      ),
+    );
+
     _authBloc.stream.listen((state) {
       if (state is AuthSuccess && state.usuario.rol == Rol.administrador) {
         _tenantBloc.add(const TenantResuelto());
@@ -166,6 +179,7 @@ class _TorreManagerAppState extends State<TorreManagerApp> {
     _proyectoWizardBloc.close();
     _administradoresBloc.close();
     _tenantBloc.close();
+    _modulosDashboardBloc.close();
     super.dispose();
   }
 
@@ -179,6 +193,7 @@ class _TorreManagerAppState extends State<TorreManagerApp> {
         BlocProvider.value(value: _proyectoWizardBloc),
         BlocProvider.value(value: _administradoresBloc),
         BlocProvider.value(value: _tenantBloc),
+        BlocProvider.value(value: _modulosDashboardBloc),
       ],
       child: MaterialApp.router(
         title: 'Torre Manager',

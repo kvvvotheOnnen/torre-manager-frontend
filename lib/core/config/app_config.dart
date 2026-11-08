@@ -40,4 +40,5 @@ class AppConfig {
   static const String superadminAdministradoresPath =
       '/api/superadmin/administradores';
   static const String misProyectosPath = '/api/mis-proyectos';
+  static const String dashboardModulosPath = '/api/dashboard/modulos';
 }

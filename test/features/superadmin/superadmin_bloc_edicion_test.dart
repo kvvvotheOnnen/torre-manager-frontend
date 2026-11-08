@@ -323,7 +323,7 @@ void main() {
         id: '7',
         nombre: 'Proyecto editado',
         descripcion: 'Nueva descripción',
-        modulos: [ModuloSistema.infraestructura, ModuloSistema.paqueteria],
+        modulos: [ModuloSistema.infraestructura],
         instalaciones: [],
         adminIds: ['2'],
       ),

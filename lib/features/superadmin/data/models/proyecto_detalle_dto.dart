@@ -49,7 +49,10 @@ class ProyectoDetalleDTO {
       nombre: nombre,
       descripcion: descripcion,
       tipoCondominio: tipoCondominioFromString(tipoCondominio),
-      modulos: modulos.map(moduloSistemaFromString).toList(),
+      modulos: modulos
+          .map(moduloSistemaFromString)
+          .whereType<ModuloSistema>()
+          .toList(),
       instalacionesExtra: instalacionesExtra
           .map((instalacion) => instalacion.toEntity())
           .toList(),
