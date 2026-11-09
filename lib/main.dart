@@ -41,6 +41,10 @@ import 'features/superadmin/domain/usecases/listar_proyectos_usecase.dart';
 import 'features/superadmin/domain/usecases/obtener_proyecto_usecase.dart';
 import 'features/superadmin/presentation/bloc/administradores_bloc.dart';
 import 'features/superadmin/presentation/bloc/proyecto_wizard_bloc.dart';
+import 'features/residente/data/datasources/residente_remote_data_source.dart';
+import 'features/residente/data/repositories/residente_repository_impl.dart';
+import 'features/residente/domain/usecases/obtener_mi_informacion_usecase.dart';
+import 'features/residente/presentation/bloc/residente_mi_informacion_bloc.dart';
 import 'features/superadmin/presentation/bloc/superadmin_bloc.dart';
 import 'features/tenant/presentation/bloc/tenant_bloc.dart';
 
@@ -63,6 +67,7 @@ class _TorreManagerAppState extends State<TorreManagerApp> {
   late final AdministradoresBloc _administradoresBloc;
   late final TenantBloc _tenantBloc;
   late final ModulosDashboardBloc _modulosDashboardBloc;
+  late final ResidenteMiInformacionBloc _residenteMiInformacionBloc;
   late final GoRouter _router;
 
   @override
@@ -160,6 +165,14 @@ class _TorreManagerAppState extends State<TorreManagerApp> {
       ),
     );
 
+    final residenteDataSource = ResidenteRemoteDataSource(dio);
+    final residenteRepository = ResidenteRepositoryImpl(residenteDataSource);
+    _residenteMiInformacionBloc = ResidenteMiInformacionBloc(
+      obtenerMiInformacionUseCase: ObtenerMiInformacionUseCase(
+        residenteRepository,
+      ),
+    );
+
     _authBloc.stream.listen((state) {
       if (state is AuthSuccess && state.usuario.rol == Rol.administrador) {
         _tenantBloc.add(const TenantResuelto());
@@ -180,6 +193,7 @@ class _TorreManagerAppState extends State<TorreManagerApp> {
     _administradoresBloc.close();
     _tenantBloc.close();
     _modulosDashboardBloc.close();
+    _residenteMiInformacionBloc.close();
     super.dispose();
   }
 
@@ -194,6 +208,7 @@ class _TorreManagerAppState extends State<TorreManagerApp> {
         BlocProvider.value(value: _administradoresBloc),
         BlocProvider.value(value: _tenantBloc),
         BlocProvider.value(value: _modulosDashboardBloc),
+        BlocProvider.value(value: _residenteMiInformacionBloc),
       ],
       child: MaterialApp.router(
         title: 'Torre Manager',

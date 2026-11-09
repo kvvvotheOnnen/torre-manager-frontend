@@ -15,12 +15,16 @@ class _ModuloResidente {
     required this.titulo,
     required this.descripcion,
     required this.icono,
+    required this.ruta,
+    this.preventivo = true,
   });
 
   final String id;
   final String titulo;
   final String descripcion;
   final IconData icono;
+  final String ruta;
+  final bool preventivo;
 }
 
 const _modulosResidente = <_ModuloResidente>[
@@ -29,30 +33,36 @@ const _modulosResidente = <_ModuloResidente>[
     titulo: 'Mi información',
     descripcion: 'Consulta la información que ya es del residente y asignaciones de servicio',
     icono: Icons.home_outlined,
+    ruta: '/residente/mi-informacion',
+    preventivo: false,
   ),
   _ModuloResidente(
     id: 'paqueteria',
     titulo: 'Paquetería',
     descripcion: 'Avisos y retiro de paquetes',
     icono: Icons.inventory_2_outlined,
+    ruta: '/admin/modulos/paqueteria',
   ),
   _ModuloResidente(
     id: 'quincho',
     titulo: 'Quincho',
     descripcion: 'Reserva de espacios comunes',
     icono: Icons.event_available_outlined,
+    ruta: '/admin/modulos/quincho',
   ),
   _ModuloResidente(
     id: 'gastos_comunes',
     titulo: 'Gastos comunes',
     descripcion: 'Consulta y pago de gastos comunes',
     icono: Icons.receipt_long_outlined,
+    ruta: '/admin/modulos/gastos_comunes',
   ),
   _ModuloResidente(
     id: 'control_acceso',
     titulo: 'Control de acceso',
     descripcion: 'Visitantes que entraron y accesos de personas de confianza',
     icono: Icons.badge_outlined,
+    ruta: '/admin/modulos/control_acceso',
   ),
 ];
 
@@ -325,13 +335,17 @@ class _ItemModuloResidente extends StatelessWidget {
         if (scaffold?.isDrawerOpen ?? false) {
           scaffold!.closeDrawer();
         }
-        context.push(
-          AppRoutes.adminModulo(modulo.id),
-          extra: ProximamenteArgs(
-            titulo: modulo.titulo,
-            descripcion: modulo.descripcion,
-          ),
-        );
+        if (modulo.preventivo) {
+          context.push(
+            modulo.ruta,
+            extra: ProximamenteArgs(
+              titulo: modulo.titulo,
+              descripcion: modulo.descripcion,
+            ),
+          );
+        } else {
+          context.push(modulo.ruta);
+        }
       },
     );
   }
@@ -441,13 +455,19 @@ class _TarjetaModuloResidente extends StatelessWidget {
     return Card(
       clipBehavior: Clip.antiAlias,
       child: InkWell(
-        onTap: () => context.push(
-          AppRoutes.adminModulo(modulo.id),
-          extra: ProximamenteArgs(
-            titulo: modulo.titulo,
-            descripcion: modulo.descripcion,
-          ),
-        ),
+        onTap: () {
+          if (modulo.preventivo) {
+            context.push(
+              modulo.ruta,
+              extra: ProximamenteArgs(
+                titulo: modulo.titulo,
+                descripcion: modulo.descripcion,
+              ),
+            );
+          } else {
+            context.push(modulo.ruta);
+          }
+        },
         child: Padding(
           padding: const EdgeInsets.all(16),
           child: Column(

@@ -8,6 +8,7 @@ import '../../features/auth/presentation/bloc/auth_state.dart';
 import '../../features/auth/presentation/screens/login_screen.dart';
 import '../../features/dashboard/presentation/screens/dashboard_screen.dart';
 import '../../features/dashboard/presentation/screens/modulo_proximamente_screen.dart';
+import '../../features/residente/presentation/screens/mi_informacion_screen.dart';
 import '../../features/infraestructura/presentation/screens/infraestructura_screen.dart';
 import '../../features/superadmin/presentation/screens/administradores_screen.dart';
 import '../../features/superadmin/presentation/screens/proyectos_screen.dart';
@@ -20,6 +21,7 @@ class AppRoutes {
   static const String splash = '/';
   static const String login = '/login';
   static const String dashboard = '/dashboard';
+  static const String residenteMiInformacion = '/residente/mi-informacion';
   static const String selectorProyecto = '/selector-proyecto';
   static const String superadminInfraestructura = '/superadmin/infraestructura';
   static const String adminModulos = '/admin/modulos';
@@ -121,6 +123,15 @@ GoRouter buildRouter(AuthBloc authBloc, TenantBloc tenantBloc) {
             titulo: args?.titulo,
             descripcion: args?.descripcion,
           );
+        },
+      ),
+      GoRoute(
+        path: AppRoutes.residenteMiInformacion,
+        builder: (context, state) {
+          final usuario = state.extra is Usuario
+              ? state.extra! as Usuario
+              : _usuarioDesdeBloc(context);
+          return MiInformacionScreen(usuario: usuario);
         },
       ),
       GoRoute(
