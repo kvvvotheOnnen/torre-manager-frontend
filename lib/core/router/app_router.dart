@@ -9,6 +9,8 @@ import '../../features/auth/presentation/screens/login_screen.dart';
 import '../../features/dashboard/presentation/screens/dashboard_screen.dart';
 import '../../features/dashboard/presentation/screens/modulo_proximamente_screen.dart';
 import '../../features/residente/presentation/screens/mi_informacion_screen.dart';
+import '../../features/paqueteria/presentation/screens/mis_paquetes_screen.dart';
+import '../../features/paqueteria/presentation/screens/paqueteria_gestion_screen.dart';
 import '../../features/infraestructura/presentation/screens/infraestructura_screen.dart';
 import '../../features/superadmin/presentation/screens/administradores_screen.dart';
 import '../../features/superadmin/presentation/screens/proyectos_screen.dart';
@@ -22,6 +24,8 @@ class AppRoutes {
   static const String login = '/login';
   static const String dashboard = '/dashboard';
   static const String residenteMiInformacion = '/residente/mi-informacion';
+  static const String paqueteria = '/paqueteria';
+  static const String paqueteriaGestion = '/paqueteria/gestion';
   static const String selectorProyecto = '/selector-proyecto';
   static const String superadminInfraestructura = '/superadmin/infraestructura';
   static const String adminModulos = '/admin/modulos';
@@ -132,6 +136,24 @@ GoRouter buildRouter(AuthBloc authBloc, TenantBloc tenantBloc) {
               ? state.extra! as Usuario
               : _usuarioDesdeBloc(context);
           return MiInformacionScreen(usuario: usuario);
+        },
+      ),
+      GoRoute(
+        path: AppRoutes.paqueteria,
+        builder: (context, state) {
+          final usuario = state.extra is Usuario
+              ? state.extra! as Usuario
+              : _usuarioDesdeBloc(context);
+          return MisPaquetesScreen(usuario: usuario);
+        },
+      ),
+      GoRoute(
+        path: AppRoutes.paqueteriaGestion,
+        builder: (context, state) {
+          final usuario = state.extra is Usuario
+              ? state.extra! as Usuario
+              : _usuarioDesdeBloc(context);
+          return PaqueteriaGestionScreen(usuario: usuario);
         },
       ),
       GoRoute(
