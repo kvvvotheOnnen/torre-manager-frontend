@@ -37,6 +37,14 @@ const _modulosResidente = <_ModuloResidente>[
     preventivo: false,
   ),
   _ModuloResidente(
+    id: 'ia',
+    titulo: 'IA',
+    descripcion: 'Consultas sobre el reglamento de infraestructura del edificio',
+    icono: Icons.star,
+    ruta: '/residente/ia',
+    preventivo: false,
+  ),
+  _ModuloResidente(
     id: 'paqueteria',
     titulo: 'Paquetería',
     descripcion: 'Avisos y retiro de paquetes',

@@ -646,6 +646,7 @@ IconData _iconoPara(String id) {
     'registro_empleados' => Icons.cleaning_services_outlined,
     'personas_externas_oficios' => Icons.engineering_outlined,
     'alertas_noticias' => Icons.campaign_outlined,
+    'asistente_ia_admin' => Icons.cloud_upload_outlined,
     _ => Icons.widgets_outlined,
   };
 }

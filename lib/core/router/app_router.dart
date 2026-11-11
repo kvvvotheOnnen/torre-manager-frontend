@@ -5,6 +5,8 @@ import 'package:go_router/go_router.dart';
 import '../../features/auth/domain/entities/usuario.dart';
 import '../../features/auth/presentation/bloc/auth_bloc.dart';
 import '../../features/auth/presentation/bloc/auth_state.dart';
+import '../../features/asistente/presentation/screens/asistente_admin_screen.dart';
+import '../../features/asistente/presentation/screens/asistente_screen.dart';
 import '../../features/auth/presentation/screens/login_screen.dart';
 import '../../features/dashboard/presentation/screens/dashboard_screen.dart';
 import '../../features/dashboard/presentation/screens/modulo_proximamente_screen.dart';
@@ -22,6 +24,8 @@ class AppRoutes {
   static const String login = '/login';
   static const String dashboard = '/dashboard';
   static const String residenteMiInformacion = '/residente/mi-informacion';
+  static const String residenteAsistente = '/residente/ia';
+  static const String adminAsistente = '/admin/modulos/asistente_ia_admin';
   static const String selectorProyecto = '/selector-proyecto';
   static const String superadminInfraestructura = '/superadmin/infraestructura';
   static const String adminModulos = '/admin/modulos';
@@ -48,6 +52,7 @@ GoRouter buildRouter(AuthBloc authBloc, TenantBloc tenantBloc) {
       final isSelector = location == AppRoutes.selectorProyecto;
       final isAdminRoute = location.startsWith('/admin');
       final isSuperadminRoute = location.startsWith('/superadmin');
+      final isResidenteRoute = location.startsWith('/residente');
 
       switch (authState) {
         case AuthInitial():
@@ -66,6 +71,10 @@ GoRouter buildRouter(AuthBloc authBloc, TenantBloc tenantBloc) {
           }
 
           if (isSuperadminRoute && rol != Rol.superadmin) {
+            return AppRoutes.dashboard;
+          }
+
+          if (isResidenteRoute && rol != Rol.residente) {
             return AppRoutes.dashboard;
           }
 
@@ -113,6 +122,10 @@ GoRouter buildRouter(AuthBloc authBloc, TenantBloc tenantBloc) {
         builder: (context, state) => const InfraestructuraScreen(),
       ),
       GoRoute(
+        path: AppRoutes.adminAsistente,
+        builder: (context, state) => const AsistenteAdminScreen(),
+      ),
+      GoRoute(
         path: '${AppRoutes.adminModulos}/:id',
         builder: (context, state) {
           final args = state.extra is ProximamenteArgs
@@ -124,6 +137,10 @@ GoRouter buildRouter(AuthBloc authBloc, TenantBloc tenantBloc) {
             descripcion: args?.descripcion,
           );
         },
+      ),
+      GoRoute(
+        path: AppRoutes.residenteAsistente,
+        builder: (context, state) => const AsistenteScreen(),
       ),
       GoRoute(
         path: AppRoutes.residenteMiInformacion,
