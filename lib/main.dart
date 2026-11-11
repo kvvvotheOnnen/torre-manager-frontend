@@ -6,6 +6,16 @@ import 'core/network/dio_client.dart';
 import 'core/router/app_router.dart';
 import 'core/storage/token_storage.dart';
 import 'core/tenant/proyecto_activo_store.dart';
+import 'features/asistente/data/datasources/asistente_admin_remote_data_source.dart';
+import 'features/asistente/data/datasources/asistente_remote_data_source.dart';
+import 'features/asistente/data/repositories/asistente_admin_repository_impl.dart';
+import 'features/asistente/data/repositories/asistente_repository_impl.dart';
+import 'features/asistente/domain/usecases/consultar_asistente_use_case.dart';
+import 'features/asistente/domain/usecases/eliminar_documento_use_case.dart';
+import 'features/asistente/domain/usecases/obtener_documento_use_case.dart';
+import 'features/asistente/domain/usecases/subir_documento_use_case.dart';
+import 'features/asistente/presentation/bloc/asistente_admin_bloc.dart';
+import 'features/asistente/presentation/bloc/asistente_bloc.dart';
 import 'features/auth/domain/entities/usuario.dart';
 import 'features/auth/presentation/bloc/auth_state.dart';
 import 'features/auth/data/datasources/auth_remote_data_source.dart';
@@ -75,6 +85,8 @@ class _TorreManagerAppState extends State<TorreManagerApp> {
   late final TenantBloc _tenantBloc;
   late final ModulosDashboardBloc _modulosDashboardBloc;
   late final ResidenteMiInformacionBloc _residenteMiInformacionBloc;
+  late final AsistenteAdminBloc _asistenteAdminBloc;
+  late final AsistenteBloc _asistenteBloc;
   late final PaqueteriaBloc _paqueteriaBloc;
   late final GoRouter _router;
 
@@ -181,6 +193,24 @@ class _TorreManagerAppState extends State<TorreManagerApp> {
       ),
     );
 
+    final asistenteAdminDataSource = AsistenteAdminRemoteDataSource(dio);
+    final asistenteAdminRepository = AsistenteAdminRepositoryImpl(
+      asistenteAdminDataSource,
+    );
+    _asistenteAdminBloc = AsistenteAdminBloc(
+      obtenerDocumentoUseCase: ObtenerDocumentoUseCase(asistenteAdminRepository),
+      subirDocumentoUseCase: SubirDocumentoUseCase(asistenteAdminRepository),
+      eliminarDocumentoUseCase: EliminarDocumentoUseCase(
+        asistenteAdminRepository,
+      ),
+    );
+
+    final asistenteDataSource = AsistenteRemoteDataSource(dio);
+    final asistenteRepository = AsistenteRepositoryImpl(asistenteDataSource);
+    _asistenteBloc = AsistenteBloc(
+      consultarUseCase: ConsultarAsistenteUseCase(asistenteRepository),
+    );
+
     final paqueteriaDataSource = PaqueteriaRemoteDataSource(dio);
     final paqueteriaRepository = PaqueteriaRepositoryImpl(paqueteriaDataSource);
     _paqueteriaBloc = PaqueteriaBloc(
@@ -215,6 +245,8 @@ class _TorreManagerAppState extends State<TorreManagerApp> {
     _tenantBloc.close();
     _modulosDashboardBloc.close();
     _residenteMiInformacionBloc.close();
+    _asistenteAdminBloc.close();
+    _asistenteBloc.close();
     _paqueteriaBloc.close();
     super.dispose();
   }
@@ -231,6 +263,8 @@ class _TorreManagerAppState extends State<TorreManagerApp> {
         BlocProvider.value(value: _tenantBloc),
         BlocProvider.value(value: _modulosDashboardBloc),
         BlocProvider.value(value: _residenteMiInformacionBloc),
+        BlocProvider.value(value: _asistenteAdminBloc),
+        BlocProvider.value(value: _asistenteBloc),
         BlocProvider.value(value: _paqueteriaBloc),
       ],
       child: MaterialApp.router(

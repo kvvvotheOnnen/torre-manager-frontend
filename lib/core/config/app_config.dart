@@ -42,4 +42,8 @@ class AppConfig {
   static const String misProyectosPath = '/api/mis-proyectos';
   static const String dashboardModulosPath = '/api/dashboard/modulos';
   static const String residenteMiInformacionPath = '/api/residente/mi-informacion';
+  static const String residenteAsistenteConsultasPath =
+      '/api/residente/asistente/consultas';
+  static const String asistenteAdminDocumentoPath =
+      '/api/admin/asistente/documento';
 }
