@@ -55,6 +55,13 @@ import 'features/residente/data/datasources/residente_remote_data_source.dart';
 import 'features/residente/data/repositories/residente_repository_impl.dart';
 import 'features/residente/domain/usecases/obtener_mi_informacion_usecase.dart';
 import 'features/residente/presentation/bloc/residente_mi_informacion_bloc.dart';
+import 'features/paqueteria/data/datasources/paqueteria_remote_data_source.dart';
+import 'features/paqueteria/data/repositories/paqueteria_repository_impl.dart';
+import 'features/paqueteria/domain/usecases/actualizar_paquete_usecase.dart';
+import 'features/paqueteria/domain/usecases/listar_paquetes_usecase.dart';
+import 'features/paqueteria/domain/usecases/marcar_paquete_retirado_usecase.dart';
+import 'features/paqueteria/domain/usecases/registrar_paquete_usecase.dart';
+import 'features/paqueteria/presentation/bloc/paqueteria_bloc.dart';
 import 'features/superadmin/presentation/bloc/superadmin_bloc.dart';
 import 'features/tenant/presentation/bloc/tenant_bloc.dart';
 
@@ -80,6 +87,7 @@ class _TorreManagerAppState extends State<TorreManagerApp> {
   late final ResidenteMiInformacionBloc _residenteMiInformacionBloc;
   late final AsistenteAdminBloc _asistenteAdminBloc;
   late final AsistenteBloc _asistenteBloc;
+  late final PaqueteriaBloc _paqueteriaBloc;
   late final GoRouter _router;
 
   @override
@@ -203,7 +211,20 @@ class _TorreManagerAppState extends State<TorreManagerApp> {
       consultarUseCase: ConsultarAsistenteUseCase(asistenteRepository),
     );
 
+    final paqueteriaDataSource = PaqueteriaRemoteDataSource(dio);
+    final paqueteriaRepository = PaqueteriaRepositoryImpl(paqueteriaDataSource);
+    _paqueteriaBloc = PaqueteriaBloc(
+      listarUseCase: ListarPaquetesUseCase(paqueteriaRepository),
+      registrarUseCase: RegistrarPaqueteUseCase(paqueteriaRepository),
+      marcarRetiradoUseCase: MarcarPaqueteRetiradoUseCase(paqueteriaRepository),
+      actualizarUseCase: ActualizarPaqueteUseCase(paqueteriaRepository),
+      remoteDataSource: paqueteriaDataSource,
+    );
+
     _authBloc.stream.listen((state) {
+      if (state is AuthSuccess || state is AuthUnauthenticated) {
+        _paqueteriaBloc.add(const PaqueteriaLimpiada());
+      }
       if (state is AuthSuccess && state.usuario.rol == Rol.administrador) {
         _tenantBloc.add(const TenantResuelto());
       } else if (state is AuthUnauthenticated) {
@@ -226,6 +247,7 @@ class _TorreManagerAppState extends State<TorreManagerApp> {
     _residenteMiInformacionBloc.close();
     _asistenteAdminBloc.close();
     _asistenteBloc.close();
+    _paqueteriaBloc.close();
     super.dispose();
   }
 
@@ -243,6 +265,7 @@ class _TorreManagerAppState extends State<TorreManagerApp> {
         BlocProvider.value(value: _residenteMiInformacionBloc),
         BlocProvider.value(value: _asistenteAdminBloc),
         BlocProvider.value(value: _asistenteBloc),
+        BlocProvider.value(value: _paqueteriaBloc),
       ],
       child: MaterialApp.router(
         title: 'Torre Manager',

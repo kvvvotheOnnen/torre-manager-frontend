@@ -49,7 +49,8 @@ const _modulosResidente = <_ModuloResidente>[
     titulo: 'Paquetería',
     descripcion: 'Avisos y retiro de paquetes',
     icono: Icons.inventory_2_outlined,
-    ruta: '/admin/modulos/paqueteria',
+    ruta: AppRoutes.paqueteria,
+    preventivo: false,
   ),
   _ModuloResidente(
     id: 'quincho',

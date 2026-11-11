@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:go_router/go_router.dart';
 
-import '../../../../core/router/app_router.dart';
 import '../bloc/auth_bloc.dart';
 import '../bloc/auth_event.dart';
 import '../bloc/auth_state.dart';
@@ -76,12 +74,9 @@ class _LoginScreenState extends State<LoginScreen> {
                                 backgroundColor: theme.colorScheme.error,
                               ),
                             );
-                        } else if (state is AuthSuccess) {
-                          context.go(
-                            AppRoutes.homeForRol(state.usuario.rol),
-                            extra: state.usuario,
-                          );
                         }
+                        // La navegación al dashboard la gestiona el router
+                        // cuando AuthBloc emite AuthSuccess.
                       },
                       builder: (context, state) {
                         final isLoading = state is AuthLoading;

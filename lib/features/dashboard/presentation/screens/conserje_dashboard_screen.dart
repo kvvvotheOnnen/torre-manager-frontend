@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../core/router/app_router.dart';
 import '../../../auth/domain/entities/usuario.dart';
 import '../../../auth/presentation/bloc/auth_bloc.dart';
 import '../../../auth/presentation/bloc/auth_event.dart';
@@ -30,7 +31,7 @@ const _modulosConserje = <_ModuloConserje>[
     titulo: 'Paquetería',
     descripcion: 'Avisos y retiro de paquetes',
     icono: Icons.inventory_2_outlined,
-    ruta: '/admin/modulos/paqueteria',
+    ruta: AppRoutes.paqueteriaGestion,
   ),
   _ModuloConserje(
     id: 'control_acceso',
