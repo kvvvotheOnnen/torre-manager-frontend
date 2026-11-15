@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -6,6 +8,11 @@ import 'core/network/dio_client.dart';
 import 'core/router/app_router.dart';
 import 'core/storage/token_storage.dart';
 import 'core/tenant/proyecto_activo_store.dart';
+import 'core/theme/app_theme.dart';
+import 'core/theme/app_typography.dart';
+import 'core/theme/theme_mode_controller.dart';
+import 'core/widgets/app_error_view.dart';
+import 'core/widgets/app_scroll_view.dart';
 import 'features/asistente/data/datasources/asistente_admin_remote_data_source.dart';
 import 'features/asistente/data/datasources/asistente_remote_data_source.dart';
 import 'features/asistente/data/repositories/asistente_admin_repository_impl.dart';
@@ -89,10 +96,17 @@ class _TorreManagerAppState extends State<TorreManagerApp> {
   late final AsistenteBloc _asistenteBloc;
   late final PaqueteriaBloc _paqueteriaBloc;
   late final GoRouter _router;
+  late final ThemeModeController _themeModeController;
 
   @override
   void initState() {
     super.initState();
+
+    ErrorWidget.builder = (details) => const AppErrorView();
+    unawaited(AppTypography.preload());
+
+    _themeModeController = ThemeModeController();
+    unawaited(_themeModeController.load());
 
     final tokenStorage = SecureTokenStorage();
     final proyectoActivoStore = SharedPreferencesProyectoActivoStore();
@@ -248,6 +262,7 @@ class _TorreManagerAppState extends State<TorreManagerApp> {
     _asistenteAdminBloc.close();
     _asistenteBloc.close();
     _paqueteriaBloc.close();
+    _themeModeController.dispose();
     super.dispose();
   }
 
@@ -267,14 +282,34 @@ class _TorreManagerAppState extends State<TorreManagerApp> {
         BlocProvider.value(value: _asistenteBloc),
         BlocProvider.value(value: _paqueteriaBloc),
       ],
-      child: MaterialApp.router(
-        title: 'Torre Manager',
-        debugShowCheckedModeBanner: false,
-        theme: ThemeData(
-          colorScheme: ColorScheme.fromSeed(seedColor: Colors.blueGrey),
-          useMaterial3: true,
-        ),
-        routerConfig: _router,
+      child: ListenableBuilder(
+        listenable: _themeModeController,
+        builder: (context, _) {
+          return ThemeModeScope(
+            controller: _themeModeController,
+            child: MaterialApp.router(
+              title: 'Torre Manager',
+              debugShowCheckedModeBanner: false,
+              theme: AppTheme.light(),
+              darkTheme: AppTheme.dark(),
+              themeMode: _themeModeController.mode,
+              scrollBehavior: const AppScrollBehavior(),
+              builder: (context, child) {
+                final media = MediaQuery.of(context);
+                return MediaQuery(
+                  data: media.copyWith(
+                    textScaler: media.textScaler.clamp(
+                      minScaleFactor: 0.9,
+                      maxScaleFactor: 1.3,
+                    ),
+                  ),
+                  child: child ?? const SizedBox.shrink(),
+                );
+              },
+              routerConfig: _router,
+            ),
+          );
+        },
       ),
     );
   }

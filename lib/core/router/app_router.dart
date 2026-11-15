@@ -18,6 +18,10 @@ import '../../features/superadmin/presentation/screens/administradores_screen.da
 import '../../features/superadmin/presentation/screens/proyectos_screen.dart';
 import '../../features/tenant/presentation/bloc/tenant_bloc.dart';
 import '../../features/tenant/presentation/screens/selector_proyecto_screen.dart';
+import '../widgets/app_background.dart';
+import '../widgets/app_title.dart';
+import '../widgets/brand_mark.dart';
+import '../theme/app_colors.dart';
 
 class AppRoutes {
   const AppRoutes._();
@@ -102,11 +106,11 @@ GoRouter buildRouter(AuthBloc authBloc, TenantBloc tenantBloc) {
     routes: [
       GoRoute(
         path: AppRoutes.splash,
-        builder: (context, state) => const _SplashScreen(),
+        builder: (context, state) => const AppTitle(title: 'Cargando', child: _SplashScreen()),
       ),
       GoRoute(
         path: AppRoutes.login,
-        builder: (context, state) => const LoginScreen(),
+        builder: (context, state) => const AppTitle(title: 'Ingresar', child: LoginScreen()),
       ),
       GoRoute(
         path: AppRoutes.dashboard,
@@ -114,20 +118,20 @@ GoRouter buildRouter(AuthBloc authBloc, TenantBloc tenantBloc) {
           final usuario = state.extra is Usuario
               ? state.extra! as Usuario
               : _usuarioDesdeBloc(context);
-          return DashboardScreen(usuario: usuario);
+          return AppTitle(title: 'Panel', child: DashboardScreen(usuario: usuario));
         },
       ),
       GoRoute(
         path: AppRoutes.selectorProyecto,
-        builder: (context, state) => const SelectorProyectoScreen(),
+        builder: (context, state) => const AppTitle(title: 'Seleccionar recinto', child: SelectorProyectoScreen()),
       ),
       GoRoute(
         path: AppRoutes.superadminInfraestructura,
-        builder: (context, state) => const InfraestructuraScreen(),
+        builder: (context, state) => const AppTitle(title: 'Infraestructura', child: InfraestructuraScreen()),
       ),
       GoRoute(
         path: AppRoutes.adminAsistente,
-        builder: (context, state) => const AsistenteAdminScreen(),
+        builder: (context, state) => const AppTitle(title: 'Asistente IA', child: AsistenteAdminScreen()),
       ),
       GoRoute(
         path: '${AppRoutes.adminModulos}/:id',
@@ -135,16 +139,19 @@ GoRouter buildRouter(AuthBloc authBloc, TenantBloc tenantBloc) {
           final args = state.extra is ProximamenteArgs
               ? state.extra! as ProximamenteArgs
               : null;
-          return ModuloProximamenteScreen(
-            moduloId: state.pathParameters['id'] ?? '',
-            titulo: args?.titulo,
-            descripcion: args?.descripcion,
+          return AppTitle(
+            title: args?.titulo ?? 'Módulo',
+            child: ModuloProximamenteScreen(
+              moduloId: state.pathParameters['id'] ?? '',
+              titulo: args?.titulo,
+              descripcion: args?.descripcion,
+            ),
           );
         },
       ),
       GoRoute(
         path: AppRoutes.residenteAsistente,
-        builder: (context, state) => const AsistenteScreen(),
+        builder: (context, state) => const AppTitle(title: 'Asistente IA', child: AsistenteScreen()),
       ),
       GoRoute(
         path: AppRoutes.residenteMiInformacion,
@@ -152,7 +159,7 @@ GoRouter buildRouter(AuthBloc authBloc, TenantBloc tenantBloc) {
           final usuario = state.extra is Usuario
               ? state.extra! as Usuario
               : _usuarioDesdeBloc(context);
-          return MiInformacionScreen(usuario: usuario);
+          return AppTitle(title: 'Mi información', child: MiInformacionScreen(usuario: usuario));
         },
       ),
       GoRoute(
@@ -161,7 +168,7 @@ GoRouter buildRouter(AuthBloc authBloc, TenantBloc tenantBloc) {
           final usuario = state.extra is Usuario
               ? state.extra! as Usuario
               : _usuarioDesdeBloc(context);
-          return MisPaquetesScreen(usuario: usuario);
+          return AppTitle(title: 'Paquetería', child: MisPaquetesScreen(usuario: usuario));
         },
       ),
       GoRoute(
@@ -170,16 +177,16 @@ GoRouter buildRouter(AuthBloc authBloc, TenantBloc tenantBloc) {
           final usuario = state.extra is Usuario
               ? state.extra! as Usuario
               : _usuarioDesdeBloc(context);
-          return PaqueteriaGestionScreen(usuario: usuario);
+          return AppTitle(title: 'Gestión de paquetería', child: PaqueteriaGestionScreen(usuario: usuario));
         },
       ),
       GoRoute(
         path: AppRoutes.superadminProyectos,
-        builder: (context, state) => const ProyectosScreen(),
+        builder: (context, state) => const AppTitle(title: 'Proyectos', child: ProyectosScreen()),
       ),
       GoRoute(
         path: AppRoutes.superadminAdministradores,
-        builder: (context, state) => const AdministradoresScreen(),
+        builder: (context, state) => const AppTitle(title: 'Administradores', child: AdministradoresScreen()),
       ),
     ],
   );
@@ -196,7 +203,33 @@ class _SplashScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    final p = Theme.of(context).brightness == Brightness.dark
+        ? darkPalette
+        : lightPalette;
+    return Scaffold(
+      body: AppBackground(
+        child: Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const BrandMark(size: 64, showWordmark: true, subtitle: 'PREMIUM CONDOMINIUM OPS'),
+              const SizedBox(height: 28),
+              SizedBox(
+                width: 160,
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(999),
+                  child: LinearProgressIndicator(
+                    minHeight: 4,
+                    backgroundColor: p.border,
+                    valueColor: AlwaysStoppedAnimation<Color>(p.accent),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 }
 
