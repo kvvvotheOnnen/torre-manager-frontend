@@ -178,11 +178,17 @@ class _UnidadPrincipalTile extends StatelessWidget {
       leading: const Icon(Icons.door_front_door, size: 20),
       title: Text('Unidad ${unidad.unidadPrincipal.identificador}'),
       subtitle: Text(
-        accesorias.isEmpty
-            ? 'Sin unidades accesorias asignadas'
-            : accesorias
-                  .map((a) => '${_etiquetaTipo(a)} ${a.identificador}')
-                  .join(' · '),
+        [
+          if (unidad.unidadPrincipal.propietarioNombre != null)
+            'Propietario: ${unidad.unidadPrincipal.propietarioNombre}',
+          if (unidad.unidadPrincipal.ocupanteNombre != null)
+            'Ocupante: ${unidad.unidadPrincipal.ocupanteNombre}',
+          accesorias.isEmpty
+              ? 'Sin unidades accesorias asignadas'
+              : accesorias
+                    .map((a) => '${_etiquetaTipo(a)} ${a.identificador}')
+                    .join(' · '),
+        ].join(' · '),
       ),
       children: [
         ...accesorias.map(

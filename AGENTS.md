@@ -59,6 +59,34 @@ El sistema distingue dos tipos de módulos y no deben mezclarse:
 - La gestión de infraestructura es una capacidad exclusiva de superadmin. No debe incluirse en el catálogo ni en el dashboard de administrador, y todos sus endpoints deben exigir el rol `superadmin` en backend.
 - Los módulos de operación administrativa (paquetería, instalaciones extra, gastos comunes, control de acceso y afines) se definen en `ModuloGeneral`; no se agregan a `ModuloSistema` ni se persisten por proyecto.
 
+### 2.4 Modelo de Propiedad, Ocupación y Acceso Multi-Proyecto
+
+La propiedad y la ocupación son relaciones contextuales entre una persona, una unidad y un proyecto. No son atributos globales del usuario.
+
+**Fuentes de verdad:**
+
+- `proyecto_usuario`: pertenencia y rol por proyecto (`administrador`, `residente`, `conserje`, `propietario`). UNIQUE `(proyecto_id, usuario_id)`.
+- `unidad_usuario`: vínculo histórico entre usuario y unidad (`propietario`, `arrendatario`, `residente`, `familiar`), con `fecha_inicio`, `fecha_fin` y `es_actual`.
+- `proyectos.modulos`: solo módulos configurables. Los módulos operativos se definen en `ModuloGeneral`.
+
+**Reglas obligatorias:**
+
+- No crear tablas `propietarios` ni `habitantes`, ni un booleano `usuarios.propietario`. Una misma persona puede ser propietaria en un proyecto y arrendataria en otro.
+- Un usuario puede tener múltiples unidades en un mismo proyecto. La unicidad es por unidad y tipo de vínculo, no por usuario.
+- Propietario y ocupante pueden coexistir en la misma unidad.
+- `usuarios.rol` y `usuarios.proyecto_id` son legado/fallback; no deben ser la fuente principal de autorización.
+- `unidades_principales.residente_id` es legado de transición; no crear nuevas reglas de negocio sobre esa columna.
+- El proyecto activo se resuelve por `X-Proyecto-Id` y membresía (`proyecto_usuario`).
+- Para funciones exclusivas del propietario, validar en backend el recurso concreto:
+  1. el usuario tiene acceso al proyecto activo;
+  2. la unidad pertenece a ese proyecto;
+  3. existe un `unidad_usuario` activo con `tipo_vinculo = propietario` para ese usuario y esa unidad.
+- No autorizar solo con `usuarios.rol === 'propietario'` ni solo con el rol de membresía.
+- El middleware `role.proyecto` valida roles por proyecto, pero no reemplaza la validación de propiedad sobre la unidad.
+- Usar los servicios y casos de uso de `src/Features/Acceso` o policies equivalentes; no duplicar consultas de vínculos en controladores.
+- Toda función de propietario debe probar: propietario de la unidad, usuario de otro proyecto, ocupante no propietario y usuario sin vínculo.
+- Mientras existan columnas/tablas legacy, mantener compatibilidad o justificar su migración. No eliminarlas sin una fase aprobada.
+
 ## 3. Especificaciones del Backend (Laravel 11 API RESTful)
 
 * **Rol:** Proveedor de API puro. Sin vistas web (Vite/Blade eliminados).

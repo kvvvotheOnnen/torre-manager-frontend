@@ -225,7 +225,7 @@ class _TorreManagerAppState extends State<TorreManagerApp> {
       if (state is AuthSuccess || state is AuthUnauthenticated) {
         _paqueteriaBloc.add(const PaqueteriaLimpiada());
       }
-      if (state is AuthSuccess && state.usuario.rol == Rol.administrador) {
+      if (state is AuthSuccess && state.usuario.rol != Rol.superadmin) {
         _tenantBloc.add(const TenantResuelto());
       } else if (state is AuthUnauthenticated) {
         _tenantBloc.add(const TenantLimpiado());

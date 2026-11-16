@@ -3,6 +3,7 @@ import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/tenant/proyecto_activo_store.dart';
+import '../../../auth/domain/entities/usuario.dart';
 import '../../../superadmin/domain/entities/proyecto_detalle.dart';
 import '../../../superadmin/domain/usecases/listar_mis_proyectos_usecase.dart';
 
@@ -51,6 +52,12 @@ class TenantState extends Equatable {
       if (proyecto.id == proyectoActivoId) return proyecto;
     }
     return null;
+  }
+
+  Rol? get rolActivo {
+    final rol = proyectoActivo?.rol;
+    if (rol == null || rol.isEmpty) return null;
+    return Rol.values.where((value) => value.name == rol).firstOrNull;
   }
 
   @override

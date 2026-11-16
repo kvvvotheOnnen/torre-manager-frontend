@@ -64,26 +64,28 @@ GoRouter buildRouter(AuthBloc authBloc, TenantBloc tenantBloc) {
           return isSplash ? null : AppRoutes.splash;
         case AuthSuccess():
           final rol = authState.usuario.rol;
+          final rolActivo =
+              rol == Rol.superadmin ? rol : (tenantState.rolActivo ?? rol);
           if (isSplash || isLogin) return AppRoutes.dashboard;
 
           final esModuloProximamente = location.startsWith('/admin/modulos');
           if (isAdminRoute &&
               !esModuloProximamente &&
-              rol != Rol.administrador &&
-              rol != Rol.superadmin) {
+              rolActivo != Rol.administrador &&
+              rolActivo != Rol.superadmin) {
             return AppRoutes.dashboard;
           }
 
-          if (isSuperadminRoute && rol != Rol.superadmin) {
+          if (isSuperadminRoute && rolActivo != Rol.superadmin) {
             return AppRoutes.dashboard;
           }
 
-          if (isResidenteRoute && rol != Rol.residente) {
+          if (isResidenteRoute && rolActivo != Rol.residente && rolActivo != Rol.propietario) {
             return AppRoutes.dashboard;
           }
 
-          // Enrutamiento multi-tenant del administrador.
-          if (rol == Rol.administrador) {
+          // Enrutamiento multi-tenant para roles con proyecto activo.
+          if (rol != Rol.superadmin) {
             if (tenantState.status == TenantStatus.cargando) {
               return AppRoutes.splash;
             }

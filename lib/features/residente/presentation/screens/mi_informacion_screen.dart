@@ -102,23 +102,33 @@ class _MiInformacionScreenState extends State<MiInformacionScreen> {
                       ),
                     ),
                     const SizedBox(height: 24),
-                    Card(
-                      child: Padding(
-                        padding: const EdgeInsets.all(16),
-                        child: Column(
-                          children: [
-                            _FilaInfo(
-                              icono: Icons.door_front_door_outlined,
-                              etiqueta: 'Unidad',
-                              valor: info.unidad,
-                            ),
-                            const Divider(),
-                            _FilaInfo(
-                              icono: Icons.domain_outlined,
-                              etiqueta: 'Agrupación',
-                              valor: info.agrupacion,
-                            ),
-                          ],
+                    ...info.unidades.map(
+                      (unidad) => Card(
+                        margin: const EdgeInsets.only(bottom: 12),
+                        child: Padding(
+                          padding: const EdgeInsets.all(16),
+                          child: Column(
+                            children: [
+                              _FilaInfo(
+                                icono: Icons.door_front_door_outlined,
+                                etiqueta: 'Unidad',
+                                valor: unidad.unidad,
+                              ),
+                              const Divider(),
+                              _FilaInfo(
+                                icono: Icons.domain_outlined,
+                                etiqueta: 'Agrupación',
+                                valor: unidad.agrupacion,
+                              ),
+                              const Divider(),
+                              _FilaInfo(
+                                icono: Icons.link,
+                                etiqueta: 'Vínculo',
+                                valor:
+                                    '${unidad.tipoVinculo}${unidad.esActual ? ' · actual' : ' · histórico'}',
+                              ),
+                            ],
+                          ),
                         ),
                       ),
                     ),

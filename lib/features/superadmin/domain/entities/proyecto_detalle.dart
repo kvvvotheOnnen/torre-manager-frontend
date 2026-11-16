@@ -13,6 +13,7 @@ class ProyectoDetalle extends Equatable {
     required this.modulos,
     required this.instalacionesExtra,
     required this.adminIds,
+    this.rol,
   });
 
   final String id;
@@ -22,6 +23,7 @@ class ProyectoDetalle extends Equatable {
   final List<ModuloSistema> modulos;
   final List<InstalacionExtra> instalacionesExtra;
   final List<String> adminIds;
+  final String? rol;
 
   @override
   List<Object?> get props => [
@@ -32,5 +34,6 @@ class ProyectoDetalle extends Equatable {
     modulos,
     instalacionesExtra,
     adminIds,
+    rol,
   ];
 }

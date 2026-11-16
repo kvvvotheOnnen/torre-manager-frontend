@@ -12,6 +12,7 @@ class ProyectoDetalleDTO {
     required this.modulos,
     required this.instalacionesExtra,
     required this.adminIds,
+    this.rol,
   });
 
   final String id;
@@ -21,6 +22,7 @@ class ProyectoDetalleDTO {
   final List<String> modulos;
   final List<InstalacionExtraDTO> instalacionesExtra;
   final List<String> adminIds;
+  final String? rol;
 
   factory ProyectoDetalleDTO.fromJson(Map<String, dynamic> json) {
     return ProyectoDetalleDTO(
@@ -40,6 +42,7 @@ class ProyectoDetalleDTO {
       adminIds: ((json['admin_ids'] ?? const []) as List)
           .map((item) => '$item')
           .toList(),
+      rol: json['rol'] as String?,
     );
   }
 
@@ -57,6 +60,7 @@ class ProyectoDetalleDTO {
           .map((instalacion) => instalacion.toEntity())
           .toList(),
       adminIds: adminIds,
+      rol: rol,
     );
   }
 }

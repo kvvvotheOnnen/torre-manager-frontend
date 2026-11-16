@@ -6,6 +6,7 @@ import '../../../auth/domain/entities/usuario.dart';
 import '../../../auth/presentation/bloc/auth_bloc.dart';
 import '../../../auth/presentation/bloc/auth_event.dart';
 import '../../../auth/presentation/bloc/auth_state.dart';
+import '../../../tenant/presentation/bloc/tenant_bloc.dart';
 import 'admin_dashboard_screen.dart';
 import 'resident_dashboard_screen.dart';
 import 'conserje_dashboard_screen.dart';
@@ -53,25 +54,28 @@ class DashboardScreen extends StatelessWidget {
       Rol.administrador => const [],
       Rol.residente => const [],
       Rol.conserje => const [],
+      Rol.propietario => const [],
     };
   }
 
   @override
   Widget build(BuildContext context) {
-    if (usuario.rol == Rol.administrador) {
+    final rolActivo = context.watch<TenantBloc>().state.rolActivo ?? usuario.rol;
+
+    if (rolActivo == Rol.administrador) {
       return AdminDashboardScreen(usuario: usuario);
     }
 
-    if (usuario.rol == Rol.residente) {
+    if (rolActivo == Rol.residente || rolActivo == Rol.propietario) {
       return ResidentDashboardScreen(usuario: usuario);
     }
 
-    if (usuario.rol == Rol.conserje) {
+    if (rolActivo == Rol.conserje) {
       return ConserjeDashboardScreen(usuario: usuario);
     }
 
     final theme = Theme.of(context);
-    final modulos = _modulosPara(usuario.rol);
+    final modulos = _modulosPara(rolActivo);
 
     return Scaffold(
       appBar: AppBar(

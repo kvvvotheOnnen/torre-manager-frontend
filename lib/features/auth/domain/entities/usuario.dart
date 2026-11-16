@@ -1,6 +1,6 @@
 import 'package:equatable/equatable.dart';
 
-enum Rol { superadmin, administrador, residente, conserje }
+enum Rol { superadmin, administrador, residente, conserje, propietario }
 
 class Usuario extends Equatable {
   const Usuario({

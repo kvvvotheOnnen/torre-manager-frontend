@@ -387,7 +387,9 @@ class _ContenidoResidente extends StatelessWidget {
               padding: const EdgeInsets.all(20),
               children: [
                 Text(
-                  'Panel de residente',
+                  usuario.rol == Rol.propietario
+              ? 'Panel de propietario'
+              : 'Panel de residente',
               style: theme.textTheme.headlineSmall?.copyWith(
                 fontWeight: FontWeight.bold,
               ),
