@@ -41,6 +41,10 @@ class AppConfig {
       '/api/superadmin/administradores';
   static const String misProyectosPath = '/api/mis-proyectos';
   static const String dashboardModulosPath = '/api/dashboard/modulos';
+  static const String dashboardFuncionesPath = '/api/dashboard/funciones';
+  static const String serviciosPath = '/api/servicios';
+  static String servicioPath(String id) =>
+      '$serviciosPath/${Uri.encodeComponent(id)}';
   static const String residenteMiInformacionPath =
       '/api/residente/mi-informacion';
   static const String residenteAsistenteConsultasPath =

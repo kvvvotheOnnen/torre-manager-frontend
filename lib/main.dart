@@ -27,6 +27,10 @@ import 'features/dashboard/data/datasources/dashboard_remote_data_source.dart';
 import 'features/dashboard/data/repositories/dashboard_repository_impl.dart';
 import 'features/dashboard/domain/usecases/obtener_modulos_dashboard_usecase.dart';
 import 'features/dashboard/presentation/bloc/modulos_dashboard_bloc.dart';
+import 'features/dashboard/data/datasources/funciones_dashboard_remote_data_source.dart';
+import 'features/dashboard/data/repositories/funciones_dashboard_repository_impl.dart';
+import 'features/dashboard/domain/usecases/obtener_funciones_dashboard_usecase.dart';
+import 'features/dashboard/presentation/bloc/funciones_dashboard_bloc.dart';
 import 'features/infraestructura/data/datasources/infraestructura_remote_data_source.dart';
 import 'features/infraestructura/data/repositories/infraestructura_repository_impl.dart';
 import 'features/infraestructura/domain/usecases/asignar_unidad_accesoria_usecase.dart';
@@ -62,6 +66,13 @@ import 'features/paqueteria/domain/usecases/listar_paquetes_usecase.dart';
 import 'features/paqueteria/domain/usecases/marcar_paquete_retirado_usecase.dart';
 import 'features/paqueteria/domain/usecases/registrar_paquete_usecase.dart';
 import 'features/paqueteria/presentation/bloc/paqueteria_bloc.dart';
+import 'features/servicios/data/datasources/servicios_remote_data_source.dart';
+import 'features/servicios/data/repositories/servicios_repository_impl.dart';
+import 'features/servicios/domain/usecases/actualizar_trabajador_usecase.dart';
+import 'features/servicios/domain/usecases/crear_trabajador_usecase.dart';
+import 'features/servicios/domain/usecases/eliminar_trabajador_usecase.dart';
+import 'features/servicios/domain/usecases/listar_trabajadores_usecase.dart';
+import 'features/servicios/presentation/bloc/servicios_bloc.dart';
 import 'features/solicitudes_residente/data/datasources/solicitudes_residente_remote_data_source.dart';
 import 'features/solicitudes_residente/data/repositories/solicitudes_residente_repository_impl.dart';
 import 'features/solicitudes_residente/domain/usecases/aprobar_solicitud_usecase.dart';
@@ -91,11 +102,13 @@ class _TorreManagerAppState extends State<TorreManagerApp> {
   late final AdministradoresBloc _administradoresBloc;
   late final TenantBloc _tenantBloc;
   late final ModulosDashboardBloc _modulosDashboardBloc;
+  late final FuncionesDashboardBloc _funcionesDashboardBloc;
   late final ResidenteMiInformacionBloc _residenteMiInformacionBloc;
   late final AsistenteAdminBloc _asistenteAdminBloc;
   late final AsistenteBloc _asistenteBloc;
   late final PaqueteriaBloc _paqueteriaBloc;
   late final SolicitudesResidenteBloc _solicitudesResidenteBloc;
+  late final ServiciosBloc _serviciosBloc;
   late final GoRouter _router;
 
   @override
@@ -193,6 +206,18 @@ class _TorreManagerAppState extends State<TorreManagerApp> {
       ),
     );
 
+    final funcionesDashboardDataSource = FuncionesDashboardRemoteDataSource(
+      dio,
+    );
+    final funcionesDashboardRepository = FuncionesDashboardRepositoryImpl(
+      funcionesDashboardDataSource,
+    );
+    _funcionesDashboardBloc = FuncionesDashboardBloc(
+      obtenerFunciones: ObtenerFuncionesDashboardUseCase(
+        funcionesDashboardRepository,
+      ),
+    );
+
     final residenteDataSource = ResidenteRemoteDataSource(dio);
     final residenteRepository = ResidenteRepositoryImpl(residenteDataSource);
     _residenteMiInformacionBloc = ResidenteMiInformacionBloc(
@@ -244,6 +269,15 @@ class _TorreManagerAppState extends State<TorreManagerApp> {
       RechazarSolicitudUseCase(solicitudesResidenteRepository),
     );
 
+    final serviciosDataSource = ServiciosRemoteDataSource(dio);
+    final serviciosRepository = ServiciosRepositoryImpl(serviciosDataSource);
+    _serviciosBloc = ServiciosBloc(
+      listar: ListarTrabajadoresUseCase(serviciosRepository),
+      crear: CrearTrabajadorUseCase(serviciosRepository),
+      actualizar: ActualizarTrabajadorUseCase(serviciosRepository),
+      eliminar: EliminarTrabajadorUseCase(serviciosRepository),
+    );
+
     _authBloc.stream.listen((state) {
       if (state is AuthSuccess || state is AuthUnauthenticated) {
         _paqueteriaBloc.add(const PaqueteriaLimpiada());
@@ -272,6 +306,8 @@ class _TorreManagerAppState extends State<TorreManagerApp> {
     _asistenteBloc.close();
     _paqueteriaBloc.close();
     _solicitudesResidenteBloc.close();
+    _funcionesDashboardBloc.close();
+    _serviciosBloc.close();
     super.dispose();
   }
 
@@ -291,6 +327,8 @@ class _TorreManagerAppState extends State<TorreManagerApp> {
         BlocProvider.value(value: _asistenteBloc),
         BlocProvider.value(value: _paqueteriaBloc),
         BlocProvider.value(value: _solicitudesResidenteBloc),
+        BlocProvider.value(value: _funcionesDashboardBloc),
+        BlocProvider.value(value: _serviciosBloc),
       ],
       child: MaterialApp.router(
         title: 'Torre Manager',

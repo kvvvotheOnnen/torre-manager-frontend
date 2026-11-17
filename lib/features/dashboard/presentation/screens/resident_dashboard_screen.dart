@@ -3,9 +3,14 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/router/app_router.dart';
+import '../../../../core/router/funcion_rutas.dart';
 import '../../../auth/domain/entities/usuario.dart';
 import '../../../auth/presentation/bloc/auth_bloc.dart';
 import '../../../auth/presentation/bloc/auth_event.dart';
+import '../../domain/entities/funcion_dashboard.dart';
+import '../bloc/funciones_dashboard_bloc.dart';
+import '../widgets/icono_funcion.dart';
+import '../widgets/tarjeta_modulo_dashboard.dart';
 import 'modulo_proximamente_screen.dart';
 
 /// Módulo preventivo del residente (no viene del backend todavía).
@@ -39,7 +44,8 @@ const _modulosResidente = <_ModuloResidente>[
   _ModuloResidente(
     id: 'ia',
     titulo: 'IA',
-    descripcion: 'Consultas sobre el reglamento de infraestructura del edificio',
+    descripcion:
+        'Consultas sobre el reglamento de infraestructura del edificio',
     icono: Icons.star,
     ruta: '/residente/ia',
     preventivo: false,
@@ -83,13 +89,20 @@ class ResidentDashboardScreen extends StatefulWidget {
   final Usuario usuario;
 
   @override
-  State<ResidentDashboardScreen> createState() => _ResidentDashboardScreenState();
+  State<ResidentDashboardScreen> createState() =>
+      _ResidentDashboardScreenState();
 }
 
 class _ResidentDashboardScreenState extends State<ResidentDashboardScreen> {
   // Contador de notificaciones pendientes (se conectará al backend más adelante).
   // ignore: prefer_final_fields
   int _notificacionesCount = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    context.read<FuncionesDashboardBloc>().add(const FuncionesSolicitadas());
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -237,8 +250,9 @@ class _PanelSuperiorResidente extends StatelessWidget {
                         IconButton(
                           tooltip: 'Cerrar sesión',
                           icon: const Icon(Icons.logout),
-                          onPressed: () =>
-                              context.read<AuthBloc>().add(const LogoutRequested()),
+                          onPressed: () => context.read<AuthBloc>().add(
+                            const LogoutRequested(),
+                          ),
                         ),
                     ],
                   ),
@@ -250,7 +264,10 @@ class _PanelSuperiorResidente extends StatelessWidget {
 }
 
 class _PanelModulosResidente extends StatelessWidget {
-  const _PanelModulosResidente({this.esDrawer = false, this.anchoSidebar = 280});
+  const _PanelModulosResidente({
+    this.esDrawer = false,
+    this.anchoSidebar = 280,
+  });
 
   final bool esDrawer;
   final double anchoSidebar;
@@ -258,6 +275,8 @@ class _PanelModulosResidente extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final funciones = context.watch<FuncionesDashboardBloc>().state.funciones;
+    final idsFijos = _modulosResidente.map((modulo) => modulo.id).toSet();
 
     return Material(
       color: theme.colorScheme.surfaceContainerLow,
@@ -270,7 +289,10 @@ class _PanelModulosResidente extends StatelessWidget {
               padding: const EdgeInsets.fromLTRB(20, 20, 20, 12),
               child: Row(
                 children: [
-                  Icon(Icons.apartment_rounded, color: theme.colorScheme.primary),
+                  Icon(
+                    Icons.apartment_rounded,
+                    color: theme.colorScheme.primary,
+                  ),
                   const SizedBox(width: 10),
                   Expanded(
                     child: Text(
@@ -292,6 +314,11 @@ class _PanelModulosResidente extends StatelessWidget {
                   ..._modulosResidente.map(
                     (modulo) => _ItemModuloResidente(modulo: modulo),
                   ),
+                  ...funciones
+                      .where((funcion) => !idsFijos.contains(funcion.id))
+                      .map(
+                        (funcion) => _ItemFuncionResidente(funcion: funcion),
+                      ),
                   const SizedBox(height: 16),
                 ],
               ),
@@ -360,6 +387,40 @@ class _ItemModuloResidente extends StatelessWidget {
   }
 }
 
+/// Ítem de barra lateral para las funciones que llegan del backend.
+class _ItemFuncionResidente extends StatelessWidget {
+  const _ItemFuncionResidente({required this.funcion});
+
+  final FuncionDashboard funcion;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final scaffold = Scaffold.maybeOf(context);
+    final seleccionado =
+        GoRouterState.of(context).matchedLocation == funcion.ruta;
+
+    return ListTile(
+      dense: true,
+      selected: seleccionado,
+      selectedTileColor: theme.colorScheme.secondaryContainer,
+      contentPadding: const EdgeInsets.symmetric(horizontal: 12),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+      leading: Icon(
+        iconoDeFuncion(funcion.icono),
+        color: theme.colorScheme.primary,
+      ),
+      title: Text(funcion.titulo, overflow: TextOverflow.ellipsis),
+      onTap: () {
+        if (scaffold?.isDrawerOpen ?? false) {
+          scaffold!.closeDrawer();
+        }
+        abrirFuncionDashboard(context, funcion);
+      },
+    );
+  }
+}
+
 class _ContenidoResidente extends StatelessWidget {
   const _ContenidoResidente({required this.usuario});
 
@@ -368,6 +429,8 @@ class _ContenidoResidente extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final funciones = context.watch<FuncionesDashboardBloc>().state.funciones;
+    final total = _modulosResidente.length + funciones.length;
 
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -388,39 +451,50 @@ class _ContenidoResidente extends StatelessWidget {
               children: [
                 Text(
                   usuario.rol == Rol.propietario
-              ? 'Panel de propietario'
-              : 'Panel de residente',
-              style: theme.textTheme.headlineSmall?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              'Hola, ${usuario.nombre}. Estos son los módulos disponibles para ti.',
-              style: theme.textTheme.bodyMedium?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
-              ),
-            ),
-            const SizedBox(height: 20),
-            GridView.builder(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              itemCount: _modulosResidente.length,
-              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: columnas,
-                mainAxisSpacing: 12,
-                crossAxisSpacing: 12,
-                childAspectRatio: 1.35,
-              ),
-              itemBuilder: (context, index) {
-                final modulo = _modulosResidente[index];
-                return _TarjetaModuloResidente(modulo: modulo);
-              },
-            ),
-          ],
-        ), // ListView
-      ), // ConstrainedBox
-    ); // Center
+                      ? 'Panel de propietario'
+                      : 'Panel de residente',
+                  style: theme.textTheme.headlineSmall?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'Hola, ${usuario.nombre}. Estos son los módulos disponibles para ti.',
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                ),
+                const SizedBox(height: 20),
+                GridView.builder(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  itemCount: total,
+                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: columnas,
+                    mainAxisSpacing: 12,
+                    crossAxisSpacing: 12,
+                    childAspectRatio: 1.35,
+                  ),
+                  itemBuilder: (context, index) {
+                    if (index < _modulosResidente.length) {
+                      return _TarjetaModuloResidente(
+                        modulo: _modulosResidente[index],
+                      );
+                    }
+
+                    final funcion = funciones[index - _modulosResidente.length];
+                    return TarjetaModuloDashboard(
+                      titulo: funcion.titulo,
+                      descripcion: funcion.descripcion,
+                      icono: iconoDeFuncion(funcion.icono),
+                      onTap: () => abrirFuncionDashboard(context, funcion),
+                    );
+                  },
+                ),
+              ],
+            ), // ListView
+          ), // ConstrainedBox
+        ); // Center
       },
     ); // LayoutBuilder
   }
@@ -447,10 +521,7 @@ class _BotonNotificaciones extends StatelessWidget {
 
     if (count <= 0) return icon;
 
-    return Badge(
-      label: Text('$count'),
-      child: icon,
-    );
+    return Badge(label: Text('$count'), child: icon);
   }
 }
 
@@ -486,7 +557,11 @@ class _TarjetaModuloResidente extends StatelessWidget {
             children: [
               Row(
                 children: [
-                  Icon(modulo.icono, size: 32, color: theme.colorScheme.primary),
+                  Icon(
+                    modulo.icono,
+                    size: 32,
+                    color: theme.colorScheme.primary,
+                  ),
                   const Spacer(),
                 ],
               ),

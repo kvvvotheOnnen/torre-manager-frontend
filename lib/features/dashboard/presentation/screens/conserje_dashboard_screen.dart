@@ -3,9 +3,14 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/router/app_router.dart';
+import '../../../../core/router/funcion_rutas.dart';
 import '../../../auth/domain/entities/usuario.dart';
 import '../../../auth/presentation/bloc/auth_bloc.dart';
 import '../../../auth/presentation/bloc/auth_event.dart';
+import '../../domain/entities/funcion_dashboard.dart';
+import '../bloc/funciones_dashboard_bloc.dart';
+import '../widgets/icono_funcion.dart';
+import '../widgets/tarjeta_modulo_dashboard.dart';
 import 'modulo_proximamente_screen.dart';
 
 /// Módulo preventivo del conserje (no viene del backend todavía).
@@ -74,6 +79,12 @@ class ConserjeDashboardScreen extends StatefulWidget {
 }
 
 class _ConserjeDashboardScreenState extends State<ConserjeDashboardScreen> {
+  @override
+  void initState() {
+    super.initState();
+    context.read<FuncionesDashboardBloc>().add(const FuncionesSolicitadas());
+  }
+
   @override
   Widget build(BuildContext context) {
     return LayoutBuilder(
@@ -223,6 +234,8 @@ class _PanelModulosConserje extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final funciones = context.watch<FuncionesDashboardBloc>().state.funciones;
+    final idsFijos = _modulosConserje.map((modulo) => modulo.id).toSet();
 
     return Material(
       color: theme.colorScheme.surfaceContainerLow,
@@ -260,6 +273,9 @@ class _PanelModulosConserje extends StatelessWidget {
                   ..._modulosConserje.map(
                     (modulo) => _ItemModuloConserje(modulo: modulo),
                   ),
+                  ...funciones
+                      .where((funcion) => !idsFijos.contains(funcion.id))
+                      .map((funcion) => _ItemFuncionConserje(funcion: funcion)),
                   const SizedBox(height: 16),
                 ],
               ),
@@ -324,6 +340,40 @@ class _ItemModuloConserje extends StatelessWidget {
   }
 }
 
+/// Ítem de barra lateral para las funciones que llegan del backend.
+class _ItemFuncionConserje extends StatelessWidget {
+  const _ItemFuncionConserje({required this.funcion});
+
+  final FuncionDashboard funcion;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final scaffold = Scaffold.maybeOf(context);
+    final seleccionado =
+        GoRouterState.of(context).matchedLocation == funcion.ruta;
+
+    return ListTile(
+      dense: true,
+      selected: seleccionado,
+      selectedTileColor: theme.colorScheme.secondaryContainer,
+      contentPadding: const EdgeInsets.symmetric(horizontal: 12),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+      leading: Icon(
+        iconoDeFuncion(funcion.icono),
+        color: theme.colorScheme.primary,
+      ),
+      title: Text(funcion.titulo, overflow: TextOverflow.ellipsis),
+      onTap: () {
+        if (scaffold?.isDrawerOpen ?? false) {
+          scaffold!.closeDrawer();
+        }
+        abrirFuncionDashboard(context, funcion);
+      },
+    );
+  }
+}
+
 class _ContenidoConserje extends StatelessWidget {
   const _ContenidoConserje({required this.usuario});
 
@@ -332,6 +382,8 @@ class _ContenidoConserje extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final funciones = context.watch<FuncionesDashboardBloc>().state.funciones;
+    final total = _modulosConserje.length + funciones.length;
 
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -367,7 +419,7 @@ class _ContenidoConserje extends StatelessWidget {
                 GridView.builder(
                   shrinkWrap: true,
                   physics: const NeverScrollableScrollPhysics(),
-                  itemCount: _modulosConserje.length,
+                  itemCount: total,
                   gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                     crossAxisCount: columnas,
                     mainAxisSpacing: 12,
@@ -375,8 +427,19 @@ class _ContenidoConserje extends StatelessWidget {
                     childAspectRatio: 1.35,
                   ),
                   itemBuilder: (context, index) {
-                    final modulo = _modulosConserje[index];
-                    return _TarjetaModuloConserje(modulo: modulo);
+                    if (index < _modulosConserje.length) {
+                      return _TarjetaModuloConserje(
+                        modulo: _modulosConserje[index],
+                      );
+                    }
+
+                    final funcion = funciones[index - _modulosConserje.length];
+                    return TarjetaModuloDashboard(
+                      titulo: funcion.titulo,
+                      descripcion: funcion.descripcion,
+                      icono: iconoDeFuncion(funcion.icono),
+                      onTap: () => abrirFuncionDashboard(context, funcion),
+                    );
                   },
                 ),
               ],

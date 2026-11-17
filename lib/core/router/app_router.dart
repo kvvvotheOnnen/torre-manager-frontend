@@ -13,6 +13,7 @@ import '../../features/dashboard/presentation/screens/modulo_proximamente_screen
 import '../../features/residente/presentation/screens/mi_informacion_screen.dart';
 import '../../features/paqueteria/presentation/screens/mis_paquetes_screen.dart';
 import '../../features/paqueteria/presentation/screens/paqueteria_gestion_screen.dart';
+import '../../features/servicios/presentation/screens/servicios_screen.dart';
 import '../../features/infraestructura/presentation/screens/infraestructura_screen.dart';
 import '../../features/superadmin/presentation/screens/administradores_screen.dart';
 import '../../features/superadmin/presentation/screens/proyectos_screen.dart';
@@ -33,6 +34,7 @@ class AppRoutes {
       '/admin/modulos/solicitudes_residente';
   static const String paqueteria = '/paqueteria';
   static const String paqueteriaGestion = '/paqueteria/gestion';
+  static const String servicios = '/servicios';
   static const String selectorProyecto = '/selector-proyecto';
   static const String superadminInfraestructura = '/superadmin/infraestructura';
   static const String adminModulos = '/admin/modulos';
@@ -154,6 +156,10 @@ GoRouter buildRouter(AuthBloc authBloc, TenantBloc tenantBloc) {
         builder: (context, state) => const GestionResidentesScreen(),
       ),
       GoRoute(
+        path: AppRoutes.adminModulo('servicios_recomendados'),
+        builder: (context, state) => const ServiciosScreen(),
+      ),
+      GoRoute(
         path: '${AppRoutes.adminModulos}/:id',
         builder: (context, state) {
           final args = state.extra is ProximamenteArgs
@@ -196,6 +202,10 @@ GoRouter buildRouter(AuthBloc authBloc, TenantBloc tenantBloc) {
               : _usuarioDesdeBloc(context);
           return PaqueteriaGestionScreen(usuario: usuario);
         },
+      ),
+      GoRoute(
+        path: AppRoutes.servicios,
+        builder: (context, state) => const ServiciosScreen(),
       ),
       GoRoute(
         path: AppRoutes.superadminProyectos,

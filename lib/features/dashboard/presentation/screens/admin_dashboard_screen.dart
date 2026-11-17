@@ -9,6 +9,7 @@ import '../../../auth/presentation/bloc/auth_event.dart';
 import '../../../tenant/presentation/bloc/tenant_bloc.dart';
 import '../../domain/entities/modulo_dashboard.dart';
 import '../bloc/modulos_dashboard_bloc.dart';
+import '../widgets/tarjeta_modulo_dashboard.dart';
 
 class AdminDashboardScreen extends StatefulWidget {
   const AdminDashboardScreen({super.key, required this.usuario});
@@ -553,57 +554,12 @@ class _TarjetaModulo extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final habilitado = modulo.habilitado;
-    final color = habilitado
-        ? theme.colorScheme.onSurface
-        : theme.colorScheme.onSurface.withValues(alpha: 0.45);
-
-    return Card(
-      clipBehavior: Clip.antiAlias,
-      color: habilitado ? null : theme.colorScheme.surfaceContainerHighest,
-      child: InkWell(
-        onTap: () => _abrirModulo(context, modulo),
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Icon(
-                    _iconoPara(modulo.id),
-                    size: 32,
-                    color: habilitado ? theme.colorScheme.primary : color,
-                  ),
-                  const Spacer(),
-                  if (!habilitado)
-                    Icon(Icons.lock_outline, size: 20, color: color),
-                ],
-              ),
-              const Spacer(),
-              Text(
-                modulo.nombre,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                style: theme.textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: color,
-                ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                habilitado
-                    ? modulo.descripcion
-                    : 'No habilitado para este proyecto.',
-                maxLines: 3,
-                overflow: TextOverflow.ellipsis,
-                style: theme.textTheme.bodySmall?.copyWith(color: color),
-              ),
-            ],
-          ),
-        ),
-      ),
+    return TarjetaModuloDashboard(
+      titulo: modulo.nombre,
+      descripcion: modulo.descripcion,
+      icono: _iconoPara(modulo.id),
+      habilitado: modulo.habilitado,
+      onTap: () => _abrirModulo(context, modulo),
     );
   }
 }
@@ -651,6 +607,7 @@ IconData _iconoPara(String id) {
     'personas_externas_oficios' => Icons.engineering_outlined,
     'alertas_noticias' => Icons.campaign_outlined,
     'asistente_ia_admin' => Icons.cloud_upload_outlined,
+    'servicios_recomendados' => Icons.handyman_outlined,
     _ => Icons.widgets_outlined,
   };
 }

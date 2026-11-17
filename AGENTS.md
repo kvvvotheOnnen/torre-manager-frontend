@@ -87,6 +87,17 @@ La propiedad y la ocupación son relaciones contextuales entre una persona, una 
 - Toda función de propietario debe probar: propietario de la unidad, usuario de otro proyecto, ocupante no propietario y usuario sin vínculo.
 - Mientras existan columnas/tablas legacy, mantener compatibilidad o justificar su migración. No eliminarlas sin una fase aprobada.
 
+### 2.5 Funciones, Capacidades y Ámbito
+
+Todo módulo nuevo se expone como **función** declarada en el catálogo del backend (`config/funciones.php`), con su ámbito y las capacidades que exige.
+
+- El dashboard se compone desde `GET /api/dashboard/funciones`; no se agregan listas de módulos por rol en el frontend.
+- La autorización se expresa como capacidad (`verbo.recurso`, p. ej. `control_acceso.registrar`), nunca como nombre de rol dentro de la lógica del módulo. El mapa rol→capacidad vive en `config/capacidades.php`.
+- El acceso a un recurso concreto se resuelve con `ResolutorAmbito` (`proyecto`, `unidad`, `propio`); no se consultan vínculos directamente en controladores ni pantallas.
+- Los endpoints de módulos nuevos usan el middleware `puede:<capacidad>`; `role.proyecto` queda para los módulos existentes.
+- Cambiar roles, jerarquía o agrupación de unidades no debe requerir cambios en un módulo: solo en el mapa de capacidades o en la implementación del resolvedor.
+- Los módulos previos al contrato (paquetería, mi-información, gestión de residentes) mantienen su autorización actual hasta una migración explícita.
+
 ## 3. Especificaciones del Backend (Laravel 11 API RESTful)
 
 * **Rol:** Proveedor de API puro. Sin vistas web (Vite/Blade eliminados).
@@ -102,6 +113,15 @@ La propiedad y la ocupación son relaciones contextuales entre una persona, una 
 - **Sincronización Local:** Todo dato de prueba masivo debe programarse mediante **Factories** y ejecutarse a través de **Seeders**. El agente debe asumir que la sincronización de la base de datos local (PostgreSQL en Docker) entre desarrolladores se realiza exclusivamente mediante el comando `php artisan migrate:fresh --seed`.
 
 - **Seguridad y Credenciales:** Ningún Seeder versionado en el repositorio debe contener contraseñas o tokens sensibles en duro (hardcoded). Cualquier Seeder que cree usuarios administradores o requiera credenciales vitales debe inyectarlas leyendo el archivo de entorno, utilizando el formato `env('KEY', 'valor_default_desarrollo')`. Solo los datos "basura" (dummy) pueden generarse sin validación de entorno.
+
+### 3.2 Almacenamiento de Archivos
+
+- Toda lectura o escritura de archivos pasa por el puerto `Features\Archivos\Domain\Contracts\AlmacenArchivos` (`guardar`, `reemplazar`, `eliminar`, `url`, `existe`). Prohibido usar `Storage` directamente en controladores, repositorios o modelos nuevos.
+- La implementación activa es `AlmacenEnDisco` sobre el disco `public`. `AlmacenS3Compatible` es un esqueleto documentado para migrar a S3/Garage; activarlo exige `league/flysystem-aws-s3-v3`, un disco `s3` y `ARCHIVOS_DRIVER=s3`.
+- La configuración vive en `config/archivos.php`: `driver`, `disco`, `max_kb` (5 MB por imagen) y `carpetas` permitidas.
+- Los archivos se guardan en `{carpeta}/{proyecto_id}/` y la base de datos persiste solo la ruta relativa; las URLs se resuelven con `url()` para no acoplar al disco.
+- Los huérfanos se limpian con `php artisan archivos:limpiar-huerfanos` (diario a las 03:00); el comando nunca borra un archivo referenciado y admite `--dry-run`.
+- No se redimensionan imágenes en el servidor: el contenedor no incluye GD ni Imagick. El límite se valida en la petición.
 
 ## 4. Especificaciones del Frontend (Flutter)
 
