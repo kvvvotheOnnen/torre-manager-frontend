@@ -7,6 +7,7 @@ import '../../../auth/domain/entities/usuario.dart';
 import '../../../auth/presentation/bloc/auth_bloc.dart';
 import '../../../auth/presentation/bloc/auth_event.dart';
 import '../bloc/residente_mi_informacion_bloc.dart';
+import '../widgets/datos_personales_card.dart';
 
 class MiInformacionScreen extends StatefulWidget {
   const MiInformacionScreen({super.key, required this.usuario});
@@ -102,6 +103,7 @@ class _MiInformacionScreenState extends State<MiInformacionScreen> {
                       ),
                     ),
                     const SizedBox(height: 24),
+                    DatosPersonalesCard(usuario: widget.usuario),
                     ...info.unidades.map(
                       (unidad) => Card(
                         margin: const EdgeInsets.only(bottom: 12),
