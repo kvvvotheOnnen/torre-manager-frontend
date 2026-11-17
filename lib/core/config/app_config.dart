@@ -41,9 +41,20 @@ class AppConfig {
       '/api/superadmin/administradores';
   static const String misProyectosPath = '/api/mis-proyectos';
   static const String dashboardModulosPath = '/api/dashboard/modulos';
-  static const String residenteMiInformacionPath = '/api/residente/mi-informacion';
+  static const String residenteMiInformacionPath =
+      '/api/residente/mi-informacion';
   static const String residenteAsistenteConsultasPath =
       '/api/residente/asistente/consultas';
   static const String asistenteAdminDocumentoPath =
       '/api/admin/asistente/documento';
+  static const String solicitudesResidentesPath =
+      '/api/admin/solicitudes-residentes';
+  static const String solicitudesResidentesHistorialPath =
+      '$solicitudesResidentesPath/historial';
+  static String solicitudResidentePath(String id) =>
+      '$solicitudesResidentesPath/${Uri.encodeComponent(id)}';
+  static String solicitudResidenteAprobarPath(String id) =>
+      '${solicitudResidentePath(id)}/aprobar';
+  static String solicitudResidenteRechazarPath(String id) =>
+      '${solicitudResidentePath(id)}/rechazar';
 }

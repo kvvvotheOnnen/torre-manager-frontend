@@ -631,6 +631,10 @@ void _abrirModulo(BuildContext context, ModuloDashboard modulo) {
 }
 
 String _rutaPara(ModuloDashboard modulo) {
+  if (modulo.id == 'solicitudes_residente') {
+    return AppRoutes.solicitudesResidente;
+  }
+
   return AppRoutes.adminModulo(modulo.id);
 }
 

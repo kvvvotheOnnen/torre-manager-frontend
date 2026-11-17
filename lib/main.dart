@@ -62,6 +62,13 @@ import 'features/paqueteria/domain/usecases/listar_paquetes_usecase.dart';
 import 'features/paqueteria/domain/usecases/marcar_paquete_retirado_usecase.dart';
 import 'features/paqueteria/domain/usecases/registrar_paquete_usecase.dart';
 import 'features/paqueteria/presentation/bloc/paqueteria_bloc.dart';
+import 'features/solicitudes_residente/data/datasources/solicitudes_residente_remote_data_source.dart';
+import 'features/solicitudes_residente/data/repositories/solicitudes_residente_repository_impl.dart';
+import 'features/solicitudes_residente/domain/usecases/aprobar_solicitud_usecase.dart';
+import 'features/solicitudes_residente/domain/usecases/listar_historial_usecase.dart';
+import 'features/solicitudes_residente/domain/usecases/listar_pendientes_usecase.dart';
+import 'features/solicitudes_residente/domain/usecases/rechazar_solicitud_usecase.dart';
+import 'features/solicitudes_residente/presentation/bloc/solicitudes_residente_bloc.dart';
 import 'features/superadmin/presentation/bloc/superadmin_bloc.dart';
 import 'features/tenant/presentation/bloc/tenant_bloc.dart';
 
@@ -88,6 +95,7 @@ class _TorreManagerAppState extends State<TorreManagerApp> {
   late final AsistenteAdminBloc _asistenteAdminBloc;
   late final AsistenteBloc _asistenteBloc;
   late final PaqueteriaBloc _paqueteriaBloc;
+  late final SolicitudesResidenteBloc _solicitudesResidenteBloc;
   late final GoRouter _router;
 
   @override
@@ -198,7 +206,9 @@ class _TorreManagerAppState extends State<TorreManagerApp> {
       asistenteAdminDataSource,
     );
     _asistenteAdminBloc = AsistenteAdminBloc(
-      obtenerDocumentoUseCase: ObtenerDocumentoUseCase(asistenteAdminRepository),
+      obtenerDocumentoUseCase: ObtenerDocumentoUseCase(
+        asistenteAdminRepository,
+      ),
       subirDocumentoUseCase: SubirDocumentoUseCase(asistenteAdminRepository),
       eliminarDocumentoUseCase: EliminarDocumentoUseCase(
         asistenteAdminRepository,
@@ -219,6 +229,19 @@ class _TorreManagerAppState extends State<TorreManagerApp> {
       marcarRetiradoUseCase: MarcarPaqueteRetiradoUseCase(paqueteriaRepository),
       actualizarUseCase: ActualizarPaqueteUseCase(paqueteriaRepository),
       remoteDataSource: paqueteriaDataSource,
+    );
+
+    final solicitudesResidenteDataSource = SolicitudesResidenteRemoteDataSource(
+      dio,
+    );
+    final solicitudesResidenteRepository = SolicitudesResidenteRepositoryImpl(
+      solicitudesResidenteDataSource,
+    );
+    _solicitudesResidenteBloc = SolicitudesResidenteBloc(
+      ListarSolicitudesPendientesUseCase(solicitudesResidenteRepository),
+      ListarHistorialSolicitudesUseCase(solicitudesResidenteRepository),
+      AprobarSolicitudUseCase(solicitudesResidenteRepository),
+      RechazarSolicitudUseCase(solicitudesResidenteRepository),
     );
 
     _authBloc.stream.listen((state) {
@@ -248,6 +271,7 @@ class _TorreManagerAppState extends State<TorreManagerApp> {
     _asistenteAdminBloc.close();
     _asistenteBloc.close();
     _paqueteriaBloc.close();
+    _solicitudesResidenteBloc.close();
     super.dispose();
   }
 
@@ -266,6 +290,7 @@ class _TorreManagerAppState extends State<TorreManagerApp> {
         BlocProvider.value(value: _asistenteAdminBloc),
         BlocProvider.value(value: _asistenteBloc),
         BlocProvider.value(value: _paqueteriaBloc),
+        BlocProvider.value(value: _solicitudesResidenteBloc),
       ],
       child: MaterialApp.router(
         title: 'Torre Manager',

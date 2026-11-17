@@ -17,6 +17,7 @@ import '../../features/infraestructura/presentation/screens/infraestructura_scre
 import '../../features/superadmin/presentation/screens/administradores_screen.dart';
 import '../../features/superadmin/presentation/screens/proyectos_screen.dart';
 import '../../features/tenant/presentation/bloc/tenant_bloc.dart';
+import '../../features/solicitudes_residente/presentation/screens/gestion_residentes_screen.dart';
 import '../../features/tenant/presentation/screens/selector_proyecto_screen.dart';
 
 class AppRoutes {
@@ -28,6 +29,8 @@ class AppRoutes {
   static const String residenteMiInformacion = '/residente/mi-informacion';
   static const String residenteAsistente = '/residente/ia';
   static const String adminAsistente = '/admin/modulos/asistente_ia_admin';
+  static const String solicitudesResidente =
+      '/admin/modulos/solicitudes_residente';
   static const String paqueteria = '/paqueteria';
   static const String paqueteriaGestion = '/paqueteria/gestion';
   static const String selectorProyecto = '/selector-proyecto';
@@ -64,13 +67,26 @@ GoRouter buildRouter(AuthBloc authBloc, TenantBloc tenantBloc) {
           return isSplash ? null : AppRoutes.splash;
         case AuthSuccess():
           final rol = authState.usuario.rol;
-          final rolActivo =
-              rol == Rol.superadmin ? rol : (tenantState.rolActivo ?? rol);
+          final rolActivo = rol == Rol.superadmin
+              ? rol
+              : (tenantState.rolActivo ?? rol);
           if (isSplash || isLogin) return AppRoutes.dashboard;
 
-          final esModuloProximamente = location.startsWith('/admin/modulos');
+          final esGestionResidentes =
+              location == AppRoutes.solicitudesResidente;
+          final esModuloProximamente =
+              location.startsWith('/admin/modulos') && !esGestionResidentes;
+
+          if (esGestionResidentes &&
+              rolActivo != Rol.administrador &&
+              rolActivo != Rol.conserje &&
+              rolActivo != Rol.superadmin) {
+            return AppRoutes.dashboard;
+          }
+
           if (isAdminRoute &&
               !esModuloProximamente &&
+              !esGestionResidentes &&
               rolActivo != Rol.administrador &&
               rolActivo != Rol.superadmin) {
             return AppRoutes.dashboard;
@@ -80,7 +96,9 @@ GoRouter buildRouter(AuthBloc authBloc, TenantBloc tenantBloc) {
             return AppRoutes.dashboard;
           }
 
-          if (isResidenteRoute && rolActivo != Rol.residente && rolActivo != Rol.propietario) {
+          if (isResidenteRoute &&
+              rolActivo != Rol.residente &&
+              rolActivo != Rol.propietario) {
             return AppRoutes.dashboard;
           }
 
@@ -130,6 +148,10 @@ GoRouter buildRouter(AuthBloc authBloc, TenantBloc tenantBloc) {
       GoRoute(
         path: AppRoutes.adminAsistente,
         builder: (context, state) => const AsistenteAdminScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.solicitudesResidente,
+        builder: (context, state) => const GestionResidentesScreen(),
       ),
       GoRoute(
         path: '${AppRoutes.adminModulos}/:id',

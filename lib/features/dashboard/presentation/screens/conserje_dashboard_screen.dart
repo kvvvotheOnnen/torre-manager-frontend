@@ -27,6 +27,13 @@ class _ModuloConserje {
 
 const _modulosConserje = <_ModuloConserje>[
   _ModuloConserje(
+    id: 'solicitudes_residente',
+    titulo: 'Gestión de residentes',
+    descripcion: 'Aprueba o rechaza solicitudes de nuevos residentes',
+    icono: Icons.how_to_reg_outlined,
+    ruta: AppRoutes.solicitudesResidente,
+  ),
+  _ModuloConserje(
     id: 'paqueteria',
     titulo: 'Paquetería',
     descripcion: 'Avisos y retiro de paquetes',
@@ -62,7 +69,8 @@ class ConserjeDashboardScreen extends StatefulWidget {
   final Usuario usuario;
 
   @override
-  State<ConserjeDashboardScreen> createState() => _ConserjeDashboardScreenState();
+  State<ConserjeDashboardScreen> createState() =>
+      _ConserjeDashboardScreenState();
 }
 
 class _ConserjeDashboardScreenState extends State<ConserjeDashboardScreen> {
@@ -194,8 +202,9 @@ class _PanelSuperiorConserje extends StatelessWidget {
                         IconButton(
                           tooltip: 'Cerrar sesión',
                           icon: const Icon(Icons.logout),
-                          onPressed: () =>
-                              context.read<AuthBloc>().add(const LogoutRequested()),
+                          onPressed: () => context.read<AuthBloc>().add(
+                            const LogoutRequested(),
+                          ),
                         ),
                     ],
                   ),
@@ -226,7 +235,10 @@ class _PanelModulosConserje extends StatelessWidget {
               padding: const EdgeInsets.fromLTRB(20, 20, 20, 12),
               child: Row(
                 children: [
-                  Icon(Icons.apartment_rounded, color: theme.colorScheme.primary),
+                  Icon(
+                    Icons.apartment_rounded,
+                    color: theme.colorScheme.primary,
+                  ),
                   const SizedBox(width: 10),
                   Expanded(
                     child: Text(
@@ -402,7 +414,11 @@ class _TarjetaModuloConserje extends StatelessWidget {
             children: [
               Row(
                 children: [
-                  Icon(modulo.icono, size: 32, color: theme.colorScheme.primary),
+                  Icon(
+                    modulo.icono,
+                    size: 32,
+                    color: theme.colorScheme.primary,
+                  ),
                   const Spacer(),
                 ],
               ),
