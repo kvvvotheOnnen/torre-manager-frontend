@@ -73,8 +73,10 @@ import 'features/solicitudes_residente/data/datasources/solicitudes_residente_re
 import 'features/solicitudes_residente/data/repositories/solicitudes_residente_repository_impl.dart';
 import 'features/solicitudes_residente/domain/usecases/aprobar_solicitud_usecase.dart';
 import 'features/solicitudes_residente/domain/usecases/listar_historial_usecase.dart';
+import 'features/solicitudes_residente/domain/usecases/listar_mis_solicitudes_usecase.dart';
 import 'features/solicitudes_residente/domain/usecases/listar_pendientes_usecase.dart';
 import 'features/solicitudes_residente/domain/usecases/rechazar_solicitud_usecase.dart';
+import 'features/solicitudes_residente/presentation/bloc/mi_solicitud_residente_bloc.dart';
 import 'features/solicitudes_residente/presentation/bloc/solicitudes_residente_bloc.dart';
 import 'features/superadmin/presentation/bloc/superadmin_bloc.dart';
 import 'features/tenant/presentation/bloc/tenant_bloc.dart';
@@ -103,6 +105,7 @@ class _TorreManagerAppState extends State<TorreManagerApp> {
   late final AsistenteBloc _asistenteBloc;
   late final PaqueteriaBloc _paqueteriaBloc;
   late final SolicitudesResidenteBloc _solicitudesResidenteBloc;
+  late final MiSolicitudResidenteBloc _miSolicitudResidenteBloc;
   late final GoRouter _router;
   late final ThemeModeController _themeModeController;
 
@@ -255,6 +258,9 @@ class _TorreManagerAppState extends State<TorreManagerApp> {
       AprobarSolicitudUseCase(solicitudesResidenteRepository),
       RechazarSolicitudUseCase(solicitudesResidenteRepository),
     );
+    _miSolicitudResidenteBloc = MiSolicitudResidenteBloc(
+      ListarMisSolicitudesUseCase(solicitudesResidenteRepository),
+    );
 
     _authBloc.stream.listen((state) {
       if (state is AuthSuccess || state is AuthUnauthenticated) {
@@ -284,6 +290,7 @@ class _TorreManagerAppState extends State<TorreManagerApp> {
     _asistenteBloc.close();
     _paqueteriaBloc.close();
     _solicitudesResidenteBloc.close();
+    _miSolicitudResidenteBloc.close();
     _themeModeController.dispose();
     super.dispose();
   }
@@ -304,6 +311,7 @@ class _TorreManagerAppState extends State<TorreManagerApp> {
         BlocProvider.value(value: _asistenteBloc),
         BlocProvider.value(value: _paqueteriaBloc),
         BlocProvider.value(value: _solicitudesResidenteBloc),
+        BlocProvider.value(value: _miSolicitudResidenteBloc),
       ],
       child: ListenableBuilder(
         listenable: _themeModeController,

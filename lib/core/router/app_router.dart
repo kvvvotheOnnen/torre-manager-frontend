@@ -18,6 +18,7 @@ import '../../features/superadmin/presentation/screens/administradores_screen.da
 import '../../features/superadmin/presentation/screens/proyectos_screen.dart';
 import '../../features/tenant/presentation/bloc/tenant_bloc.dart';
 import '../../features/solicitudes_residente/presentation/screens/gestion_residentes_screen.dart';
+import '../../features/solicitudes_residente/presentation/screens/solicitud_pendiente_screen.dart';
 import '../../features/tenant/presentation/screens/selector_proyecto_screen.dart';
 import '../widgets/app_background.dart';
 import '../widgets/app_title.dart';
@@ -35,6 +36,7 @@ class AppRoutes {
   static const String adminAsistente = '/admin/modulos/asistente_ia_admin';
   static const String solicitudesResidente =
       '/admin/modulos/solicitudes_residente';
+  static const String solicitudPendiente = '/solicitud-pendiente';
   static const String paqueteria = '/paqueteria';
   static const String paqueteriaGestion = '/paqueteria/gestion';
   static const String selectorProyecto = '/selector-proyecto';
@@ -76,6 +78,14 @@ GoRouter buildRouter(AuthBloc authBloc, TenantBloc tenantBloc) {
               : (tenantState.rolActivo ?? rol);
           if (isSplash || isLogin) return AppRoutes.dashboard;
 
+          final esSolicitudPendiente = location == AppRoutes.solicitudPendiente;
+
+          if (esSolicitudPendiente &&
+              rolActivo != Rol.residente &&
+              rolActivo != Rol.propietario) {
+            return AppRoutes.dashboard;
+          }
+
           final esGestionResidentes =
               location == AppRoutes.solicitudesResidente;
           final esModuloProximamente =
@@ -108,11 +118,20 @@ GoRouter buildRouter(AuthBloc authBloc, TenantBloc tenantBloc) {
 
           // Enrutamiento multi-tenant para roles con proyecto activo.
           if (rol != Rol.superadmin) {
-            if (tenantState.status == TenantStatus.cargando) {
+            if (tenantState.status == TenantStatus.inicial ||
+                tenantState.status == TenantStatus.cargando) {
               return AppRoutes.splash;
             }
             if (tenantState.status == TenantStatus.seleccionPendiente) {
               return isSelector ? null : AppRoutes.selectorProyecto;
+            }
+            if (tenantState.status == TenantStatus.sinProyectos &&
+                (rolActivo == Rol.residente || rolActivo == Rol.propietario)) {
+              return esSolicitudPendiente ? null : AppRoutes.solicitudPendiente;
+            }
+            if (tenantState.status == TenantStatus.listo &&
+                esSolicitudPendiente) {
+              return AppRoutes.dashboard;
             }
             if (isSelector) return AppRoutes.dashboard;
           }
@@ -155,7 +174,13 @@ GoRouter buildRouter(AuthBloc authBloc, TenantBloc tenantBloc) {
       ),
       GoRoute(
         path: AppRoutes.solicitudesResidente,
-        builder: (context, state) => const GestionResidentesScreen(),
+        builder: (context, state) =>
+            const AppTitle(title: 'Gestión de residentes', child: GestionResidentesScreen()),
+      ),
+      GoRoute(
+        path: AppRoutes.solicitudPendiente,
+        builder: (context, state) =>
+            const AppTitle(title: 'Solicitud pendiente', child: SolicitudPendienteScreen()),
       ),
       GoRoute(
         path: '${AppRoutes.adminModulos}/:id',

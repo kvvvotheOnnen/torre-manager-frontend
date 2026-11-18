@@ -22,6 +22,13 @@ class SolicitudesResidenteRemoteDataSource {
     return _parseLista(response.data);
   }
 
+  Future<List<SolicitudResidenteDTO>> listarMias() async {
+    final response = await _dio.get<Map<String, dynamic>>(
+      AppConfig.misSolicitudesResidentesPath,
+    );
+    return _parseLista(response.data);
+  }
+
   Future<SolicitudResidenteDTO> aprobar(String id) async {
     final response = await _dio.post<Map<String, dynamic>>(
       AppConfig.solicitudResidenteAprobarPath(id),

@@ -52,6 +52,10 @@ class _FakeRepository implements SolicitudesResidenteRepository {
       Right(historial);
 
   @override
+  Future<Either<Failure, List<SolicitudResidente>>> listarMias() async =>
+      Right(pendientes);
+
+  @override
   Future<Either<Failure, SolicitudResidente>> aprobar(String id) async {
     pendientes = pendientes.where((s) => s.id != id).toList();
     return const Right(_historica);

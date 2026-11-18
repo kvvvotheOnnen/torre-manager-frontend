@@ -2,7 +2,7 @@ import 'package:equatable/equatable.dart';
 
 enum EstadoSolicitud { pendiente, aprobada, rechazada }
 
-enum TipoSolicitud { propietario, arrendatario }
+enum TipoSolicitud { propietario, arrendatario, residente }
 
 enum OrigenSolicitud {
   autoregistro,

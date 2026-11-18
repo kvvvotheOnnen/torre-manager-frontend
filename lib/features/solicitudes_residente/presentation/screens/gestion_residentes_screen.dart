@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/router/app_router.dart';
 import '../../domain/entities/solicitud_residente.dart';
 import '../bloc/solicitudes_residente_bloc.dart';
+import '../utils/solicitud_busqueda.dart';
 
 class GestionResidentesScreen extends StatefulWidget {
   const GestionResidentesScreen({super.key});
@@ -15,6 +16,9 @@ class GestionResidentesScreen extends StatefulWidget {
 }
 
 class _GestionResidentesScreenState extends State<GestionResidentesScreen> {
+  final _busquedaController = TextEditingController();
+  String _busqueda = '';
+
   @override
   void initState() {
     super.initState();
@@ -24,6 +28,17 @@ class _GestionResidentesScreenState extends State<GestionResidentesScreen> {
         const SolicitudesResidenteIniciadas(),
       );
     });
+  }
+
+  @override
+  void dispose() {
+    _busquedaController.dispose();
+    super.dispose();
+  }
+
+  void _limpiarBusqueda() {
+    _busquedaController.clear();
+    setState(() => _busqueda = '');
   }
 
   @override
@@ -48,27 +63,66 @@ class _GestionResidentesScreenState extends State<GestionResidentesScreen> {
           );
         },
         builder: (context, state) {
-          return LayoutBuilder(
-            builder: (context, constraints) {
-              final esDesktop = constraints.maxWidth >= 900;
+          return Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+                child: TextField(
+                  controller: _busquedaController,
+                  onChanged: (value) => setState(() => _busqueda = value),
+                  decoration: InputDecoration(
+                    hintText:
+                        'Buscar por nombre, RUT, correo, teléfono, unidad...',
+                    prefixIcon: const Icon(Icons.search),
+                    suffixIcon: _busqueda.isEmpty
+                        ? null
+                        : IconButton(
+                            tooltip: 'Limpiar búsqueda',
+                            icon: const Icon(Icons.clear),
+                            onPressed: _limpiarBusqueda,
+                          ),
+                    border: const OutlineInputBorder(),
+                    isDense: true,
+                  ),
+                ),
+              ),
+              Expanded(
+                child: LayoutBuilder(
+                  builder: (context, constraints) {
+                    final esDesktop = constraints.maxWidth >= 900;
 
-              if (!esDesktop) {
-                return Column(
-                  children: [
-                    _SelectorVista(state: state),
-                    Expanded(child: _Contenido(state: state)),
-                  ],
-                );
-              }
+                    if (!esDesktop) {
+                      return Column(
+                        children: [
+                          _SelectorVista(state: state),
+                          Expanded(
+                            child: _Contenido(
+                              state: state,
+                              busqueda: _busqueda,
+                              onLimpiarBusqueda: _limpiarBusqueda,
+                            ),
+                          ),
+                        ],
+                      );
+                    }
 
-              return Row(
-                children: [
-                  SizedBox(width: 260, child: _Sidebar(state: state)),
-                  const VerticalDivider(width: 1),
-                  Expanded(child: _Contenido(state: state)),
-                ],
-              );
-            },
+                    return Row(
+                      children: [
+                        SizedBox(width: 260, child: _Sidebar(state: state)),
+                        const VerticalDivider(width: 1),
+                        Expanded(
+                          child: _Contenido(
+                            state: state,
+                            busqueda: _busqueda,
+                            onLimpiarBusqueda: _limpiarBusqueda,
+                          ),
+                        ),
+                      ],
+                    );
+                  },
+                ),
+              ),
+            ],
           );
         },
       ),
@@ -176,22 +230,30 @@ class _SelectorVista extends StatelessWidget {
 }
 
 class _Contenido extends StatelessWidget {
-  const _Contenido({required this.state});
+  const _Contenido({
+    required this.state,
+    required this.busqueda,
+    required this.onLimpiarBusqueda,
+  });
 
   final SolicitudesResidenteState state;
+  final String busqueda;
+  final VoidCallback onLimpiarBusqueda;
 
   @override
   Widget build(BuildContext context) {
     final esPendientes = state.vista == VistaSolicitudes.pendientes;
-    final solicitudes = esPendientes ? state.pendientes : state.historial;
+    final todas = esPendientes ? state.pendientes : state.historial;
+    final solicitudes = todas
+        .where((solicitud) => solicitudCoincide(solicitud, busqueda))
+        .toList();
     final cargando = state.status == SolicitudesResidenteStatus.cargando;
 
-    if (cargando && solicitudes.isEmpty) {
+    if (cargando && todas.isEmpty) {
       return const Center(child: CircularProgressIndicator());
     }
 
-    if (state.status == SolicitudesResidenteStatus.error &&
-        solicitudes.isEmpty) {
+    if (state.status == SolicitudesResidenteStatus.error && todas.isEmpty) {
       return _EstadoVacio(
         icono: Icons.error_outline,
         mensaje: state.mensaje ?? 'No fue posible cargar las solicitudes.',
@@ -210,12 +272,24 @@ class _Contenido extends StatelessWidget {
       );
     }
 
-    if (solicitudes.isEmpty) {
+    if (todas.isEmpty) {
       return _EstadoVacio(
         icono: esPendientes ? Icons.inbox_outlined : Icons.history,
         mensaje: esPendientes
             ? 'No hay solicitudes pendientes.'
             : 'Aún no hay solicitudes decididas.',
+      );
+    }
+
+    if (solicitudes.isEmpty) {
+      return _EstadoVacio(
+        icono: Icons.search_off,
+        mensaje: 'No hay solicitudes que coincidan con la búsqueda.',
+        accion: TextButton.icon(
+          onPressed: onLimpiarBusqueda,
+          icon: const Icon(Icons.clear),
+          label: const Text('Limpiar búsqueda'),
+        ),
       );
     }
 

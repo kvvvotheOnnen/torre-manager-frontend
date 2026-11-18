@@ -24,6 +24,11 @@ class SolicitudesResidenteRepositoryImpl
   }
 
   @override
+  Future<Either<Failure, List<SolicitudResidente>>> listarMias() {
+    return _listar(_remoteDataSource.listarMias);
+  }
+
+  @override
   Future<Either<Failure, SolicitudResidente>> aprobar(String id) async {
     try {
       final dto = await _remoteDataSource.aprobar(id);

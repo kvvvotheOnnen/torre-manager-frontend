@@ -171,9 +171,10 @@ class SolicitudResidenteDTO {
   }
 
   static TipoSolicitud _tipoSolicitud(String value) {
-    return value == 'arrendatario'
-        ? TipoSolicitud.arrendatario
-        : TipoSolicitud.propietario;
+    return TipoSolicitud.values.firstWhere(
+      (tipo) => tipo.name == value,
+      orElse: () => TipoSolicitud.propietario,
+    );
   }
 
   static OrigenSolicitud _origen(String value) {

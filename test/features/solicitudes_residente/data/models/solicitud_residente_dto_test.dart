@@ -47,6 +47,20 @@ void main() {
     expect(solicitud.instalaciones.single.tipo, 'bodega');
   });
 
+  test('parsea el tipo de solicitud residente', () {
+    final solicitud = SolicitudResidenteDTO.fromJson({
+      'id': 7,
+      'proyecto_id': 1,
+      'unidad_principal_id': 9,
+      'unidad': 'Edificio-805',
+      'agrupacion': 'Edificio',
+      'tipo_solicitud': 'residente',
+      'estado': 'pendiente',
+    }).toEntity();
+
+    expect(solicitud.tipoSolicitud, TipoSolicitud.residente);
+  });
+
   test('tolera valores ausentes y estados desconocidos', () {
     final solicitud = SolicitudResidenteDTO.fromJson({
       'id': 6,

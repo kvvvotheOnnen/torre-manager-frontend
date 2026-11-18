@@ -57,4 +57,6 @@ class AppConfig {
       '${solicitudResidentePath(id)}/aprobar';
   static String solicitudResidenteRechazarPath(String id) =>
       '${solicitudResidentePath(id)}/rechazar';
+  static const String misSolicitudesResidentesPath =
+      '/api/mis-solicitudes-residentes';
 }

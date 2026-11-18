@@ -6,6 +6,7 @@ import '../entities/solicitud_residente.dart';
 abstract interface class SolicitudesResidenteRepository {
   Future<Either<Failure, List<SolicitudResidente>>> listarPendientes();
   Future<Either<Failure, List<SolicitudResidente>>> listarHistorial();
+  Future<Either<Failure, List<SolicitudResidente>>> listarMias();
   Future<Either<Failure, SolicitudResidente>> aprobar(String id);
   Future<Either<Failure, SolicitudResidente>> rechazar(
     String id,
