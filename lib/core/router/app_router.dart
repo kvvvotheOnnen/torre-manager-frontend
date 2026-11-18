@@ -13,6 +13,7 @@ import '../../features/dashboard/presentation/screens/modulo_proximamente_screen
 import '../../features/residente/presentation/screens/mi_informacion_screen.dart';
 import '../../features/paqueteria/presentation/screens/mis_paquetes_screen.dart';
 import '../../features/paqueteria/presentation/screens/paqueteria_gestion_screen.dart';
+import '../../features/marketplace/presentation/screens/marketplace_screen.dart';
 import '../../features/servicios/presentation/screens/servicios_screen.dart';
 import '../../features/infraestructura/presentation/screens/infraestructura_screen.dart';
 import '../../features/superadmin/presentation/screens/administradores_screen.dart';
@@ -35,6 +36,7 @@ class AppRoutes {
   static const String paqueteria = '/paqueteria';
   static const String paqueteriaGestion = '/paqueteria/gestion';
   static const String servicios = '/servicios';
+  static const String marketplace = '/marketplace';
   static const String selectorProyecto = '/selector-proyecto';
   static const String superadminInfraestructura = '/superadmin/infraestructura';
   static const String adminModulos = '/admin/modulos';
@@ -160,6 +162,10 @@ GoRouter buildRouter(AuthBloc authBloc, TenantBloc tenantBloc) {
         builder: (context, state) => const ServiciosScreen(),
       ),
       GoRoute(
+        path: AppRoutes.adminModulo('marketplace'),
+        builder: (context, state) => const MarketplaceScreen(),
+      ),
+      GoRoute(
         path: '${AppRoutes.adminModulos}/:id',
         builder: (context, state) {
           final args = state.extra is ProximamenteArgs
@@ -206,6 +212,10 @@ GoRouter buildRouter(AuthBloc authBloc, TenantBloc tenantBloc) {
       GoRoute(
         path: AppRoutes.servicios,
         builder: (context, state) => const ServiciosScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.marketplace,
+        builder: (context, state) => const MarketplaceScreen(),
       ),
       GoRoute(
         path: AppRoutes.superadminProyectos,

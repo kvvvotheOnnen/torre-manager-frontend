@@ -10,6 +10,7 @@ IconData iconoDeFuncion(String nombre) {
     'handyman' => Icons.handyman_outlined,
     'payments' => Icons.payments_outlined,
     'package' => Icons.inventory_2_outlined,
+    'storefront' => Icons.storefront_outlined,
     'info' => Icons.info_outline,
     _ => Icons.widgets_outlined,
   };

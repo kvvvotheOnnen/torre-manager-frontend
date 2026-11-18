@@ -45,6 +45,23 @@ class AppConfig {
   static const String serviciosPath = '/api/servicios';
   static String servicioPath(String id) =>
       '$serviciosPath/${Uri.encodeComponent(id)}';
+  static const String marketplaceBasePath = '/api/marketplace';
+  static const String marketplacePublicacionesPath =
+      '$marketplaceBasePath/publicaciones';
+  static const String marketplaceMisPublicacionesPath =
+      '$marketplaceBasePath/mis-publicaciones';
+  static const String marketplaceHistorialPath =
+      '$marketplaceBasePath/historial';
+  static const String marketplaceFavoritosPath =
+      '$marketplaceBasePath/favoritos';
+  static String marketplacePublicacionPath(String id) =>
+      '$marketplacePublicacionesPath/${Uri.encodeComponent(id)}';
+  static String marketplaceRetirarPath(String id) =>
+      '${marketplacePublicacionPath(id)}/retirar';
+  static String marketplaceVenderPath(String id) =>
+      '${marketplacePublicacionPath(id)}/vender';
+  static String marketplaceFavoritoPath(String id) =>
+      '${marketplacePublicacionPath(id)}/favorito';
   static const String residenteMiInformacionPath =
       '/api/residente/mi-informacion';
   static const String residenteAsistenteConsultasPath =

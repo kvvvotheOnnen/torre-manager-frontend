@@ -13,6 +13,8 @@ void abrirFuncionDashboard(BuildContext context, FuncionDashboard funcion) {
   switch (funcion.ruta) {
     case AppRoutes.servicios:
       context.push(AppRoutes.servicios);
+    case AppRoutes.marketplace:
+      context.push(AppRoutes.marketplace);
     default:
       ScaffoldMessenger.of(context)
         ..hideCurrentSnackBar()

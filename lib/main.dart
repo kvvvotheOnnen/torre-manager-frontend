@@ -73,6 +73,19 @@ import 'features/servicios/domain/usecases/crear_trabajador_usecase.dart';
 import 'features/servicios/domain/usecases/eliminar_trabajador_usecase.dart';
 import 'features/servicios/domain/usecases/listar_trabajadores_usecase.dart';
 import 'features/servicios/presentation/bloc/servicios_bloc.dart';
+import 'features/marketplace/data/datasources/marketplace_remote_data_source.dart';
+import 'features/marketplace/data/repositories/marketplace_repository_impl.dart';
+import 'features/marketplace/domain/usecases/actualizar_publicacion_usecase.dart';
+import 'features/marketplace/domain/usecases/alternar_favorito_usecase.dart';
+import 'features/marketplace/domain/usecases/crear_publicacion_usecase.dart';
+import 'features/marketplace/domain/usecases/eliminar_publicacion_usecase.dart';
+import 'features/marketplace/domain/usecases/listar_favoritos_marketplace_usecase.dart';
+import 'features/marketplace/domain/usecases/listar_historial_marketplace_usecase.dart';
+import 'features/marketplace/domain/usecases/listar_mis_publicaciones_usecase.dart';
+import 'features/marketplace/domain/usecases/listar_publicaciones_usecase.dart';
+import 'features/marketplace/domain/usecases/marcar_publicacion_vendida_usecase.dart';
+import 'features/marketplace/domain/usecases/retirar_publicacion_usecase.dart';
+import 'features/marketplace/presentation/bloc/marketplace_bloc.dart';
 import 'features/solicitudes_residente/data/datasources/solicitudes_residente_remote_data_source.dart';
 import 'features/solicitudes_residente/data/repositories/solicitudes_residente_repository_impl.dart';
 import 'features/solicitudes_residente/domain/usecases/aprobar_solicitud_usecase.dart';
@@ -109,6 +122,7 @@ class _TorreManagerAppState extends State<TorreManagerApp> {
   late final PaqueteriaBloc _paqueteriaBloc;
   late final SolicitudesResidenteBloc _solicitudesResidenteBloc;
   late final ServiciosBloc _serviciosBloc;
+  late final MarketplaceBloc _marketplaceBloc;
   late final GoRouter _router;
 
   @override
@@ -278,6 +292,23 @@ class _TorreManagerAppState extends State<TorreManagerApp> {
       eliminar: EliminarTrabajadorUseCase(serviciosRepository),
     );
 
+    final marketplaceDataSource = MarketplaceRemoteDataSource(dio);
+    final marketplaceRepository = MarketplaceRepositoryImpl(
+      marketplaceDataSource,
+    );
+    _marketplaceBloc = MarketplaceBloc(
+      listar: ListarPublicacionesUseCase(marketplaceRepository),
+      listarMias: ListarMisPublicacionesUseCase(marketplaceRepository),
+      listarFavoritos: ListarFavoritosMarketplaceUseCase(marketplaceRepository),
+      listarHistorial: ListarHistorialMarketplaceUseCase(marketplaceRepository),
+      crear: CrearPublicacionUseCase(marketplaceRepository),
+      actualizar: ActualizarPublicacionUseCase(marketplaceRepository),
+      retirar: RetirarPublicacionUseCase(marketplaceRepository),
+      vender: MarcarPublicacionVendidaUseCase(marketplaceRepository),
+      eliminar: EliminarPublicacionUseCase(marketplaceRepository),
+      favorito: AlternarFavoritoUseCase(marketplaceRepository),
+    );
+
     _authBloc.stream.listen((state) {
       if (state is AuthSuccess || state is AuthUnauthenticated) {
         _paqueteriaBloc.add(const PaqueteriaLimpiada());
@@ -308,6 +339,7 @@ class _TorreManagerAppState extends State<TorreManagerApp> {
     _solicitudesResidenteBloc.close();
     _funcionesDashboardBloc.close();
     _serviciosBloc.close();
+    _marketplaceBloc.close();
     super.dispose();
   }
 
@@ -329,6 +361,7 @@ class _TorreManagerAppState extends State<TorreManagerApp> {
         BlocProvider.value(value: _solicitudesResidenteBloc),
         BlocProvider.value(value: _funcionesDashboardBloc),
         BlocProvider.value(value: _serviciosBloc),
+        BlocProvider.value(value: _marketplaceBloc),
       ],
       child: MaterialApp.router(
         title: 'Torre Manager',
