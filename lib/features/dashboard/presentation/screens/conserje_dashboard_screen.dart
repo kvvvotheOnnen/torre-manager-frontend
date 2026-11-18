@@ -3,6 +3,13 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/router/app_router.dart';
+import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/design_tokens.dart';
+import '../../../../core/widgets/app_shell.dart';
+import '../../../../core/widgets/module_card.dart';
+import '../../../../core/widgets/section_header.dart';
+import '../../../../core/widgets/status_pill.dart';
+import '../../../../core/widgets/top_bar.dart';
 import '../../../auth/domain/entities/usuario.dart';
 import '../../../auth/presentation/bloc/auth_bloc.dart';
 import '../../../auth/presentation/bloc/auth_event.dart';
@@ -74,250 +81,67 @@ class ConserjeDashboardScreen extends StatefulWidget {
 }
 
 class _ConserjeDashboardScreenState extends State<ConserjeDashboardScreen> {
+  void _abrirModulo(_ModuloConserje modulo) {
+    context.push(
+      modulo.ruta,
+      extra: ProximamenteArgs(
+        titulo: modulo.titulo,
+        descripcion: modulo.descripcion,
+      ),
+    );
+  }
+
+  void _notificaciones() {
+    context.push(
+      AppRoutes.adminModulo('notificaciones'),
+      extra: const ProximamenteArgs(
+        titulo: 'Notificaciones',
+        descripcion: 'Avisos y notificaciones del recinto (próximamente)',
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    final location = GoRouterState.of(context).matchedLocation;
+    final sections = [
+      AppNavSection(
+        title: 'Módulos',
+        subtitle: 'Herramientas de conserjería',
+        items: _modulosConserje
+            .map(
+              (modulo) => AppNavItem(
+                label: modulo.titulo,
+                icon: modulo.icono,
+                selected: location == modulo.ruta,
+                onTap: () => _abrirModulo(modulo),
+              ),
+            )
+            .toList(),
+      ),
+    ];
+
     return LayoutBuilder(
       builder: (context, constraints) {
         final esEscritorio = constraints.maxWidth >= 900;
-
-        if (esEscritorio) {
-          return Scaffold(
-            body: Row(
-              children: [
-                const _PanelModulosConserje(),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      _PanelSuperiorConserje(
-                        usuario: widget.usuario,
-                        esCompacto: false,
-                      ),
-                      Expanded(
-                        child: _ContenidoConserje(usuario: widget.usuario),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          );
-        }
-
-        return Scaffold(
-          appBar: AppBar(
-            title: const Text('Torre Manager'),
-            actions: [
-              IconButton(
-                tooltip: 'Cerrar sesión',
-                icon: const Icon(Icons.logout),
-                onPressed: () =>
-                    context.read<AuthBloc>().add(const LogoutRequested()),
-              ),
-            ],
+        return AppShell(
+          sections: sections,
+          userName: widget.usuario.nombre,
+          roleLabel: widget.usuario.rol.name,
+          onLogout: () =>
+              context.read<AuthBloc>().add(const LogoutRequested()),
+          topBar: AppTopBar(
+            greeting: 'Bienvenido, ${widget.usuario.nombre}',
+            avatarName: widget.usuario.nombre,
+            roleLabel: widget.usuario.rol.name,
+            compact: !esEscritorio,
+            showThemeToggle: !esEscritorio,
+            onLogout: esEscritorio
+                ? null
+                : () => context.read<AuthBloc>().add(const LogoutRequested()),
+            onNotifications: _notificaciones,
           ),
-          drawer: const Drawer(
-            child: SafeArea(child: _PanelModulosConserje(esDrawer: true)),
-          ),
-          body: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              _PanelSuperiorConserje(
-                usuario: widget.usuario,
-                esCompacto: true,
-                mostrarCerrarSesion: false,
-              ),
-              Expanded(child: _ContenidoConserje(usuario: widget.usuario)),
-            ],
-          ),
-        );
-      },
-    );
-  }
-}
-
-class _PanelSuperiorConserje extends StatelessWidget {
-  const _PanelSuperiorConserje({
-    required this.usuario,
-    required this.esCompacto,
-    this.mostrarCerrarSesion = true,
-  });
-
-  final Usuario usuario;
-  final bool esCompacto;
-  final bool mostrarCerrarSesion;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final nombre = Text(
-      'Bienvenido, ${usuario.nombre}',
-      overflow: TextOverflow.ellipsis,
-      style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
-    );
-
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surface,
-        border: Border(bottom: BorderSide(color: theme.dividerColor)),
-      ),
-      child: esCompacto
-          ? Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Row(
-                  children: [
-                    Expanded(child: nombre),
-                    if (mostrarCerrarSesion)
-                      IconButton(
-                        tooltip: 'Cerrar sesión',
-                        icon: const Icon(Icons.logout),
-                        onPressed: () => context.read<AuthBloc>().add(
-                          const LogoutRequested(),
-                        ),
-                      ),
-                  ],
-                ),
-              ],
-            )
-          : Stack(
-              children: [
-                Align(
-                  alignment: Alignment.centerLeft,
-                  child: Padding(
-                    padding: const EdgeInsets.only(right: 48),
-                    child: nombre,
-                  ),
-                ),
-                Positioned(
-                  right: 0,
-                  top: 0,
-                  bottom: 0,
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      if (mostrarCerrarSesion)
-                        IconButton(
-                          tooltip: 'Cerrar sesión',
-                          icon: const Icon(Icons.logout),
-                          onPressed: () => context.read<AuthBloc>().add(
-                            const LogoutRequested(),
-                          ),
-                        ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-    );
-  }
-}
-
-class _PanelModulosConserje extends StatelessWidget {
-  const _PanelModulosConserje({this.esDrawer = false});
-
-  final bool esDrawer;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
-    return Material(
-      color: theme.colorScheme.surfaceContainerLow,
-      child: SizedBox(
-        width: esDrawer ? null : 280,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(20, 20, 20, 12),
-              child: Row(
-                children: [
-                  Icon(
-                    Icons.apartment_rounded,
-                    color: theme.colorScheme.primary,
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Text(
-                      'Torre Manager',
-                      overflow: TextOverflow.ellipsis,
-                      style: theme.textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            Expanded(
-              child: ListView(
-                padding: const EdgeInsets.symmetric(horizontal: 12),
-                children: [
-                  _TituloSeccion(texto: 'Módulos'),
-                  ..._modulosConserje.map(
-                    (modulo) => _ItemModuloConserje(modulo: modulo),
-                  ),
-                  const SizedBox(height: 16),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _TituloSeccion extends StatelessWidget {
-  const _TituloSeccion({required this.texto});
-
-  final String texto;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(12, 12, 12, 6),
-      child: Text(
-        texto.toUpperCase(),
-        style: Theme.of(context).textTheme.labelSmall?.copyWith(
-          color: Theme.of(context).colorScheme.onSurfaceVariant,
-          letterSpacing: 0.8,
-          fontWeight: FontWeight.bold,
-        ),
-      ),
-    );
-  }
-}
-
-class _ItemModuloConserje extends StatelessWidget {
-  const _ItemModuloConserje({required this.modulo});
-
-  final _ModuloConserje modulo;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final scaffold = Scaffold.maybeOf(context);
-
-    return ListTile(
-      dense: true,
-      contentPadding: const EdgeInsets.symmetric(horizontal: 12),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-      leading: Icon(modulo.icono, color: theme.colorScheme.primary),
-      title: Text(modulo.titulo, overflow: TextOverflow.ellipsis),
-      onTap: () {
-        if (scaffold?.isDrawerOpen ?? false) {
-          scaffold!.closeDrawer();
-        }
-        context.push(
-          modulo.ruta,
-          extra: ProximamenteArgs(
-            titulo: modulo.titulo,
-            descripcion: modulo.descripcion,
-          ),
+          body: _ContenidoConserje(usuario: widget.usuario),
         );
       },
     );
@@ -336,50 +160,78 @@ class _ContenidoConserje extends StatelessWidget {
     return LayoutBuilder(
       builder: (context, constraints) {
         final ancho = constraints.maxWidth;
-        final columnas = ancho >= 1100
+        final columnas = ancho >= 1180
             ? 4
-            : ancho >= 760
+            : ancho >= 860
             ? 3
-            : ancho >= 520
+            : ancho >= 560
             ? 2
             : 1;
 
         return Center(
           child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 1200),
-            child: ListView(
-              padding: const EdgeInsets.all(20),
-              children: [
-                Text(
-                  'Panel de conserje',
-                  style: theme.textTheme.headlineSmall?.copyWith(
-                    fontWeight: FontWeight.bold,
+            constraints: const BoxConstraints(maxWidth: 1280),
+            child: SingleChildScrollView(
+              keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+              padding: EdgeInsets.fromLTRB(
+                AppSpacing.xl,
+                AppSpacing.xl,
+                AppSpacing.xl,
+                AppSpacing.xxl + MediaQuery.viewPaddingOf(context).bottom,
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  _HeroConserje(usuario: usuario),
+                  const SizedBox(height: AppSpacing.xl),
+                  SectionHeader(
+                    title: 'Operación diaria',
+                    subtitle: 'Accesos rápidos de conserjería',
+                    trailing: StatusPill(
+                      label: '${_modulosConserje.length} módulos',
+                      color: context.palette.primary,
+                      compact: true,
+                    ),
                   ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  'Hola, ${usuario.nombre}. Estos son los módulos disponibles para ti.',
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    color: theme.colorScheme.onSurfaceVariant,
+                  const SizedBox(height: AppSpacing.sm),
+                  GridView.builder(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    itemCount: _modulosConserje.length,
+                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: columnas,
+                      mainAxisSpacing: AppSpacing.md,
+                      crossAxisSpacing: AppSpacing.md,
+                      mainAxisExtent: 196,
+                    ),
+                    itemBuilder: (context, index) {
+                      final modulo = _modulosConserje[index];
+                      return ModuleCard(
+                        title: modulo.titulo,
+                        description: modulo.descripcion,
+                        icon: modulo.icono,
+                        onTap: () {
+                          context.push(
+                            modulo.ruta,
+                            extra: ProximamenteArgs(
+                              titulo: modulo.titulo,
+                              descripcion: modulo.descripcion,
+                            ),
+                          );
+                        },
+                      );
+                    },
                   ),
-                ),
-                const SizedBox(height: 20),
-                GridView.builder(
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  itemCount: _modulosConserje.length,
-                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: columnas,
-                    mainAxisSpacing: 12,
-                    crossAxisSpacing: 12,
-                    childAspectRatio: 1.35,
+                  const SizedBox(height: AppSpacing.lg),
+                  Text(
+                    'Estos módulos estarán conectados a la operación del recinto.',
+                    textAlign: TextAlign.center,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: context.palette.inkMuted,
+                    ),
                   ),
-                  itemBuilder: (context, index) {
-                    final modulo = _modulosConserje[index];
-                    return _TarjetaModuloConserje(modulo: modulo);
-                  },
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         );
@@ -388,59 +240,107 @@ class _ContenidoConserje extends StatelessWidget {
   }
 }
 
-class _TarjetaModuloConserje extends StatelessWidget {
-  const _TarjetaModuloConserje({required this.modulo});
+class _HeroConserje extends StatelessWidget {
+  const _HeroConserje({required this.usuario});
 
-  final _ModuloConserje modulo;
+  final Usuario usuario;
 
   @override
   Widget build(BuildContext context) {
+    final p = context.palette;
     final theme = Theme.of(context);
 
-    return Card(
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: () => context.push(
-          modulo.ruta,
-          extra: ProximamenteArgs(
-            titulo: modulo.titulo,
-            descripcion: modulo.descripcion,
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.xl),
+      decoration: BoxDecoration(
+        gradient: p.hero,
+        borderRadius: AppRadii.xlAll,
+        border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+        boxShadow: AppShadows.glow(p.primary),
+      ),
+      child: Stack(
+        children: [
+          Positioned(
+            right: -24,
+            bottom: -30,
+            child: Icon(
+              Icons.support_agent_rounded,
+              size: 200,
+              color: Colors.white.withValues(alpha: 0.05),
+            ),
           ),
-        ),
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
+          Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Row(
-                children: [
-                  Icon(
-                    modulo.icono,
-                    size: 32,
-                    color: theme.colorScheme.primary,
-                  ),
-                  const Spacer(),
-                ],
+              StatusPill(
+                label: 'CONSERJERÍA',
+                color: p.accent,
+                icon: Icons.badge_rounded,
+                compact: true,
               ),
-              const Spacer(),
+              const SizedBox(height: AppSpacing.md),
               Text(
-                modulo.titulo,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                style: theme.textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
+                'Panel de conserje',
+                style: theme.textTheme.headlineLarge?.copyWith(
+                  color: Colors.white,
                 ),
               ),
-              const SizedBox(height: 4),
+              const SizedBox(height: AppSpacing.sm),
               Text(
-                modulo.descripcion,
-                maxLines: 3,
-                overflow: TextOverflow.ellipsis,
-                style: theme.textTheme.bodySmall,
+                'Hola, ${usuario.nombre}. Estos son los módulos disponibles para ti.',
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: Colors.white.withValues(alpha: 0.78),
+                ),
+              ),
+              const SizedBox(height: AppSpacing.xl),
+              Wrap(
+                spacing: AppSpacing.sm,
+                runSpacing: AppSpacing.sm,
+                children: const [
+                  _HeroChip(icon: Icons.inventory_2_rounded, label: 'Paquetes'),
+                  _HeroChip(icon: Icons.security_rounded, label: 'Accesos'),
+                  _HeroChip(icon: Icons.campaign_rounded, label: 'Avisos'),
+                ],
               ),
             ],
           ),
-        ),
+        ],
+      ),
+    );
+  }
+}
+
+class _HeroChip extends StatelessWidget {
+  const _HeroChip({required this.icon, required this.label});
+
+  final IconData icon;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    final p = context.palette;
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.md,
+        vertical: AppSpacing.sm,
+      ),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.08),
+        borderRadius: AppRadii.mdAll,
+        border: Border.all(color: Colors.white.withValues(alpha: 0.12)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 15, color: p.accent),
+          const SizedBox(width: AppSpacing.sm),
+          Text(
+            label,
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+              color: Colors.white.withValues(alpha: 0.88),
+            ),
+          ),
+        ],
       ),
     );
   }
