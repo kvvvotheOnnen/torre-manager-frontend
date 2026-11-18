@@ -34,6 +34,10 @@ import 'features/dashboard/data/datasources/dashboard_remote_data_source.dart';
 import 'features/dashboard/data/repositories/dashboard_repository_impl.dart';
 import 'features/dashboard/domain/usecases/obtener_modulos_dashboard_usecase.dart';
 import 'features/dashboard/presentation/bloc/modulos_dashboard_bloc.dart';
+import 'features/dashboard/data/datasources/funciones_dashboard_remote_data_source.dart';
+import 'features/dashboard/data/repositories/funciones_dashboard_repository_impl.dart';
+import 'features/dashboard/domain/usecases/obtener_funciones_dashboard_usecase.dart';
+import 'features/dashboard/presentation/bloc/funciones_dashboard_bloc.dart';
 import 'features/infraestructura/data/datasources/infraestructura_remote_data_source.dart';
 import 'features/infraestructura/data/repositories/infraestructura_repository_impl.dart';
 import 'features/infraestructura/domain/usecases/asignar_unidad_accesoria_usecase.dart';
@@ -79,6 +83,26 @@ import 'features/solicitudes_residente/domain/usecases/rechazar_solicitud_usecas
 import 'features/solicitudes_residente/presentation/bloc/mi_solicitud_residente_bloc.dart';
 import 'features/solicitudes_residente/presentation/bloc/solicitudes_residente_bloc.dart';
 import 'features/superadmin/presentation/bloc/superadmin_bloc.dart';
+import 'features/servicios/data/datasources/servicios_remote_data_source.dart';
+import 'features/servicios/data/repositories/servicios_repository_impl.dart';
+import 'features/servicios/domain/usecases/actualizar_trabajador_usecase.dart';
+import 'features/servicios/domain/usecases/crear_trabajador_usecase.dart';
+import 'features/servicios/domain/usecases/eliminar_trabajador_usecase.dart';
+import 'features/servicios/domain/usecases/listar_trabajadores_usecase.dart';
+import 'features/servicios/presentation/bloc/servicios_bloc.dart';
+import 'features/marketplace/data/datasources/marketplace_remote_data_source.dart';
+import 'features/marketplace/data/repositories/marketplace_repository_impl.dart';
+import 'features/marketplace/domain/usecases/actualizar_publicacion_usecase.dart';
+import 'features/marketplace/domain/usecases/alternar_favorito_usecase.dart';
+import 'features/marketplace/domain/usecases/crear_publicacion_usecase.dart';
+import 'features/marketplace/domain/usecases/eliminar_publicacion_usecase.dart';
+import 'features/marketplace/domain/usecases/listar_favoritos_marketplace_usecase.dart';
+import 'features/marketplace/domain/usecases/listar_historial_marketplace_usecase.dart';
+import 'features/marketplace/domain/usecases/listar_mis_publicaciones_usecase.dart';
+import 'features/marketplace/domain/usecases/listar_publicaciones_usecase.dart';
+import 'features/marketplace/domain/usecases/marcar_publicacion_vendida_usecase.dart';
+import 'features/marketplace/domain/usecases/retirar_publicacion_usecase.dart';
+import 'features/marketplace/presentation/bloc/marketplace_bloc.dart';
 import 'features/tenant/presentation/bloc/tenant_bloc.dart';
 
 void main() {
@@ -100,12 +124,15 @@ class _TorreManagerAppState extends State<TorreManagerApp> {
   late final AdministradoresBloc _administradoresBloc;
   late final TenantBloc _tenantBloc;
   late final ModulosDashboardBloc _modulosDashboardBloc;
+  late final FuncionesDashboardBloc _funcionesDashboardBloc;
   late final ResidenteMiInformacionBloc _residenteMiInformacionBloc;
   late final AsistenteAdminBloc _asistenteAdminBloc;
   late final AsistenteBloc _asistenteBloc;
   late final PaqueteriaBloc _paqueteriaBloc;
   late final SolicitudesResidenteBloc _solicitudesResidenteBloc;
   late final MiSolicitudResidenteBloc _miSolicitudResidenteBloc;
+  late final ServiciosBloc _serviciosBloc;
+  late final MarketplaceBloc _marketplaceBloc;
   late final GoRouter _router;
   late final ThemeModeController _themeModeController;
 
@@ -262,6 +289,44 @@ class _TorreManagerAppState extends State<TorreManagerApp> {
       ListarMisSolicitudesUseCase(solicitudesResidenteRepository),
     );
 
+    final funcionesDashboardDataSource = FuncionesDashboardRemoteDataSource(
+      dio,
+    );
+    final funcionesDashboardRepository = FuncionesDashboardRepositoryImpl(
+      funcionesDashboardDataSource,
+    );
+    _funcionesDashboardBloc = FuncionesDashboardBloc(
+      obtenerFunciones: ObtenerFuncionesDashboardUseCase(
+        funcionesDashboardRepository,
+      ),
+    );
+
+    final serviciosDataSource = ServiciosRemoteDataSource(dio);
+    final serviciosRepository = ServiciosRepositoryImpl(serviciosDataSource);
+    _serviciosBloc = ServiciosBloc(
+      listar: ListarTrabajadoresUseCase(serviciosRepository),
+      crear: CrearTrabajadorUseCase(serviciosRepository),
+      actualizar: ActualizarTrabajadorUseCase(serviciosRepository),
+      eliminar: EliminarTrabajadorUseCase(serviciosRepository),
+    );
+
+    final marketplaceDataSource = MarketplaceRemoteDataSource(dio);
+    final marketplaceRepository = MarketplaceRepositoryImpl(
+      marketplaceDataSource,
+    );
+    _marketplaceBloc = MarketplaceBloc(
+      listar: ListarPublicacionesUseCase(marketplaceRepository),
+      listarMias: ListarMisPublicacionesUseCase(marketplaceRepository),
+      listarFavoritos: ListarFavoritosMarketplaceUseCase(marketplaceRepository),
+      listarHistorial: ListarHistorialMarketplaceUseCase(marketplaceRepository),
+      crear: CrearPublicacionUseCase(marketplaceRepository),
+      actualizar: ActualizarPublicacionUseCase(marketplaceRepository),
+      retirar: RetirarPublicacionUseCase(marketplaceRepository),
+      vender: MarcarPublicacionVendidaUseCase(marketplaceRepository),
+      eliminar: EliminarPublicacionUseCase(marketplaceRepository),
+      favorito: AlternarFavoritoUseCase(marketplaceRepository),
+    );
+
     _authBloc.stream.listen((state) {
       if (state is AuthSuccess || state is AuthUnauthenticated) {
         _paqueteriaBloc.add(const PaqueteriaLimpiada());
@@ -290,6 +355,9 @@ class _TorreManagerAppState extends State<TorreManagerApp> {
     _asistenteBloc.close();
     _paqueteriaBloc.close();
     _solicitudesResidenteBloc.close();
+    _funcionesDashboardBloc.close();
+    _serviciosBloc.close();
+    _marketplaceBloc.close();
     _miSolicitudResidenteBloc.close();
     _themeModeController.dispose();
     super.dispose();
@@ -312,6 +380,9 @@ class _TorreManagerAppState extends State<TorreManagerApp> {
         BlocProvider.value(value: _paqueteriaBloc),
         BlocProvider.value(value: _solicitudesResidenteBloc),
         BlocProvider.value(value: _miSolicitudResidenteBloc),
+        BlocProvider.value(value: _funcionesDashboardBloc),
+        BlocProvider.value(value: _serviciosBloc),
+        BlocProvider.value(value: _marketplaceBloc),
       ],
       child: ListenableBuilder(
         listenable: _themeModeController,

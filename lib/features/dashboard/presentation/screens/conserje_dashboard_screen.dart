@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/router/app_router.dart';
+import '../../../../core/router/funcion_rutas.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/design_tokens.dart';
 import '../../../../core/widgets/app_shell.dart';
@@ -13,6 +14,8 @@ import '../../../../core/widgets/top_bar.dart';
 import '../../../auth/domain/entities/usuario.dart';
 import '../../../auth/presentation/bloc/auth_bloc.dart';
 import '../../../auth/presentation/bloc/auth_event.dart';
+import '../bloc/funciones_dashboard_bloc.dart';
+import '../widgets/icono_funcion.dart';
 import 'modulo_proximamente_screen.dart';
 
 /// Módulo preventivo del conserje (no viene del backend todavía).
@@ -81,6 +84,12 @@ class ConserjeDashboardScreen extends StatefulWidget {
 }
 
 class _ConserjeDashboardScreenState extends State<ConserjeDashboardScreen> {
+  @override
+  void initState() {
+    super.initState();
+    context.read<FuncionesDashboardBloc>().add(const FuncionesSolicitadas());
+  }
+
   void _abrirModulo(_ModuloConserje modulo) {
     context.push(
       modulo.ruta,
@@ -104,20 +113,33 @@ class _ConserjeDashboardScreenState extends State<ConserjeDashboardScreen> {
   @override
   Widget build(BuildContext context) {
     final location = GoRouterState.of(context).matchedLocation;
+    final funciones = context.watch<FuncionesDashboardBloc>().state.funciones;
+    final idsFijos = _modulosConserje.map((modulo) => modulo.id).toSet();
+    final funcionesNuevas = funciones
+        .where((funcion) => !idsFijos.contains(funcion.id))
+        .toList();
     final sections = [
       AppNavSection(
         title: 'Módulos',
         subtitle: 'Herramientas de conserjería',
-        items: _modulosConserje
-            .map(
-              (modulo) => AppNavItem(
-                label: modulo.titulo,
-                icon: modulo.icono,
-                selected: location == modulo.ruta,
-                onTap: () => _abrirModulo(modulo),
-              ),
-            )
-            .toList(),
+        items: [
+          ..._modulosConserje.map(
+            (modulo) => AppNavItem(
+              label: modulo.titulo,
+              icon: modulo.icono,
+              selected: location == modulo.ruta,
+              onTap: () => _abrirModulo(modulo),
+            ),
+          ),
+          ...funcionesNuevas.map(
+            (funcion) => AppNavItem(
+              label: funcion.titulo,
+              icon: iconoDeFuncion(funcion.icono),
+              selected: location == funcion.ruta,
+              onTap: () => abrirFuncionDashboard(context, funcion),
+            ),
+          ),
+        ],
       ),
     ];
 
@@ -156,6 +178,8 @@ class _ContenidoConserje extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final funciones = context.watch<FuncionesDashboardBloc>().state.funciones;
+    final total = _modulosConserje.length + funciones.length;
 
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -188,7 +212,7 @@ class _ContenidoConserje extends StatelessWidget {
                     title: 'Operación diaria',
                     subtitle: 'Accesos rápidos de conserjería',
                     trailing: StatusPill(
-                      label: '${_modulosConserje.length} módulos',
+                      label: '$total módulos',
                       color: context.palette.primary,
                       compact: true,
                     ),
@@ -197,7 +221,7 @@ class _ContenidoConserje extends StatelessWidget {
                   GridView.builder(
                     shrinkWrap: true,
                     physics: const NeverScrollableScrollPhysics(),
-                    itemCount: _modulosConserje.length,
+                    itemCount: total,
                     gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                       crossAxisCount: columnas,
                       mainAxisSpacing: AppSpacing.md,
@@ -205,6 +229,16 @@ class _ContenidoConserje extends StatelessWidget {
                       mainAxisExtent: 196,
                     ),
                     itemBuilder: (context, index) {
+                      if (index >= _modulosConserje.length) {
+                        final funcion = funciones[index - _modulosConserje.length];
+                        return ModuleCard(
+                          title: funcion.titulo,
+                          description: funcion.descripcion,
+                          icon: iconoDeFuncion(funcion.icono),
+                          onTap: () => abrirFuncionDashboard(context, funcion),
+                        );
+                      }
+
                       final modulo = _modulosConserje[index];
                       return ModuleCard(
                         title: modulo.titulo,
