@@ -37,10 +37,10 @@ Cada nueva funcionalidad (ej. `Paqueteria`, `Quincho`, `Auth`) debe seguir esta 
 El sistema distingue dos tipos de módulos y no deben mezclarse:
 
 1. **Módulos por defecto o globales**
-   - Están disponibles para todos los proyectos existentes y futuros.
-   - No se persisten en `proyectos.modulos`.
-   - No pueden deshabilitarse por proyecto.
-   - Su fuente de verdad es el catálogo backend (`ModuloGeneral`).
+   - Están disponibles por defecto para todos los proyectos existentes y futuros.
+   - No se persisten como habilitados en `proyectos.modulos`; su fuente de verdad de definición es el catálogo backend (`ModuloGeneral`).
+   - Solo el superadmin puede deshabilitarlos por proyecto. El estado deshabilitado se persiste en `proyectos.modulos_deshabilitados` (json, IDs de `ModuloGeneral`); ausencia del ID significa habilitado.
+   - El dashboard, sus funciones y la edición de proyecto del superadmin deben respetar ese estado. La autorización de endpoints sigue resolviéndose por capacidades; el estado del módulo no reemplaza la validación de capacidades.
    - Agregar uno nuevo requiere modificar el catálogo backend y su entrada visual/ruta en el frontend; no requiere migración de base de datos.
 
 2. **Módulos configurables por proyecto**
@@ -53,7 +53,7 @@ El sistema distingue dos tipos de módulos y no deben mezclarse:
 
 - No agregar módulos globales a `ModuloSistema`.
 - El catálogo canónico se expone desde backend mediante `GET /api/dashboard/modulos`; el frontend no debe hardcodear la lista.
-- El dashboard muestra siempre los módulos globales y muestra los configurables habilitados o bloqueados según el proyecto activo.
+- El dashboard muestra siempre los módulos globales definidos en el catálogo, habilitados salvo que el superadmin los haya deshabilitado para el proyecto activo, y muestra los configurables habilitados o bloqueados según el proyecto activo.
 - Ocultar o bloquear un módulo en el frontend no es un control de seguridad. Todo endpoint de un módulo configurable debe validar en backend que el módulo esté habilitado para el proyecto activo.
 - Los módulos globales no requieren validación de habilitación por proyecto.
 - La gestión de infraestructura es una capacidad exclusiva de superadmin. No debe incluirse en el catálogo ni en el dashboard de administrador, y todos sus endpoints deben exigir el rol `superadmin` en backend.

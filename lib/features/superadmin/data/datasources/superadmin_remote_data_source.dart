@@ -3,6 +3,7 @@ import 'package:dio/dio.dart';
 import '../../../../core/config/app_config.dart';
 import '../../domain/entities/definicion_agrupacion.dart';
 import '../../domain/entities/instalacion_extra.dart';
+import '../../domain/entities/modulo_general.dart';
 import '../../domain/entities/modulo_sistema.dart';
 import '../../domain/entities/tipo_condominio.dart';
 import '../models/administrador_dto.dart';
@@ -175,6 +176,7 @@ class SuperadminRemoteDataSource {
     required String nombre,
     String? descripcion,
     required List<ModuloSistema> modulos,
+    required List<ModuloGeneral> modulosDeshabilitados,
     required List<InstalacionExtra> instalaciones,
     required List<String> adminIds,
   }) async {
@@ -184,6 +186,9 @@ class SuperadminRemoteDataSource {
         'nombre': nombre,
         'descripcion': ?descripcion,
         'modulos': modulos.map((modulo) => modulo.valor).toList(),
+        'modulos_deshabilitados': modulosDeshabilitados
+            .map((modulo) => modulo.valor)
+            .toList(),
         'instalaciones': instalaciones
             .map(
               (instalacion) => {

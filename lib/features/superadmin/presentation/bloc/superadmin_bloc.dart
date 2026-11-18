@@ -11,6 +11,7 @@ import '../../../infraestructura/domain/usecases/crear_unidades_accesorias_en_lo
 import '../../../infraestructura/domain/usecases/obtener_arbol_infraestructura_usecase.dart';
 import '../../domain/entities/definicion_agrupacion.dart';
 import '../../domain/entities/instalacion_extra.dart';
+import '../../domain/entities/modulo_general.dart';
 import '../../domain/entities/modulo_sistema.dart';
 import '../../domain/entities/proyecto_detalle.dart';
 import '../../domain/entities/resumen_proyecto.dart';
@@ -140,6 +141,7 @@ class ProyectoActualizado extends SuperadminEvent {
     required this.nombre,
     required this.descripcion,
     required this.modulos,
+    required this.modulosDeshabilitados,
     required this.instalaciones,
     required this.adminIds,
   });
@@ -148,6 +150,7 @@ class ProyectoActualizado extends SuperadminEvent {
   final String nombre;
   final String? descripcion;
   final List<ModuloSistema> modulos;
+  final List<ModuloGeneral> modulosDeshabilitados;
   final List<InstalacionExtra> instalaciones;
   final List<String> adminIds;
 
@@ -157,6 +160,7 @@ class ProyectoActualizado extends SuperadminEvent {
     nombre,
     descripcion,
     modulos,
+    modulosDeshabilitados,
     instalaciones,
     adminIds,
   ];
@@ -461,6 +465,7 @@ class SuperadminBloc extends Bloc<SuperadminEvent, SuperadminState> {
       nombre: event.nombre,
       descripcion: event.descripcion,
       modulos: event.modulos,
+      modulosDeshabilitados: event.modulosDeshabilitados,
       instalaciones: event.instalaciones,
       adminIds: event.adminIds,
     );

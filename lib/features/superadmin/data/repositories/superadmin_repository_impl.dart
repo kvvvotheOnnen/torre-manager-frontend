@@ -5,6 +5,7 @@ import '../../../../core/errors/failures.dart';
 import '../../domain/entities/administrador.dart';
 import '../../domain/entities/definicion_agrupacion.dart';
 import '../../domain/entities/instalacion_extra.dart';
+import '../../domain/entities/modulo_general.dart';
 import '../../domain/entities/modulo_sistema.dart';
 import '../../domain/entities/proyecto_detalle.dart';
 import '../../domain/entities/resumen_proyecto.dart';
@@ -142,6 +143,7 @@ class SuperadminRepositoryImpl implements SuperadminRepositoryInterface {
     required String nombre,
     String? descripcion,
     required List<ModuloSistema> modulos,
+    required List<ModuloGeneral> modulosDeshabilitados,
     required List<InstalacionExtra> instalaciones,
     required List<String> adminIds,
   }) {
@@ -152,6 +154,7 @@ class SuperadminRepositoryImpl implements SuperadminRepositoryInterface {
             nombre: nombre,
             descripcion: descripcion,
             modulos: modulos,
+            modulosDeshabilitados: modulosDeshabilitados,
             instalaciones: instalaciones,
             adminIds: adminIds,
           )

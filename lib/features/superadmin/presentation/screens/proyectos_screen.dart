@@ -8,6 +8,7 @@ import '../../../infraestructura/domain/entities/tipo_agrupacion.dart';
 import '../../../infraestructura/domain/entities/tipo_unidad_accesoria.dart';
 import '../../../infraestructura/domain/entities/unidad_accesoria.dart';
 import '../../domain/entities/instalacion_extra.dart';
+import '../../domain/entities/modulo_general.dart';
 import '../../domain/entities/modulo_sistema.dart';
 import '../../domain/entities/proyecto_detalle.dart';
 import '../../domain/entities/resumen_proyecto.dart';
@@ -199,6 +200,7 @@ class _ProyectoFormScreenState extends State<_ProyectoFormScreen> {
 
   TipoCondominio _tipo = TipoCondominio.torres;
   final Set<ModuloSistema> _modulos = {ModuloSistema.infraestructura};
+  final Set<ModuloGeneral> _modulosDeshabilitados = {};
   final List<_InstalacionForm> _instalaciones = [];
   final Set<String> _adminIds = {};
 
@@ -235,6 +237,10 @@ class _ProyectoFormScreenState extends State<_ProyectoFormScreen> {
     _modulos
       ..clear()
       ..addAll(detalle.modulos);
+
+    _modulosDeshabilitados
+      ..clear()
+      ..addAll(detalle.modulosDeshabilitados);
 
     _adminIds
       ..clear()
@@ -309,6 +315,7 @@ class _ProyectoFormScreenState extends State<_ProyectoFormScreen> {
         nombre: _nombreController.text,
         descripcion: descripcion,
         modulos: _modulos.toList(),
+        modulosDeshabilitados: _modulosDeshabilitados.toList(),
         instalaciones: instalaciones,
         adminIds: _adminIds.toList(),
       ),
@@ -525,6 +532,29 @@ class _ProyectoFormScreenState extends State<_ProyectoFormScreen> {
                               _modulos.add(modulo);
                             } else {
                               _modulos.remove(modulo);
+                            }
+                          }),
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        'Módulos globales',
+                        style: theme.textTheme.titleSmall,
+                      ),
+                      const SizedBox(height: 4),
+                      ...ModuloGeneral.values.map(
+                        (modulo) => SwitchListTile(
+                          contentPadding: EdgeInsets.zero,
+                          title: Text(modulo.etiqueta),
+                          subtitle: const Text(
+                            'Disponible para todos los proyectos por defecto',
+                          ),
+                          value: !_modulosDeshabilitados.contains(modulo),
+                          onChanged: (value) => setState(() {
+                            if (value) {
+                              _modulosDeshabilitados.remove(modulo);
+                            } else {
+                              _modulosDeshabilitados.add(modulo);
                             }
                           }),
                         ),

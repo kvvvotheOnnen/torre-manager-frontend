@@ -1,6 +1,7 @@
 import 'package:equatable/equatable.dart';
 
 import 'instalacion_extra.dart';
+import 'modulo_general.dart';
 import 'modulo_sistema.dart';
 import 'tipo_condominio.dart';
 
@@ -13,6 +14,7 @@ class ProyectoDetalle extends Equatable {
     required this.modulos,
     required this.instalacionesExtra,
     required this.adminIds,
+    this.modulosDeshabilitados = const [],
     this.rol,
   });
 
@@ -23,6 +25,7 @@ class ProyectoDetalle extends Equatable {
   final List<ModuloSistema> modulos;
   final List<InstalacionExtra> instalacionesExtra;
   final List<String> adminIds;
+  final List<ModuloGeneral> modulosDeshabilitados;
   final String? rol;
 
   @override
@@ -34,6 +37,7 @@ class ProyectoDetalle extends Equatable {
     modulos,
     instalacionesExtra,
     adminIds,
+    modulosDeshabilitados,
     rol,
   ];
 }

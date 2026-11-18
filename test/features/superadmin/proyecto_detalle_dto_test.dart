@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:torre_manager_frontend/features/superadmin/data/models/proyecto_detalle_dto.dart';
+import 'package:torre_manager_frontend/features/superadmin/domain/entities/modulo_general.dart';
 import 'package:torre_manager_frontend/features/superadmin/domain/entities/modulo_sistema.dart';
 import 'package:torre_manager_frontend/features/superadmin/domain/entities/tipo_condominio.dart';
 
@@ -62,6 +63,21 @@ void main() {
       final dto = ProyectoDetalleDTO.fromJson(json);
 
       expect(dto.toEntity().tipoCondominio, TipoCondominio.edificio);
+    });
+
+    test('parsea los módulos globales deshabilitados', () {
+      final json = baseJson()
+        ..['modulos_deshabilitados'] = ['paqueteria', 'desconocido'];
+
+      final entity = ProyectoDetalleDTO.fromJson(json).toEntity();
+
+      expect(entity.modulosDeshabilitados, [ModuloGeneral.paqueteria]);
+    });
+
+    test('tolera módulos deshabilitados ausentes', () {
+      final entity = ProyectoDetalleDTO.fromJson(baseJson()).toEntity();
+
+      expect(entity.modulosDeshabilitados, isEmpty);
     });
 
     test('ignora módulos que ya no son configurables', () {

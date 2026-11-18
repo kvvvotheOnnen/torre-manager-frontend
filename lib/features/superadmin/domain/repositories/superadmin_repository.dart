@@ -4,6 +4,7 @@ import '../../../../core/errors/failures.dart';
 import '../entities/administrador.dart';
 import '../entities/definicion_agrupacion.dart';
 import '../entities/instalacion_extra.dart';
+import '../entities/modulo_general.dart';
 import '../entities/modulo_sistema.dart';
 import '../entities/proyecto_detalle.dart';
 import '../entities/resumen_proyecto.dart';
@@ -59,6 +60,7 @@ abstract interface class SuperadminRepositoryInterface {
     required String nombre,
     String? descripcion,
     required List<ModuloSistema> modulos,
+    required List<ModuloGeneral> modulosDeshabilitados,
     required List<InstalacionExtra> instalaciones,
     required List<String> adminIds,
   });

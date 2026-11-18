@@ -1,4 +1,5 @@
 import '../../domain/entities/instalacion_extra.dart';
+import '../../domain/entities/modulo_general.dart';
 import '../../domain/entities/modulo_sistema.dart';
 import '../../domain/entities/proyecto_detalle.dart';
 import '../../domain/entities/tipo_condominio.dart';
@@ -12,6 +13,7 @@ class ProyectoDetalleDTO {
     required this.modulos,
     required this.instalacionesExtra,
     required this.adminIds,
+    this.modulosDeshabilitados = const [],
     this.rol,
   });
 
@@ -22,6 +24,7 @@ class ProyectoDetalleDTO {
   final List<String> modulos;
   final List<InstalacionExtraDTO> instalacionesExtra;
   final List<String> adminIds;
+  final List<String> modulosDeshabilitados;
   final String? rol;
 
   factory ProyectoDetalleDTO.fromJson(Map<String, dynamic> json) {
@@ -42,6 +45,10 @@ class ProyectoDetalleDTO {
       adminIds: ((json['admin_ids'] ?? const []) as List)
           .map((item) => '$item')
           .toList(),
+      modulosDeshabilitados:
+          ((json['modulos_deshabilitados'] ?? const []) as List)
+              .map((item) => '$item')
+              .toList(),
       rol: json['rol'] as String?,
     );
   }
@@ -60,6 +67,10 @@ class ProyectoDetalleDTO {
           .map((instalacion) => instalacion.toEntity())
           .toList(),
       adminIds: adminIds,
+      modulosDeshabilitados: modulosDeshabilitados
+          .map(moduloGeneralFromString)
+          .whereType<ModuloGeneral>()
+          .toList(),
       rol: rol,
     );
   }

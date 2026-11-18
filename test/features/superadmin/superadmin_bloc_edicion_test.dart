@@ -17,6 +17,7 @@ import 'package:torre_manager_frontend/features/infraestructura/domain/usecases/
 import 'package:torre_manager_frontend/features/superadmin/domain/entities/administrador.dart';
 import 'package:torre_manager_frontend/features/superadmin/domain/entities/definicion_agrupacion.dart';
 import 'package:torre_manager_frontend/features/superadmin/domain/entities/instalacion_extra.dart';
+import 'package:torre_manager_frontend/features/superadmin/domain/entities/modulo_general.dart';
 import 'package:torre_manager_frontend/features/superadmin/domain/entities/modulo_sistema.dart';
 import 'package:torre_manager_frontend/features/superadmin/domain/entities/proyecto_detalle.dart';
 import 'package:torre_manager_frontend/features/superadmin/domain/entities/resumen_proyecto.dart';
@@ -46,6 +47,7 @@ class _FakeSuperadminRepository implements SuperadminRepositoryInterface {
     required String nombre,
     String? descripcion,
     required List<ModuloSistema> modulos,
+    required List<ModuloGeneral> modulosDeshabilitados,
     required List<InstalacionExtra> instalaciones,
     required List<String> adminIds,
   }) async {
@@ -324,6 +326,7 @@ void main() {
         nombre: 'Proyecto editado',
         descripcion: 'Nueva descripción',
         modulos: [ModuloSistema.infraestructura],
+        modulosDeshabilitados: [],
         instalaciones: [],
         adminIds: ['2'],
       ),
@@ -515,6 +518,7 @@ void main() {
         nombre: '   ',
         descripcion: null,
         modulos: [ModuloSistema.infraestructura],
+        modulosDeshabilitados: [],
         instalaciones: [],
         adminIds: ['2'],
       ),

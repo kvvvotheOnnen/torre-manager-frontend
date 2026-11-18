@@ -2,6 +2,7 @@ import 'package:fpdart/fpdart.dart';
 
 import '../../../../core/errors/failures.dart';
 import '../entities/instalacion_extra.dart';
+import '../entities/modulo_general.dart';
 import '../entities/modulo_sistema.dart';
 import '../entities/proyecto_detalle.dart';
 import '../repositories/superadmin_repository.dart';
@@ -16,6 +17,7 @@ class ActualizarProyectoUseCase {
     required String nombre,
     String? descripcion,
     required List<ModuloSistema> modulos,
+    required List<ModuloGeneral> modulosDeshabilitados,
     required List<InstalacionExtra> instalaciones,
     required List<String> adminIds,
   }) {
@@ -42,6 +44,7 @@ class ActualizarProyectoUseCase {
       nombre: nombreTrim,
       descripcion: descripcion?.trim(),
       modulos: modulos,
+      modulosDeshabilitados: modulosDeshabilitados,
       instalaciones: instalaciones,
       adminIds: adminIds,
     );
