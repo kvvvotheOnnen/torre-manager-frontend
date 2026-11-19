@@ -3,9 +3,11 @@ import 'package:fpdart/fpdart.dart';
 import '../../../../core/errors/failures.dart';
 import '../entities/paquete.dart';
 import '../entities/paquete_foto.dart';
+import '../entities/unidad_gestionable.dart';
 
 abstract interface class PaqueteriaRepositoryInterface {
   Future<Either<Failure, List<Paquete>>> listar();
+  Future<Either<Failure, List<UnidadGestionable>>> listarUnidades();
   Future<Either<Failure, Paquete>> registrar({
     required int proyectoId,
     required String descripcion,

@@ -1,4 +1,4 @@
-import 'package:dio/dio.dart';
+import '../../../../core/network/api_client.dart';
 
 import '../../../../core/config/app_config.dart';
 import '../../domain/entities/definicion_agrupacion.dart';
@@ -11,12 +11,12 @@ import '../models/proyecto_detalle_dto.dart';
 import '../models/resumen_proyecto_dto.dart';
 
 class SuperadminRemoteDataSource {
-  const SuperadminRemoteDataSource(this._dio);
+  const SuperadminRemoteDataSource(this._client);
 
-  final Dio _dio;
+  final ApiClient _client;
 
   Future<List<ResumenProyectoDTO>> listarProyectos() async {
-    final response = await _dio.get<Map<String, dynamic>>(
+    final response = await _client.get<Map<String, dynamic>>(
       AppConfig.superadminProyectosPath,
     );
 
@@ -30,7 +30,7 @@ class SuperadminRemoteDataSource {
   }
 
   Future<List<AdministradorDTO>> listarAdministradores() async {
-    final response = await _dio.get<Map<String, dynamic>>(
+    final response = await _client.get<Map<String, dynamic>>(
       AppConfig.superadminAdministradoresPath,
     );
 
@@ -47,7 +47,7 @@ class SuperadminRemoteDataSource {
     required String correo,
     required String password,
   }) async {
-    final response = await _dio.post<Map<String, dynamic>>(
+    final response = await _client.post<Map<String, dynamic>>(
       AppConfig.superadminAdministradoresPath,
       data: {'nombre': nombre, 'email': correo, 'password': password},
     );
@@ -68,7 +68,7 @@ class SuperadminRemoteDataSource {
     int estacionamientos = 0,
     int bodegas = 0,
   }) async {
-    final response = await _dio.post<Map<String, dynamic>>(
+    final response = await _client.post<Map<String, dynamic>>(
       AppConfig.superadminProyectosPath,
       data: {
         'nombre': nombre,
@@ -82,8 +82,6 @@ class SuperadminRemoteDataSource {
                 'nombre': instalacion.nombre,
                 'capacidad': instalacion.capacidad,
                 'descripcion': ?instalacion.descripcion,
-                if (instalacion.atributos.isNotEmpty)
-                  'atributos': instalacion.atributos,
               },
             )
             .toList(),
@@ -102,7 +100,7 @@ class SuperadminRemoteDataSource {
     required String nombre,
     String? descripcion,
   }) async {
-    final response = await _dio.post<Map<String, dynamic>>(
+    final response = await _client.post<Map<String, dynamic>>(
       AppConfig.superadminProyectosBorradorPath,
       data: {'nombre': nombre, 'descripcion': descripcion},
     );
@@ -124,7 +122,7 @@ class SuperadminRemoteDataSource {
     bool resetEstructura = false,
     bool finalizar = false,
   }) async {
-    final response = await _dio.patch<Map<String, dynamic>>(
+    final response = await _client.patch<Map<String, dynamic>>(
       AppConfig.superadminProyectoBorradorPath(id),
       data: {
         'nombre': nombre,
@@ -139,8 +137,6 @@ class SuperadminRemoteDataSource {
                   'nombre': instalacion.nombre,
                   'capacidad': instalacion.capacidad,
                   'descripcion': ?instalacion.descripcion,
-                  if (instalacion.atributos.isNotEmpty)
-                    'atributos': instalacion.atributos,
                 },
               )
               .toList(),
@@ -158,11 +154,11 @@ class SuperadminRemoteDataSource {
   }
 
   Future<void> descartarProyectoBorrador(String id) async {
-    await _dio.delete<void>(AppConfig.superadminProyectoBorradorPath(id));
+    await _client.delete<void>(AppConfig.superadminProyectoBorradorPath(id));
   }
 
   Future<ProyectoDetalleDTO> obtenerProyecto(String id) async {
-    final response = await _dio.get<Map<String, dynamic>>(
+    final response = await _client.get<Map<String, dynamic>>(
       AppConfig.superadminProyectoPath(id),
     );
 
@@ -180,7 +176,7 @@ class SuperadminRemoteDataSource {
     required List<InstalacionExtra> instalaciones,
     required List<String> adminIds,
   }) async {
-    final response = await _dio.put<Map<String, dynamic>>(
+    final response = await _client.put<Map<String, dynamic>>(
       AppConfig.superadminProyectoPath(id),
       data: {
         'nombre': nombre,
@@ -195,8 +191,6 @@ class SuperadminRemoteDataSource {
                 'nombre': instalacion.nombre,
                 'capacidad': instalacion.capacidad,
                 'descripcion': ?instalacion.descripcion,
-                if (instalacion.atributos.isNotEmpty)
-                  'atributos': instalacion.atributos,
               },
             )
             .toList(),
@@ -253,11 +247,11 @@ class SuperadminRemoteDataSource {
   }
 
   Future<void> eliminarProyecto(String id) async {
-    await _dio.delete<void>(AppConfig.superadminProyectoPath(id));
+    await _client.delete<void>(AppConfig.superadminProyectoPath(id));
   }
 
   Future<List<ProyectoDetalleDTO>> listarMisProyectos() async {
-    final response = await _dio.get<Map<String, dynamic>>(
+    final response = await _client.get<Map<String, dynamic>>(
       AppConfig.misProyectosPath,
     );
 

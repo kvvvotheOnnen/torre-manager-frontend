@@ -8,6 +8,7 @@ import '../../../auth/presentation/bloc/auth_event.dart';
 import '../bloc/paqueteria_bloc.dart';
 import '../../domain/entities/paquete.dart';
 import '../../domain/entities/paquete_foto.dart';
+import '../../domain/entities/unidad_gestionable.dart';
 import '../widgets/paquete_card_image.dart';
 import '../widgets/paquete_detalle_dialog.dart';
 
@@ -28,7 +29,7 @@ class _PaqueteriaGestionScreenState extends State<PaqueteriaGestionScreen> {
   final _busquedaController = TextEditingController();
   PaqueteFoto? _foto;
   String _busqueda = '';
-  Map<String, dynamic>? _unidadSeleccionada;
+  UnidadGestionable? _unidadSeleccionada;
 
   @override
   void initState() {
@@ -79,10 +80,10 @@ class _PaqueteriaGestionScreenState extends State<PaqueteriaGestionScreen> {
     final unidad = _unidadSeleccionada!;
     context.read<PaqueteriaBloc>().add(
       PaqueteRegistrado(
-        proyectoId: (unidad['proyecto_id'] as num).toInt(),
+        proyectoId: unidad.proyectoId,
         descripcion: _descripcionController.text.trim(),
         remitente: _remitenteController.text.trim(),
-        unidadPrincipalId: (unidad['id'] as num).toInt(),
+        unidadPrincipalId: unidad.id,
         foto: _foto,
       ),
     );
@@ -404,9 +405,9 @@ class _FormularioRegistro extends StatelessWidget {
   final GlobalKey<FormState> formKey;
   final TextEditingController descripcionController;
   final TextEditingController remitenteController;
-  final List<Map<String, dynamic>> unidades;
-  final Map<String, dynamic>? unidadSeleccionada;
-  final ValueChanged<Map<String, dynamic>?> onUnidadSeleccionada;
+  final List<UnidadGestionable> unidades;
+  final UnidadGestionable? unidadSeleccionada;
+  final ValueChanged<UnidadGestionable?> onUnidadSeleccionada;
   final PaqueteFoto? foto;
   final VoidCallback onSeleccionarFoto;
   final VoidCallback onRegistrar;
@@ -516,9 +517,9 @@ class _BuscadorDepartamento extends StatefulWidget {
     required this.onSeleccionado,
   });
 
-  final List<Map<String, dynamic>> unidades;
-  final Map<String, dynamic>? seleccionado;
-  final ValueChanged<Map<String, dynamic>?> onSeleccionado;
+  final List<UnidadGestionable> unidades;
+  final UnidadGestionable? seleccionado;
+  final ValueChanged<UnidadGestionable?> onSeleccionado;
 
   @override
   State<_BuscadorDepartamento> createState() => _BuscadorDepartamentoState();
@@ -529,15 +530,14 @@ class _BuscadorDepartamentoState extends State<_BuscadorDepartamento> {
   final GlobalKey _fieldKey = GlobalKey();
   final TextEditingController _controller = TextEditingController();
   OverlayEntry? _overlayEntry;
-  Map<String, dynamic>? _seleccionado;
+  UnidadGestionable? _seleccionado;
 
   @override
   void initState() {
     super.initState();
     _seleccionado = widget.seleccionado;
     if (widget.seleccionado != null) {
-      _controller.text = (widget.seleccionado!['identificador'] ?? '')
-          .toString();
+      _controller.text = widget.seleccionado!.identificador;
     }
   }
 
@@ -547,7 +547,7 @@ class _BuscadorDepartamentoState extends State<_BuscadorDepartamento> {
     if (widget.seleccionado != oldWidget.seleccionado) {
       _seleccionado = widget.seleccionado;
       if (_seleccionado != null) {
-        _controller.text = (_seleccionado!['identificador'] ?? '').toString();
+        _controller.text = _seleccionado!.identificador;
       }
     }
     if (widget.unidades != oldWidget.unidades && _overlayEntry != null) {
@@ -567,20 +567,19 @@ class _BuscadorDepartamentoState extends State<_BuscadorDepartamento> {
     _overlayEntry = null;
   }
 
-  List<Map<String, dynamic>> _filtradas(String query) {
+  List<UnidadGestionable> _filtradas(String query) {
     final q = query.toLowerCase().trim();
     if (q.isEmpty) return widget.unidades;
     return widget.unidades
         .where(
-          (u) =>
-              (u['identificador'] ?? '').toString().toLowerCase().contains(q),
+          (u) => u.identificador.toLowerCase().contains(q),
         )
         .toList();
   }
 
-  void _seleccionar(Map<String, dynamic> unidad) {
+  void _seleccionar(UnidadGestionable unidad) {
     setState(() => _seleccionado = unidad);
-    _controller.text = (unidad['identificador'] ?? '').toString();
+    _controller.text = unidad.identificador;
     widget.onSeleccionado(unidad);
     _ocultarOverlay();
   }
@@ -644,7 +643,7 @@ class _BuscadorDepartamentoState extends State<_BuscadorDepartamento> {
       itemCount: filtradas.length,
       itemBuilder: (context, index) {
         final unidad = filtradas[index];
-        final id = (unidad['identificador'] ?? '').toString();
+        final id = unidad.identificador;
         return InkWell(
           onTap: () => _seleccionar(unidad),
           child: Padding(

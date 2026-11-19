@@ -1,4 +1,4 @@
-import 'package:dio/dio.dart';
+import '../../../../core/errors/api_exception.dart';
 import 'package:fpdart/fpdart.dart';
 
 import '../../../../core/errors/failures.dart';
@@ -16,9 +16,9 @@ class DashboardRepositoryImpl implements DashboardRepository {
     try {
       final modulos = await _remoteDataSource.listarModulos();
       return Right(modulos.map((dto) => dto.toEntity()).toList());
-    } on DioException catch (error) {
-      final statusCode = error.response?.statusCode;
-      final data = error.response?.data;
+    } on ApiException catch (error) {
+      final statusCode = error.statusCode;
+      final data = error.data;
 
       if (data is Map<String, dynamic> && data['message'] is String) {
         final message = data['message'] as String;

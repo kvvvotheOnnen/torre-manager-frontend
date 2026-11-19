@@ -15,7 +15,7 @@ import 'package:torre_manager_frontend/features/superadmin/domain/entities/modul
 import 'package:torre_manager_frontend/features/superadmin/domain/entities/proyecto_detalle.dart';
 import 'package:torre_manager_frontend/features/superadmin/domain/entities/tipo_condominio.dart';
 import 'package:torre_manager_frontend/features/superadmin/domain/repositories/superadmin_repository.dart';
-import 'package:torre_manager_frontend/features/superadmin/domain/usecases/listar_mis_proyectos_usecase.dart';
+import 'package:torre_manager_frontend/features/tenant/domain/usecases/listar_mis_proyectos_usecase.dart';
 import 'package:torre_manager_frontend/features/tenant/presentation/bloc/tenant_bloc.dart';
 
 class _FakeSuperadminRepository implements SuperadminRepositoryInterface {

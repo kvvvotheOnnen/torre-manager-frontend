@@ -1,4 +1,4 @@
-import 'package:dio/dio.dart';
+import '../../../../core/network/api_client.dart';
 
 import '../../../../core/config/app_config.dart';
 import '../models/agrupacion_dto.dart';
@@ -7,12 +7,12 @@ import '../models/proyecto_dto.dart';
 import '../models/unidad_accesoria_dto.dart';
 
 class InfraestructuraRemoteDataSource {
-  const InfraestructuraRemoteDataSource(this._dio);
+  const InfraestructuraRemoteDataSource(this._client);
 
-  final Dio _dio;
+  final ApiClient _client;
 
   Future<ProyectoDTO> obtenerProyectoDelUsuario() async {
-    final response = await _dio.get<Map<String, dynamic>>(
+    final response = await _client.get<Map<String, dynamic>>(
       AppConfig.infraestructuraProyectoPath,
     );
 
@@ -20,7 +20,7 @@ class InfraestructuraRemoteDataSource {
   }
 
   Future<List<ProyectoDTO>> listarProyectos() async {
-    final response = await _dio.get<List<dynamic>>(
+    final response = await _client.get<List<dynamic>>(
       AppConfig.infraestructuraProyectosPath,
     );
 
@@ -33,7 +33,7 @@ class InfraestructuraRemoteDataSource {
     required String nombre,
     String? descripcion,
   }) async {
-    final response = await _dio.post<Map<String, dynamic>>(
+    final response = await _client.post<Map<String, dynamic>>(
       AppConfig.infraestructuraProyectosPath,
       data: {'nombre': nombre, 'descripcion': ?descripcion},
     );
@@ -49,7 +49,7 @@ class InfraestructuraRemoteDataSource {
     required int pisoHasta,
     required int unidadesPorPiso,
   }) async {
-    final response = await _dio.post<Map<String, dynamic>>(
+    final response = await _client.post<Map<String, dynamic>>(
       AppConfig.infraestructuraAgrupacionesPath,
       data: {
         'nombre': nombre,
@@ -70,7 +70,7 @@ class InfraestructuraRemoteDataSource {
     required int pisoHasta,
     required int unidadesPorPiso,
   }) async {
-    final response = await _dio.post<Map<String, dynamic>>(
+    final response = await _client.post<Map<String, dynamic>>(
       AppConfig.infraestructuraVistaPreviaPath,
       data: {
         if (prefijo != null && prefijo.isNotEmpty) 'prefijo': prefijo,
@@ -92,7 +92,7 @@ class InfraestructuraRemoteDataSource {
     required String? asignacion,
     String? unidadPrincipalId,
   }) async {
-    final response = await _dio.post<Map<String, dynamic>>(
+    final response = await _client.post<Map<String, dynamic>>(
       AppConfig.infraestructuraUnidadesAccesoriasPath,
       data: {
         'identificador': identificador,
@@ -113,7 +113,7 @@ class InfraestructuraRemoteDataSource {
     required int cantidad,
     String? asignacion,
   }) async {
-    final response = await _dio.post<Map<String, dynamic>>(
+    final response = await _client.post<Map<String, dynamic>>(
       AppConfig.infraestructuraUnidadesAccesoriasLotePath,
       data: {
         'proyecto_id': proyectoId,
@@ -137,7 +137,7 @@ class InfraestructuraRemoteDataSource {
     required String? asignacion,
     String? unidadPrincipalId,
   }) async {
-    final response = await _dio.patch<Map<String, dynamic>>(
+    final response = await _client.patch<Map<String, dynamic>>(
       '${AppConfig.infraestructuraUnidadesAccesoriasPath}/$unidadAccesoriaId/asignacion',
       data: {
         'asignacion': ?asignacion,
@@ -153,7 +153,7 @@ class InfraestructuraRemoteDataSource {
   Future<ArbolInfraestructuraDTO> obtenerArbol({
     required String proyectoId,
   }) async {
-    final response = await _dio.get<Map<String, dynamic>>(
+    final response = await _client.get<Map<String, dynamic>>(
       AppConfig.infraestructuraArbolPath,
       queryParameters: {'proyecto_id': proyectoId},
     );

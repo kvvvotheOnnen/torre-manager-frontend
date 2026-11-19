@@ -1,16 +1,16 @@
-import 'package:dio/dio.dart';
+import '../../../../core/network/api_client.dart';
 
 import '../../../../core/config/app_config.dart';
 import '../models/funcion_dashboard_dto.dart';
 
 /// Única clase de la feature autorizada a usar `dio`.
 class FuncionesDashboardRemoteDataSource {
-  const FuncionesDashboardRemoteDataSource(this._dio);
+  const FuncionesDashboardRemoteDataSource(this._client);
 
-  final Dio _dio;
+  final ApiClient _client;
 
   Future<List<FuncionDashboardDto>> listar() async {
-    final respuesta = await _dio.get<Map<String, dynamic>>(
+    final respuesta = await _client.get<Map<String, dynamic>>(
       AppConfig.dashboardFuncionesPath,
     );
 

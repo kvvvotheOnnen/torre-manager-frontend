@@ -1,4 +1,4 @@
-import 'package:dio/dio.dart';
+import '../../../../core/errors/api_exception.dart';
 import 'package:fpdart/fpdart.dart';
 
 import '../../../../core/errors/failures.dart';
@@ -21,7 +21,7 @@ class ServiciosRepositoryImpl implements ServiciosRepositoryInterface {
     try {
       final dtos = await _remoteDataSource.listar(tipo: tipo, buscar: buscar);
       return Right(dtos.map((dto) => dto.toEntity()).toList());
-    } on DioException catch (error) {
+    } on ApiException catch (error) {
       return Left(_failureDesde(error));
     } on FormatException {
       return const Left(ServerFailure('Respuesta inesperada del servidor.'));
@@ -49,7 +49,7 @@ class ServiciosRepositoryImpl implements ServiciosRepositoryInterface {
         foto: foto,
       );
       return Right(dto.toEntity());
-    } on DioException catch (error) {
+    } on ApiException catch (error) {
       return Left(_failureDesde(error));
     } on FormatException {
       return const Left(ServerFailure('Respuesta inesperada del servidor.'));
@@ -79,7 +79,7 @@ class ServiciosRepositoryImpl implements ServiciosRepositoryInterface {
         foto: foto,
       );
       return Right(dto.toEntity());
-    } on DioException catch (error) {
+    } on ApiException catch (error) {
       return Left(_failureDesde(error));
     } on FormatException {
       return const Left(ServerFailure('Respuesta inesperada del servidor.'));
@@ -93,7 +93,7 @@ class ServiciosRepositoryImpl implements ServiciosRepositoryInterface {
     try {
       await _remoteDataSource.eliminar(id);
       return const Right(true);
-    } on DioException catch (error) {
+    } on ApiException catch (error) {
       return Left(_failureDesde(error));
     } on FormatException {
       return const Left(ServerFailure('Respuesta inesperada del servidor.'));
@@ -102,9 +102,9 @@ class ServiciosRepositoryImpl implements ServiciosRepositoryInterface {
     }
   }
 
-  Failure _failureDesde(DioException error) {
-    final statusCode = error.response?.statusCode;
-    final data = error.response?.data;
+  Failure _failureDesde(ApiException error) {
+    final statusCode = error.statusCode;
+    final data = error.data;
 
     if (statusCode == 401) {
       return const AuthenticationFailure();

@@ -1,9 +1,10 @@
-import 'package:dio/dio.dart';
 import 'package:fpdart/fpdart.dart';
 
+import '../../../../core/errors/api_exception.dart';
 import '../../../../core/errors/failures.dart';
 import '../../domain/entities/paquete.dart';
 import '../../domain/entities/paquete_foto.dart';
+import '../../domain/entities/unidad_gestionable.dart';
 import '../../domain/repositories/paqueteria_repository.dart';
 import '../datasources/paqueteria_remote_data_source.dart';
 
@@ -17,11 +18,26 @@ class PaqueteriaRepositoryImpl implements PaqueteriaRepositoryInterface {
     try {
       final dtos = await _remoteDataSource.listar();
       return Right(dtos.map((d) => d.toEntity()).toList());
-    } on DioException catch (error) {
-      if (error.response?.statusCode == 401) {
+    } on ApiException catch (error) {
+      if (error.statusCode == 401) {
         return const Left(ServerFailure('No autenticado.'));
       }
-      return const Left(ServerFailure());
+      return Left(ServerFailure(_mensaje(error)));
+    } catch (_) {
+      return const Left(UnexpectedFailure());
+    }
+  }
+
+  @override
+  Future<Either<Failure, List<UnidadGestionable>>> listarUnidades() async {
+    try {
+      final dtos = await _remoteDataSource.unidades();
+      return Right(dtos.map((d) => d.toEntity()).toList());
+    } on ApiException catch (error) {
+      if (error.statusCode == 401) {
+        return const Left(ServerFailure('No autenticado.'));
+      }
+      return Left(ServerFailure(_mensaje(error)));
     } catch (_) {
       return const Left(UnexpectedFailure());
     }
@@ -46,13 +62,11 @@ class PaqueteriaRepositoryImpl implements PaqueteriaRepositoryInterface {
         foto: foto,
       );
       return Right(dto.toEntity());
-    } on DioException catch (error) {
-      if (error.response?.statusCode == 403) {
-        return const Left(
-          ServerFailure('No tienes permisos para registrar paquetes.'),
-        );
+    } on ApiException catch (error) {
+      if (error.statusCode == 403) {
+        return Left(ServerFailure(_mensaje(error)));
       }
-      return const Left(ServerFailure());
+      return Left(ServerFailure(_mensaje(error)));
     } catch (_) {
       return const Left(UnexpectedFailure());
     }
@@ -77,11 +91,11 @@ class PaqueteriaRepositoryImpl implements PaqueteriaRepositoryInterface {
         foto: foto,
       );
       return Right(dto.toEntity());
-    } on DioException catch (error) {
-      if (error.response?.statusCode == 404) {
+    } on ApiException catch (error) {
+      if (error.statusCode == 404) {
         return const Left(ServerFailure('Paquete no encontrado.'));
       }
-      return const Left(ServerFailure());
+      return Left(ServerFailure(_mensaje(error)));
     } catch (_) {
       return const Left(UnexpectedFailure());
     }
@@ -95,13 +109,22 @@ class PaqueteriaRepositoryImpl implements PaqueteriaRepositoryInterface {
     try {
       final dto = await _remoteDataSource.marcarRetirado(id, retiradoPorNombre);
       return Right(dto.toEntity());
-    } on DioException catch (error) {
-      if (error.response?.statusCode == 404) {
+    } on ApiException catch (error) {
+      if (error.statusCode == 404) {
         return const Left(ServerFailure('Paquete no encontrado.'));
       }
-      return const Left(ServerFailure());
+      return Left(ServerFailure(_mensaje(error)));
     } catch (_) {
       return const Left(UnexpectedFailure());
     }
+  }
+
+  String _mensaje(ApiException error) {
+    final data = error.data;
+    if (data is Map && data['message'] is String) {
+      final mensaje = data['message'] as String;
+      if (mensaje.isNotEmpty) return mensaje;
+    }
+    return 'Ocurrió un error en el servidor.';
   }
 }

@@ -1,25 +1,28 @@
 import 'package:dio/dio.dart';
 
+import '../../../../core/network/api_client.dart';
+
 import '../../domain/entities/paquete_foto.dart';
 import '../models/paquete_dto.dart';
+import '../models/unidad_dto.dart';
 
 class PaqueteriaRemoteDataSource {
-  const PaqueteriaRemoteDataSource(this._dio);
+  const PaqueteriaRemoteDataSource(this._client);
 
-  final Dio _dio;
+  final ApiClient _client;
 
-  Future<List<Map<String, dynamic>>> unidades() async {
-    final response = await _dio.get<Map<String, dynamic>>(
+  Future<List<UnidadDto>> unidades() async {
+    final response = await _client.get<Map<String, dynamic>>(
       '/api/paqueteria/unidades',
     );
     final data = response.data ?? const <String, dynamic>{};
     return (data['unidades'] as List<dynamic>? ?? const [])
-        .map((e) => e as Map<String, dynamic>)
+        .map((e) => UnidadDto.fromJson(e as Map<String, dynamic>))
         .toList();
   }
 
   Future<List<PaqueteDto>> listar() async {
-    final response = await _dio.get<Map<String, dynamic>>('/api/paqueteria');
+    final response = await _client.get<Map<String, dynamic>>('/api/paqueteria');
     final data = response.data ?? const <String, dynamic>{};
     final lista = (data['paquetes'] as List<dynamic>? ?? const [])
         .map((e) => PaqueteDto.fromJson(e as Map<String, dynamic>))
@@ -55,7 +58,7 @@ class PaqueteriaRemoteDataSource {
       );
     }
 
-    final response = await _dio.post<Map<String, dynamic>>(
+    final response = await _client.post<Map<String, dynamic>>(
       '/api/paqueteria',
       data: form,
     );
@@ -90,7 +93,7 @@ class PaqueteriaRemoteDataSource {
       );
     }
 
-    final response = await _dio.put<Map<String, dynamic>>(
+    final response = await _client.put<Map<String, dynamic>>(
       '/api/paqueteria/$id',
       data: form,
     );
@@ -98,7 +101,7 @@ class PaqueteriaRemoteDataSource {
   }
 
   Future<PaqueteDto> marcarRetirado(String id, String retiradoPorNombre) async {
-    final response = await _dio.patch<Map<String, dynamic>>(
+    final response = await _client.patch<Map<String, dynamic>>(
       '/api/paqueteria/$id/retirar',
       data: {'retirado_por_nombre': retiradoPorNombre},
     );

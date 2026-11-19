@@ -1,4 +1,4 @@
-import 'package:dio/dio.dart';
+import '../../../../core/errors/api_exception.dart';
 import 'package:fpdart/fpdart.dart';
 
 import '../../../../core/errors/failures.dart';
@@ -16,11 +16,11 @@ class ResidenteRepositoryImpl implements ResidenteRepositoryInterface {
     try {
       final dto = await _remoteDataSource.miInformacion();
       return Right(dto.toEntity());
-    } on DioException catch (error) {
-      if (error.response?.statusCode == 404) {
+    } on ApiException catch (error) {
+      if (error.statusCode == 404) {
         return const Left(ServerFailure('No tienes una unidad asignada.'));
       }
-      if (error.response?.statusCode == 403) {
+      if (error.statusCode == 403) {
         return const Left(ServerFailure('No tienes permisos.'));
       }
       return const Left(ServerFailure());

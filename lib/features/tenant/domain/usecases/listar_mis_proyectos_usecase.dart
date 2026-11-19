@@ -1,8 +1,8 @@
 import 'package:fpdart/fpdart.dart';
 
 import '../../../../core/errors/failures.dart';
-import '../entities/proyecto_detalle.dart';
-import '../repositories/superadmin_repository.dart';
+import '../../../superadmin/domain/entities/proyecto_detalle.dart';
+import '../../../superadmin/domain/repositories/superadmin_repository.dart';
 
 class ListarMisProyectosUseCase {
   final SuperadminRepositoryInterface _repository;

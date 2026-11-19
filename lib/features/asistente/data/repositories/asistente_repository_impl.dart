@@ -1,4 +1,4 @@
-import 'package:dio/dio.dart';
+import '../../../../core/errors/api_exception.dart';
 import 'package:fpdart/fpdart.dart';
 
 import '../../../../core/errors/failures.dart';
@@ -16,9 +16,9 @@ class AsistenteRepositoryImpl implements AsistenteRepositoryInterface {
     try {
       final dto = await _remoteDataSource.consultar(pregunta);
       return Right(dto.toEntity());
-    } on DioException catch (error) {
-      final statusCode = error.response?.statusCode;
-      final data = error.response?.data;
+    } on ApiException catch (error) {
+      final statusCode = error.statusCode;
+      final data = error.data;
       final mensaje = data is Map<String, dynamic> && data['message'] is String
           ? data['message'] as String
           : null;

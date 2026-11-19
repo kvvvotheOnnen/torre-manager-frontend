@@ -1,15 +1,15 @@
-import 'package:dio/dio.dart';
+import '../../../../core/network/api_client.dart';
 
 import '../../../../core/config/app_config.dart';
 import '../models/modulo_dashboard_dto.dart';
 
 class DashboardRemoteDataSource {
-  const DashboardRemoteDataSource(this._dio);
+  const DashboardRemoteDataSource(this._client);
 
-  final Dio _dio;
+  final ApiClient _client;
 
   Future<List<ModuloDashboardDTO>> listarModulos() async {
-    final response = await _dio.get<Map<String, dynamic>>(
+    final response = await _client.get<Map<String, dynamic>>(
       AppConfig.dashboardModulosPath,
     );
 

@@ -1,4 +1,4 @@
-import 'package:dio/dio.dart';
+import '../../../../core/errors/api_exception.dart';
 import 'package:fpdart/fpdart.dart';
 
 import '../../../../core/errors/failures.dart';
@@ -19,9 +19,9 @@ class FuncionesDashboardRepositoryImpl implements FuncionesDashboardRepository {
       final dtos = await _dataSource.listar();
 
       return Right(dtos.map((dto) => dto.toEntity()).toList());
-    } on DioException catch (error) {
-      final statusCode = error.response?.statusCode;
-      final data = error.response?.data;
+    } on ApiException catch (error) {
+      final statusCode = error.statusCode;
+      final data = error.data;
 
       if ((statusCode == 404 || statusCode == 422) &&
           data is Map<String, dynamic> &&

@@ -81,22 +81,17 @@ class InstalacionExtraDTO {
     required this.nombre,
     required this.capacidad,
     this.descripcion,
-    this.atributos = const {},
   });
 
   final String nombre;
   final int capacidad;
   final String? descripcion;
-  final Map<String, dynamic> atributos;
 
   factory InstalacionExtraDTO.fromJson(Map<String, dynamic> json) {
-    final atributos = json['atributos'];
-
     return InstalacionExtraDTO(
       nombre: (json['nombre'] ?? '') as String,
       capacidad: (json['capacidad'] ?? 0) as int,
       descripcion: json['descripcion'] as String?,
-      atributos: atributos is Map<String, dynamic> ? atributos : const {},
     );
   }
 
@@ -105,7 +100,6 @@ class InstalacionExtraDTO {
       nombre: nombre,
       capacidad: capacidad,
       descripcion: descripcion,
-      atributos: atributos,
     );
   }
 }

@@ -1,15 +1,15 @@
 import 'dart:async';
 
-import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:torre_manager_frontend/core/errors/failures.dart';
-import 'package:torre_manager_frontend/features/paqueteria/data/datasources/paqueteria_remote_data_source.dart';
 import 'package:torre_manager_frontend/features/paqueteria/domain/entities/paquete.dart';
 import 'package:torre_manager_frontend/features/paqueteria/domain/entities/paquete_foto.dart';
+import 'package:torre_manager_frontend/features/paqueteria/domain/entities/unidad_gestionable.dart';
 import 'package:torre_manager_frontend/features/paqueteria/domain/repositories/paqueteria_repository.dart';
 import 'package:torre_manager_frontend/features/paqueteria/domain/usecases/actualizar_paquete_usecase.dart';
 import 'package:torre_manager_frontend/features/paqueteria/domain/usecases/listar_paquetes_usecase.dart';
+import 'package:torre_manager_frontend/features/paqueteria/domain/usecases/listar_unidades_usecase.dart';
 import 'package:torre_manager_frontend/features/paqueteria/domain/usecases/marcar_paquete_retirado_usecase.dart';
 import 'package:torre_manager_frontend/features/paqueteria/domain/usecases/registrar_paquete_usecase.dart';
 import 'package:torre_manager_frontend/features/paqueteria/presentation/bloc/paqueteria_bloc.dart';
@@ -24,7 +24,7 @@ void main() {
         registrarUseCase: RegistrarPaqueteUseCase(repo),
         marcarRetiradoUseCase: MarcarPaqueteRetiradoUseCase(repo),
         actualizarUseCase: ActualizarPaqueteUseCase(repo),
-        remoteDataSource: PaqueteriaRemoteDataSource(Dio()),
+        listarUnidadesUseCase: ListarUnidadesUseCase(repo),
       );
       addTearDown(bloc.close);
 
@@ -63,6 +63,11 @@ class _RepositorioConRespuestaTardia implements PaqueteriaRepositoryInterface {
     _llamadas++;
     if (_llamadas == 1) return Future.value(Right([_paquete('viejo')]));
     return respuestaTardia.future;
+  }
+
+  @override
+  Future<Either<Failure, List<UnidadGestionable>>> listarUnidades() {
+    return Future.value(const Right([]));
   }
 
   @override

@@ -1,15 +1,17 @@
 import 'package:dio/dio.dart';
 
+import '../../../../core/network/api_client.dart';
+
 import '../../../../core/config/app_config.dart';
 import '../models/documento_asistente_dto.dart';
 
 class AsistenteAdminRemoteDataSource {
-  const AsistenteAdminRemoteDataSource(this._dio);
+  const AsistenteAdminRemoteDataSource(this._client);
 
-  final Dio _dio;
+  final ApiClient _client;
 
   Future<DocumentoAsistenteDto?> obtenerDocumento() async {
-    final response = await _dio.get<Map<String, dynamic>>(
+    final response = await _client.get<Map<String, dynamic>>(
       AppConfig.asistenteAdminDocumentoPath,
     );
 
@@ -33,7 +35,7 @@ class AsistenteAdminRemoteDataSource {
       ),
     });
 
-    final response = await _dio.post<Map<String, dynamic>>(
+    final response = await _client.post<Map<String, dynamic>>(
       AppConfig.asistenteAdminDocumentoPath,
       data: formData,
     );
@@ -45,6 +47,6 @@ class AsistenteAdminRemoteDataSource {
   }
 
   Future<void> eliminarDocumento() async {
-    await _dio.delete<dynamic>(AppConfig.asistenteAdminDocumentoPath);
+    await _client.delete<dynamic>(AppConfig.asistenteAdminDocumentoPath);
   }
 }

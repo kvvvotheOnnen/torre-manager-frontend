@@ -7,6 +7,7 @@ import '../../../../core/router/funcion_rutas.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/design_tokens.dart';
 import '../../../../core/widgets/app_shell.dart';
+import '../../../../core/widgets/empty_state.dart';
 import '../../../../core/widgets/module_card.dart';
 import '../../../../core/widgets/section_header.dart';
 import '../../../../core/widgets/status_pill.dart';
@@ -18,61 +19,10 @@ import '../bloc/funciones_dashboard_bloc.dart';
 import '../widgets/icono_funcion.dart';
 import 'modulo_proximamente_screen.dart';
 
-/// Módulo preventivo del conserje (no viene del backend todavía).
-class _ModuloConserje {
-  const _ModuloConserje({
-    required this.id,
-    required this.titulo,
-    required this.descripcion,
-    required this.icono,
-    required this.ruta,
-  });
-
-  final String id;
-  final String titulo;
-  final String descripcion;
-  final IconData icono;
-  final String ruta;
-}
-
-const _modulosConserje = <_ModuloConserje>[
-  _ModuloConserje(
-    id: 'solicitudes_residente',
-    titulo: 'Gestión de residentes',
-    descripcion: 'Aprueba o rechaza solicitudes de nuevos residentes',
-    icono: Icons.how_to_reg_outlined,
-    ruta: AppRoutes.solicitudesResidente,
-  ),
-  _ModuloConserje(
-    id: 'paqueteria',
-    titulo: 'Paquetería',
-    descripcion: 'Avisos y retiro de paquetes',
-    icono: Icons.inventory_2_outlined,
-    ruta: AppRoutes.paqueteriaGestion,
-  ),
-  _ModuloConserje(
-    id: 'control_acceso',
-    titulo: 'Control de acceso',
-    descripcion: 'Visitantes que entraron y accesos de personas de confianza',
-    icono: Icons.badge_outlined,
-    ruta: '/admin/modulos/control_acceso',
-  ),
-  _ModuloConserje(
-    id: 'alertas_noticias',
-    titulo: 'Alertas y noticias',
-    descripcion: 'Comunicados a la comunidad',
-    icono: Icons.campaign_outlined,
-    ruta: '/admin/modulos/alertas_noticias',
-  ),
-  _ModuloConserje(
-    id: 'instalaciones_extra',
-    titulo: 'Reserva de espacios comunes',
-    descripcion: 'Reserva de espacios comunes',
-    icono: Icons.event_available_outlined,
-    ruta: '/admin/modulos/instalaciones_extra',
-  ),
-];
-
+/// Dashboard del conserje.
+///
+/// Las tarjetas se componen exclusivamente desde `GET /api/dashboard/funciones`;
+/// no hay listas de módulos hardcodeadas por rol.
 class ConserjeDashboardScreen extends StatefulWidget {
   const ConserjeDashboardScreen({super.key, required this.usuario});
 
@@ -90,16 +40,6 @@ class _ConserjeDashboardScreenState extends State<ConserjeDashboardScreen> {
     context.read<FuncionesDashboardBloc>().add(const FuncionesSolicitadas());
   }
 
-  void _abrirModulo(_ModuloConserje modulo) {
-    context.push(
-      modulo.ruta,
-      extra: ProximamenteArgs(
-        titulo: modulo.titulo,
-        descripcion: modulo.descripcion,
-      ),
-    );
-  }
-
   void _notificaciones() {
     context.push(
       AppRoutes.adminModulo('notificaciones'),
@@ -114,32 +54,21 @@ class _ConserjeDashboardScreenState extends State<ConserjeDashboardScreen> {
   Widget build(BuildContext context) {
     final location = GoRouterState.of(context).matchedLocation;
     final funciones = context.watch<FuncionesDashboardBloc>().state.funciones;
-    final idsFijos = _modulosConserje.map((modulo) => modulo.id).toSet();
-    final funcionesNuevas = funciones
-        .where((funcion) => !idsFijos.contains(funcion.id))
-        .toList();
+
     final sections = [
       AppNavSection(
         title: 'Módulos',
         subtitle: 'Herramientas de conserjería',
-        items: [
-          ..._modulosConserje.map(
-            (modulo) => AppNavItem(
-              label: modulo.titulo,
-              icon: modulo.icono,
-              selected: location == modulo.ruta,
-              onTap: () => _abrirModulo(modulo),
-            ),
-          ),
-          ...funcionesNuevas.map(
-            (funcion) => AppNavItem(
-              label: funcion.titulo,
-              icon: iconoDeFuncion(funcion.icono),
-              selected: location == funcion.ruta,
-              onTap: () => abrirFuncionDashboard(context, funcion),
-            ),
-          ),
-        ],
+        items: funciones
+            .map(
+              (funcion) => AppNavItem(
+                label: funcion.titulo,
+                icon: iconoDeFuncion(funcion.icono),
+                selected: location == funcion.ruta,
+                onTap: () => abrirFuncionDashboard(context, funcion),
+              ),
+            )
+            .toList(),
       ),
     ];
 
@@ -178,8 +107,8 @@ class _ContenidoConserje extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final funciones = context.watch<FuncionesDashboardBloc>().state.funciones;
-    final total = _modulosConserje.length + funciones.length;
+    final state = context.watch<FuncionesDashboardBloc>().state;
+    final funciones = state.funciones;
 
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -212,53 +141,58 @@ class _ContenidoConserje extends StatelessWidget {
                     title: 'Operación diaria',
                     subtitle: 'Accesos rápidos de conserjería',
                     trailing: StatusPill(
-                      label: '$total módulos',
+                      label: '${funciones.length} módulos',
                       color: context.palette.primary,
                       compact: true,
                     ),
                   ),
                   const SizedBox(height: AppSpacing.sm),
-                  GridView.builder(
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    itemCount: total,
-                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: columnas,
-                      mainAxisSpacing: AppSpacing.md,
-                      crossAxisSpacing: AppSpacing.md,
-                      mainAxisExtent: 196,
-                    ),
-                    itemBuilder: (context, index) {
-                      if (index >= _modulosConserje.length) {
-                        final funcion = funciones[index - _modulosConserje.length];
+                  if (state.cargando && funciones.isEmpty)
+                    const Padding(
+                      padding: EdgeInsets.all(AppSpacing.xl),
+                      child: Center(child: CircularProgressIndicator()),
+                    )
+                  else if (state.tieneError && funciones.isEmpty)
+                    AppEmptyState(
+                      icon: Icons.cloud_off_rounded,
+                      title: 'No pudimos cargar tus módulos',
+                      message:
+                          state.mensaje ??
+                          'Revisa tu conexión e inténtalo de nuevo.',
+                      actionLabel: 'Reintentar',
+                      onAction: () => context.read<FuncionesDashboardBloc>().add(
+                        const FuncionesRefrescadas(),
+                      ),
+                    )
+                  else if (funciones.isEmpty)
+                    const AppEmptyState(
+                      icon: Icons.widgets_outlined,
+                      title: 'Aún no tienes módulos disponibles',
+                    )
+                  else
+                    GridView.builder(
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      itemCount: funciones.length,
+                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: columnas,
+                        mainAxisSpacing: AppSpacing.md,
+                        crossAxisSpacing: AppSpacing.md,
+                        mainAxisExtent: 196,
+                      ),
+                      itemBuilder: (context, index) {
+                        final funcion = funciones[index];
                         return ModuleCard(
                           title: funcion.titulo,
                           description: funcion.descripcion,
                           icon: iconoDeFuncion(funcion.icono),
                           onTap: () => abrirFuncionDashboard(context, funcion),
                         );
-                      }
-
-                      final modulo = _modulosConserje[index];
-                      return ModuleCard(
-                        title: modulo.titulo,
-                        description: modulo.descripcion,
-                        icon: modulo.icono,
-                        onTap: () {
-                          context.push(
-                            modulo.ruta,
-                            extra: ProximamenteArgs(
-                              titulo: modulo.titulo,
-                              descripcion: modulo.descripcion,
-                            ),
-                          );
-                        },
-                      );
-                    },
-                  ),
+                      },
+                    ),
                   const SizedBox(height: AppSpacing.lg),
                   Text(
-                    'Estos módulos estarán conectados a la operación del recinto.',
+                    'Cada módulo aparece según los permisos y la configuración del recinto.',
                     textAlign: TextAlign.center,
                     style: theme.textTheme.bodySmall?.copyWith(
                       color: context.palette.inkMuted,

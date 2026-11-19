@@ -3,11 +3,12 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../domain/entities/paquete.dart';
 import '../../domain/entities/paquete_foto.dart';
+import '../../domain/entities/unidad_gestionable.dart';
 import '../../domain/usecases/actualizar_paquete_usecase.dart';
 import '../../domain/usecases/listar_paquetes_usecase.dart';
+import '../../domain/usecases/listar_unidades_usecase.dart';
 import '../../domain/usecases/marcar_paquete_retirado_usecase.dart';
 import '../../domain/usecases/registrar_paquete_usecase.dart';
-import '../../data/datasources/paqueteria_remote_data_source.dart';
 
 sealed class PaqueteriaEvent extends Equatable {
   const PaqueteriaEvent();
@@ -93,7 +94,7 @@ class PaqueteriaState extends Equatable {
 
   final PaqueteriaStatus status;
   final List<Paquete> paquetes;
-  final List<Map<String, dynamic>> unidades;
+  final List<UnidadGestionable> unidades;
   final String? mensaje;
   final String? errorUnidades;
 
@@ -119,7 +120,7 @@ class PaqueteriaBloc extends Bloc<PaqueteriaEvent, PaqueteriaState> {
     required this.registrarUseCase,
     required this.marcarRetiradoUseCase,
     required this.actualizarUseCase,
-    required this.remoteDataSource,
+    required this.listarUnidadesUseCase,
   }) : super(const PaqueteriaState()) {
     on<PaqueteriaSolicitada>(_onSolicitada);
     on<PaqueteriaLimpiada>(_onLimpiada);
@@ -133,7 +134,7 @@ class PaqueteriaBloc extends Bloc<PaqueteriaEvent, PaqueteriaState> {
   final RegistrarPaqueteUseCase registrarUseCase;
   final MarcarPaqueteRetiradoUseCase marcarRetiradoUseCase;
   final ActualizarPaqueteUseCase actualizarUseCase;
-  final PaqueteriaRemoteDataSource remoteDataSource;
+  final ListarUnidadesUseCase listarUnidadesUseCase;
   int _identityVersion = 0;
 
   void _onLimpiada(PaqueteriaLimpiada event, Emitter<PaqueteriaState> emit) {
@@ -177,10 +178,19 @@ class PaqueteriaBloc extends Bloc<PaqueteriaEvent, PaqueteriaState> {
     Emitter<PaqueteriaState> emit,
   ) async {
     final identityVersion = _identityVersion;
-    try {
-      final unidades = await remoteDataSource.unidades();
-      if (identityVersion != _identityVersion) return;
-      emit(
+    final result = await listarUnidadesUseCase();
+    if (identityVersion != _identityVersion) return;
+    result.fold(
+      (failure) => emit(
+        PaqueteriaState(
+          status: state.status,
+          paquetes: state.paquetes,
+          unidades: state.unidades,
+          mensaje: state.mensaje,
+          errorUnidades: failure.message,
+        ),
+      ),
+      (unidades) => emit(
         PaqueteriaState(
           status: state.status,
           paquetes: state.paquetes,
@@ -188,19 +198,8 @@ class PaqueteriaBloc extends Bloc<PaqueteriaEvent, PaqueteriaState> {
           mensaje: state.mensaje,
           errorUnidades: null,
         ),
-      );
-    } catch (e) {
-      if (identityVersion != _identityVersion) return;
-      emit(
-        PaqueteriaState(
-          status: state.status,
-          paquetes: state.paquetes,
-          unidades: state.unidades,
-          mensaje: state.mensaje,
-          errorUnidades: 'Error: $e',
-        ),
-      );
-    }
+      ),
+    );
   }
 
   Future<void> _onRegistrado(

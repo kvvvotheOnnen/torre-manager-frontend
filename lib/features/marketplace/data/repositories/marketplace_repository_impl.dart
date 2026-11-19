@@ -1,4 +1,4 @@
-import 'package:dio/dio.dart';
+import '../../../../core/errors/api_exception.dart';
 import 'package:fpdart/fpdart.dart';
 
 import '../../../../core/errors/failures.dart';
@@ -23,7 +23,7 @@ class MarketplaceRepositoryImpl implements MarketplaceRepositoryInterface {
     try {
       final dtos = await _remoteDataSource.listar(todas: todas, estado: estado);
       return Right(dtos.map((dto) => dto.toEntity()).toList());
-    } on DioException catch (error) {
+    } on ApiException catch (error) {
       return Left(_failureDesde(error));
     } on FormatException {
       return const Left(ServerFailure('Respuesta inesperada del servidor.'));
@@ -38,7 +38,7 @@ class MarketplaceRepositoryImpl implements MarketplaceRepositoryInterface {
     try {
       final dtos = await _remoteDataSource.misPublicaciones();
       return Right(dtos.map((dto) => dto.toEntity()).toList());
-    } on DioException catch (error) {
+    } on ApiException catch (error) {
       return Left(_failureDesde(error));
     } on FormatException {
       return const Left(ServerFailure('Respuesta inesperada del servidor.'));
@@ -52,7 +52,7 @@ class MarketplaceRepositoryImpl implements MarketplaceRepositoryInterface {
     try {
       final dtos = await _remoteDataSource.historial();
       return Right(dtos.map((dto) => dto.toEntity()).toList());
-    } on DioException catch (error) {
+    } on ApiException catch (error) {
       return Left(_failureDesde(error));
     } on FormatException {
       return const Left(ServerFailure('Respuesta inesperada del servidor.'));
@@ -66,7 +66,7 @@ class MarketplaceRepositoryImpl implements MarketplaceRepositoryInterface {
     try {
       final dtos = await _remoteDataSource.favoritos();
       return Right(dtos.map((dto) => dto.toEntity()).toList());
-    } on DioException catch (error) {
+    } on ApiException catch (error) {
       return Left(_failureDesde(error));
     } on FormatException {
       return const Left(ServerFailure('Respuesta inesperada del servidor.'));
@@ -94,7 +94,7 @@ class MarketplaceRepositoryImpl implements MarketplaceRepositoryInterface {
         foto: foto,
       );
       return Right(dto.toEntity());
-    } on DioException catch (error) {
+    } on ApiException catch (error) {
       return Left(_failureDesde(error));
     } on FormatException {
       return const Left(ServerFailure('Respuesta inesperada del servidor.'));
@@ -124,7 +124,7 @@ class MarketplaceRepositoryImpl implements MarketplaceRepositoryInterface {
         foto: foto,
       );
       return Right(dto.toEntity());
-    } on DioException catch (error) {
+    } on ApiException catch (error) {
       return Left(_failureDesde(error));
     } on FormatException {
       return const Left(ServerFailure('Respuesta inesperada del servidor.'));
@@ -138,7 +138,7 @@ class MarketplaceRepositoryImpl implements MarketplaceRepositoryInterface {
     try {
       final dto = await _remoteDataSource.retirar(id);
       return Right(dto.toEntity());
-    } on DioException catch (error) {
+    } on ApiException catch (error) {
       return Left(_failureDesde(error));
     } on FormatException {
       return const Left(ServerFailure('Respuesta inesperada del servidor.'));
@@ -152,7 +152,7 @@ class MarketplaceRepositoryImpl implements MarketplaceRepositoryInterface {
     try {
       final dto = await _remoteDataSource.vender(id);
       return Right(dto.toEntity());
-    } on DioException catch (error) {
+    } on ApiException catch (error) {
       return Left(_failureDesde(error));
     } on FormatException {
       return const Left(ServerFailure('Respuesta inesperada del servidor.'));
@@ -169,7 +169,7 @@ class MarketplaceRepositoryImpl implements MarketplaceRepositoryInterface {
     try {
       await _remoteDataSource.eliminar(id: id, motivo: motivo);
       return const Right(true);
-    } on DioException catch (error) {
+    } on ApiException catch (error) {
       return Left(_failureDesde(error));
     } on FormatException {
       return const Left(ServerFailure('Respuesta inesperada del servidor.'));
@@ -189,7 +189,7 @@ class MarketplaceRepositoryImpl implements MarketplaceRepositoryInterface {
         favorito: favorito,
       );
       return Right(esFavorita);
-    } on DioException catch (error) {
+    } on ApiException catch (error) {
       return Left(_failureDesde(error));
     } on FormatException {
       return const Left(ServerFailure('Respuesta inesperada del servidor.'));
@@ -198,9 +198,9 @@ class MarketplaceRepositoryImpl implements MarketplaceRepositoryInterface {
     }
   }
 
-  Failure _failureDesde(DioException error) {
-    final statusCode = error.response?.statusCode;
-    final data = error.response?.data;
+  Failure _failureDesde(ApiException error) {
+    final statusCode = error.statusCode;
+    final data = error.data;
 
     if (statusCode == 401) {
       return const AuthenticationFailure();

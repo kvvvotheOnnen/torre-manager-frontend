@@ -54,8 +54,11 @@ El sistema distingue dos tipos de módulos y no deben mezclarse:
 - No agregar módulos globales a `ModuloSistema`.
 - El catálogo canónico se expone desde backend mediante `GET /api/dashboard/modulos`; el frontend no debe hardcodear la lista.
 - El dashboard muestra siempre los módulos globales definidos en el catálogo, habilitados salvo que el superadmin los haya deshabilitado para el proyecto activo, y muestra los configurables habilitados o bloqueados según el proyecto activo.
-- Ocultar o bloquear un módulo en el frontend no es un control de seguridad. Todo endpoint de un módulo configurable debe validar en backend que el módulo esté habilitado para el proyecto activo.
-- Los módulos globales no requieren validación de habilitación por proyecto.
+- Ocultar o bloquear un módulo en el frontend no es un control de seguridad. Todo endpoint de un módulo, global o configurable, debe validar en backend que el módulo esté habilitado para el proyecto activo.
+- La verificación se resuelve con el contrato `Features\Dashboard\Domain\Contracts\VerificadorModulo`. Por defecto es automática en el middleware `puede:<capacidad>`: el mapa capacidad→módulo vive en `config/modulos.php`. Para rutas sin capacidad se usa el middleware `modulo:<id>`.
+- El superadmin está exento de la verificación de estado de módulo; su autorización se resuelve por capacidades (comodín `*`).
+- Un módulo nuevo debe declarar sus capacidades en `config/capacidades.php` y su relación capacidad→módulo en `config/modulos.php`; así queda protegido en API para todos sus endpoints sin cambios adicionales en rutas.
+- La verificación debe ser fail-safe: un identificador de módulo desconocido o un proyecto inaccesible se deniegan.
 - La gestión de infraestructura es una capacidad exclusiva de superadmin. No debe incluirse en el catálogo ni en el dashboard de administrador, y todos sus endpoints deben exigir el rol `superadmin` en backend.
 - Los módulos de operación administrativa (paquetería, instalaciones extra, gastos comunes, control de acceso y afines) se definen en `ModuloGeneral`; no se agregan a `ModuloSistema` ni se persisten por proyecto.
 

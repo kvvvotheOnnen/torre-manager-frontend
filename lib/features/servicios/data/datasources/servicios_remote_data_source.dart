@@ -1,20 +1,22 @@
 import 'package:dio/dio.dart';
 
+import '../../../../core/network/api_client.dart';
+
 import '../../../../core/config/app_config.dart';
 import '../../domain/entities/tipo_servicio.dart';
 import '../../domain/entities/trabajador_servicio_foto.dart';
 import '../models/trabajador_servicio_dto.dart';
 
 class ServiciosRemoteDataSource {
-  const ServiciosRemoteDataSource(this._dio);
+  const ServiciosRemoteDataSource(this._client);
 
-  final Dio _dio;
+  final ApiClient _client;
 
   Future<List<TrabajadorServicioDto>> listar({
     TipoServicio? tipo,
     String? buscar,
   }) async {
-    final response = await _dio.get<Map<String, dynamic>>(
+    final response = await _client.get<Map<String, dynamic>>(
       AppConfig.serviciosPath,
       queryParameters: {
         if (tipo != null) 'tipo': tipo.valor,
@@ -42,7 +44,7 @@ class ServiciosRemoteDataSource {
     String? descripcion,
     TrabajadorServicioFoto? foto,
   }) async {
-    final response = await _dio.post<Map<String, dynamic>>(
+    final response = await _client.post<Map<String, dynamic>>(
       AppConfig.serviciosPath,
       data: _formulario(
         nombre: nombre,
@@ -65,7 +67,7 @@ class ServiciosRemoteDataSource {
     String? descripcion,
     TrabajadorServicioFoto? foto,
   }) async {
-    final response = await _dio.put<Map<String, dynamic>>(
+    final response = await _client.put<Map<String, dynamic>>(
       AppConfig.servicioPath(id),
       data: _formulario(
         nombre: nombre,
@@ -80,7 +82,7 @@ class ServiciosRemoteDataSource {
   }
 
   Future<void> eliminar(String id) async {
-    await _dio.delete<void>(AppConfig.servicioPath(id));
+    await _client.delete<void>(AppConfig.servicioPath(id));
   }
 
   TrabajadorServicioDto _leerTrabajador(Map<String, dynamic>? data) {

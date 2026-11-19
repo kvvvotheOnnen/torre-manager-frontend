@@ -7,6 +7,7 @@ import '../../../../core/router/funcion_rutas.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/design_tokens.dart';
 import '../../../../core/widgets/app_shell.dart';
+import '../../../../core/widgets/empty_state.dart';
 import '../../../../core/widgets/module_card.dart';
 import '../../../../core/widgets/section_header.dart';
 import '../../../../core/widgets/status_pill.dart';
@@ -18,74 +19,11 @@ import '../bloc/funciones_dashboard_bloc.dart';
 import '../widgets/icono_funcion.dart';
 import 'modulo_proximamente_screen.dart';
 
-/// Módulo preventivo del residente (no viene del backend todavía).
-class _ModuloResidente {
-  const _ModuloResidente({
-    required this.id,
-    required this.titulo,
-    required this.descripcion,
-    required this.icono,
-    required this.ruta,
-    this.preventivo = true,
-  });
-
-  final String id;
-  final String titulo;
-  final String descripcion;
-  final IconData icono;
-  final String ruta;
-  final bool preventivo;
-}
-
-const _modulosResidente = <_ModuloResidente>[
-  _ModuloResidente(
-    id: 'mi_informacion',
-    titulo: 'Mi información',
-    descripcion:
-        'Consulta la información que ya es del residente y asignaciones de servicio',
-    icono: Icons.home_outlined,
-    ruta: '/residente/mi-informacion',
-    preventivo: false,
-  ),
-  _ModuloResidente(
-    id: 'ia',
-    titulo: 'IA',
-    descripcion: 'Consultas sobre el reglamento de infraestructura del edificio',
-    icono: Icons.star,
-    ruta: '/residente/ia',
-    preventivo: false,
-  ),
-  _ModuloResidente(
-    id: 'paqueteria',
-    titulo: 'Paquetería',
-    descripcion: 'Avisos y retiro de paquetes',
-    icono: Icons.inventory_2_outlined,
-    ruta: AppRoutes.paqueteria,
-    preventivo: false,
-  ),
-  _ModuloResidente(
-    id: 'quincho',
-    titulo: 'Quincho',
-    descripcion: 'Reserva de espacios comunes',
-    icono: Icons.event_available_outlined,
-    ruta: '/admin/modulos/quincho',
-  ),
-  _ModuloResidente(
-    id: 'gastos_comunes',
-    titulo: 'Gastos comunes',
-    descripcion: 'Consulta y pago de gastos comunes',
-    icono: Icons.receipt_long_outlined,
-    ruta: '/admin/modulos/gastos_comunes',
-  ),
-  _ModuloResidente(
-    id: 'control_acceso',
-    titulo: 'Control de acceso',
-    descripcion: 'Visitantes que entraron y accesos de personas de confianza',
-    icono: Icons.badge_outlined,
-    ruta: '/admin/modulos/control_acceso',
-  ),
-];
-
+/// Dashboard del residente/propietario.
+///
+/// Las tarjetas se componen exclusivamente desde `GET /api/dashboard/funciones`.
+/// El backend ya filtró por capacidad y por módulo habilitado del proyecto; el
+/// cliente no mantiene listas de módulos por rol.
 class ResidentDashboardScreen extends StatefulWidget {
   const ResidentDashboardScreen({super.key, required this.usuario});
 
@@ -105,20 +43,6 @@ class _ResidentDashboardScreenState extends State<ResidentDashboardScreen> {
     context.read<FuncionesDashboardBloc>().add(const FuncionesSolicitadas());
   }
 
-  void _abrirModulo(_ModuloResidente modulo) {
-    if (modulo.preventivo) {
-      context.push(
-        modulo.ruta,
-        extra: ProximamenteArgs(
-          titulo: modulo.titulo,
-          descripcion: modulo.descripcion,
-        ),
-      );
-    } else {
-      context.push(modulo.ruta);
-    }
-  }
-
   void _notificaciones() {
     context.push(
       AppRoutes.adminModulo('notificaciones'),
@@ -133,32 +57,21 @@ class _ResidentDashboardScreenState extends State<ResidentDashboardScreen> {
   Widget build(BuildContext context) {
     final location = GoRouterState.of(context).matchedLocation;
     final funciones = context.watch<FuncionesDashboardBloc>().state.funciones;
-    final idsFijos = _modulosResidente.map((modulo) => modulo.id).toSet();
-    final funcionesNuevas = funciones
-        .where((funcion) => !idsFijos.contains(funcion.id))
-        .toList();
+
     final sections = [
       AppNavSection(
         title: 'Módulos',
         subtitle: 'Todo lo que necesitas de tu comunidad',
-        items: [
-          ..._modulosResidente.map(
-            (modulo) => AppNavItem(
-              label: modulo.titulo,
-              icon: modulo.icono,
-              selected: location == modulo.ruta,
-              onTap: () => _abrirModulo(modulo),
-            ),
-          ),
-          ...funcionesNuevas.map(
-            (funcion) => AppNavItem(
-              label: funcion.titulo,
-              icon: iconoDeFuncion(funcion.icono),
-              selected: location == funcion.ruta,
-              onTap: () => abrirFuncionDashboard(context, funcion),
-            ),
-          ),
-        ],
+        items: funciones
+            .map(
+              (funcion) => AppNavItem(
+                label: funcion.titulo,
+                icon: iconoDeFuncion(funcion.icono),
+                selected: location == funcion.ruta,
+                onTap: () => abrirFuncionDashboard(context, funcion),
+              ),
+            )
+            .toList(),
       ),
     ];
 
@@ -198,8 +111,8 @@ class _ContenidoResidente extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final funciones = context.watch<FuncionesDashboardBloc>().state.funciones;
-    final total = _modulosResidente.length + funciones.length;
+    final state = context.watch<FuncionesDashboardBloc>().state;
+    final funciones = state.funciones;
 
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -232,57 +145,58 @@ class _ContenidoResidente extends StatelessWidget {
                     title: 'Tu comunidad',
                     subtitle: 'Servicios disponibles para ti',
                     trailing: StatusPill(
-                      label: '$total módulos',
+                      label: '${funciones.length} módulos',
                       color: context.palette.primary,
                       compact: true,
                     ),
                   ),
                   const SizedBox(height: AppSpacing.sm),
-                  GridView.builder(
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    itemCount: total,
-                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: columnas,
-                      mainAxisSpacing: AppSpacing.md,
-                      crossAxisSpacing: AppSpacing.md,
-                      mainAxisExtent: 196,
-                    ),
-                    itemBuilder: (context, index) {
-                      if (index >= _modulosResidente.length) {
-                        final funcion = funciones[index - _modulosResidente.length];
+                  if (state.cargando && funciones.isEmpty)
+                    const Padding(
+                      padding: EdgeInsets.all(AppSpacing.xl),
+                      child: Center(child: CircularProgressIndicator()),
+                    )
+                  else if (state.tieneError && funciones.isEmpty)
+                    AppEmptyState(
+                      icon: Icons.cloud_off_rounded,
+                      title: 'No pudimos cargar tus módulos',
+                      message:
+                          state.mensaje ??
+                          'Revisa tu conexión e inténtalo de nuevo.',
+                      actionLabel: 'Reintentar',
+                      onAction: () => context.read<FuncionesDashboardBloc>().add(
+                        const FuncionesRefrescadas(),
+                      ),
+                    )
+                  else if (funciones.isEmpty)
+                    const AppEmptyState(
+                      icon: Icons.widgets_outlined,
+                      title: 'Aún no tienes módulos disponibles',
+                    )
+                  else
+                    GridView.builder(
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      itemCount: funciones.length,
+                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: columnas,
+                        mainAxisSpacing: AppSpacing.md,
+                        crossAxisSpacing: AppSpacing.md,
+                        mainAxisExtent: 196,
+                      ),
+                      itemBuilder: (context, index) {
+                        final funcion = funciones[index];
                         return ModuleCard(
                           title: funcion.titulo,
                           description: funcion.descripcion,
                           icon: iconoDeFuncion(funcion.icono),
                           onTap: () => abrirFuncionDashboard(context, funcion),
                         );
-                      }
-
-                      final modulo = _modulosResidente[index];
-                      return ModuleCard(
-                        title: modulo.titulo,
-                        description: modulo.descripcion,
-                        icon: modulo.icono,
-                        onTap: () {
-                          if (modulo.preventivo) {
-                            context.push(
-                              modulo.ruta,
-                              extra: ProximamenteArgs(
-                                titulo: modulo.titulo,
-                                descripcion: modulo.descripcion,
-                              ),
-                            );
-                          } else {
-                            context.push(modulo.ruta);
-                          }
-                        },
-                      );
-                    },
-                  ),
+                      },
+                    ),
                   const SizedBox(height: AppSpacing.lg),
                   Text(
-                    'Los módulos marcados como próximos se habilitarán en tu recinto.',
+                    'Cada módulo aparece según los permisos y la configuración de tu recinto.',
                     textAlign: TextAlign.center,
                     style: theme.textTheme.bodySmall?.copyWith(
                       color: context.palette.inkMuted,

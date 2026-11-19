@@ -175,7 +175,6 @@ class _ProyectoWizardScreenState extends State<ProyectoWizardScreen> {
             descripcion: form.descripcion.text.trim().isEmpty
                 ? null
                 : form.descripcion.text.trim(),
-            atributos: form.atributos,
           ),
         )
         .toList();
@@ -1301,14 +1300,9 @@ class _ProyectoWizardScreenState extends State<ProyectoWizardScreen> {
           (modulo) => SwitchListTile(
             contentPadding: EdgeInsets.zero,
             title: Text(modulo.etiqueta),
-            value: _modulos.contains(modulo),
-            onChanged: (value) => setState(() {
-              if (value) {
-                _modulos.add(modulo);
-              } else {
-                _modulos.remove(modulo);
-              }
-            }),
+            subtitle: const Text('Siempre habilitado para el proyecto'),
+            value: true,
+            onChanged: null,
           ),
         ),
       ],
@@ -1322,7 +1316,6 @@ class _InstalacionForm {
   final TextEditingController nombre;
   final TextEditingController capacidad = TextEditingController();
   final TextEditingController descripcion = TextEditingController();
-  final Map<String, dynamic> atributos = const {};
 
   void dispose() {
     nombre.dispose();

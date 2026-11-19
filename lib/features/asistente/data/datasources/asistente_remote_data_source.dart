@@ -1,15 +1,15 @@
-import 'package:dio/dio.dart';
+import '../../../../core/network/api_client.dart';
 
 import '../../../../core/config/app_config.dart';
 import '../models/respuesta_asistente_dto.dart';
 
 class AsistenteRemoteDataSource {
-  const AsistenteRemoteDataSource(this._dio);
+  const AsistenteRemoteDataSource(this._client);
 
-  final Dio _dio;
+  final ApiClient _client;
 
   Future<RespuestaAsistenteDto> consultar(String pregunta) async {
-    final response = await _dio.post<Map<String, dynamic>>(
+    final response = await _client.post<Map<String, dynamic>>(
       AppConfig.residenteAsistenteConsultasPath,
       data: {'pregunta': pregunta},
     );

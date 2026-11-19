@@ -236,7 +236,8 @@ class _ProyectoFormScreenState extends State<_ProyectoFormScreen> {
 
     _modulos
       ..clear()
-      ..addAll(detalle.modulos);
+      ..addAll(detalle.modulos)
+      ..add(ModuloSistema.infraestructura);
 
     _modulosDeshabilitados
       ..clear()
@@ -286,7 +287,6 @@ class _ProyectoFormScreenState extends State<_ProyectoFormScreen> {
             descripcion: form.descripcion.text.trim().isEmpty
                 ? null
                 : form.descripcion.text.trim(),
-            atributos: form.atributos,
           ),
         )
         .toList();
@@ -526,14 +526,11 @@ class _ProyectoFormScreenState extends State<_ProyectoFormScreen> {
                         (modulo) => SwitchListTile(
                           contentPadding: EdgeInsets.zero,
                           title: Text(modulo.etiqueta),
-                          value: _modulos.contains(modulo),
-                          onChanged: (value) => setState(() {
-                            if (value) {
-                              _modulos.add(modulo);
-                            } else {
-                              _modulos.remove(modulo);
-                            }
-                          }),
+                          subtitle: const Text(
+                            'Siempre habilitado para el proyecto',
+                          ),
+                          value: true,
+                          onChanged: null,
                         ),
                       ),
                       const SizedBox(height: 8),
@@ -1115,7 +1112,6 @@ class _InstalacionForm {
     String nombre = '',
     int? capacidad,
     String descripcion = '',
-    this.atributos = const {},
   }) : nombre = TextEditingController(text: nombre),
        capacidad = TextEditingController(
          text: capacidad == null ? '' : '$capacidad',
@@ -1127,14 +1123,12 @@ class _InstalacionForm {
       nombre: instalacion.nombre,
       capacidad: instalacion.capacidad,
       descripcion: instalacion.descripcion ?? '',
-      atributos: instalacion.atributos,
     );
   }
 
   final TextEditingController nombre;
   final TextEditingController capacidad;
   final TextEditingController descripcion;
-  final Map<String, dynamic> atributos;
 
   void dispose() {
     nombre.dispose();

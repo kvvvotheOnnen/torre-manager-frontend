@@ -1,5 +1,7 @@
 import 'package:dio/dio.dart';
 
+import '../../../../core/network/api_client.dart';
+
 import '../../../../core/config/app_config.dart';
 import '../../domain/entities/categoria_producto.dart';
 import '../../domain/entities/condicion_producto.dart';
@@ -8,15 +10,15 @@ import '../../domain/entities/publicacion_foto.dart';
 import '../models/publicacion_marketplace_dto.dart';
 
 class MarketplaceRemoteDataSource {
-  const MarketplaceRemoteDataSource(this._dio);
+  const MarketplaceRemoteDataSource(this._client);
 
-  final Dio _dio;
+  final ApiClient _client;
 
   Future<List<PublicacionMarketplaceDto>> listar({
     bool todas = false,
     EstadoPublicacion? estado,
   }) async {
-    final response = await _dio.get<Map<String, dynamic>>(
+    final response = await _client.get<Map<String, dynamic>>(
       AppConfig.marketplacePublicacionesPath,
       queryParameters: {
         if (estado != null) 'estado': estado.valor,
@@ -27,21 +29,21 @@ class MarketplaceRemoteDataSource {
   }
 
   Future<List<PublicacionMarketplaceDto>> misPublicaciones() async {
-    final response = await _dio.get<Map<String, dynamic>>(
+    final response = await _client.get<Map<String, dynamic>>(
       AppConfig.marketplaceMisPublicacionesPath,
     );
     return _leerLista(response.data);
   }
 
   Future<List<PublicacionMarketplaceDto>> historial() async {
-    final response = await _dio.get<Map<String, dynamic>>(
+    final response = await _client.get<Map<String, dynamic>>(
       AppConfig.marketplaceHistorialPath,
     );
     return _leerLista(response.data);
   }
 
   Future<List<PublicacionMarketplaceDto>> favoritos() async {
-    final response = await _dio.get<Map<String, dynamic>>(
+    final response = await _client.get<Map<String, dynamic>>(
       AppConfig.marketplaceFavoritosPath,
     );
     return _leerLista(response.data);
@@ -55,7 +57,7 @@ class MarketplaceRemoteDataSource {
     required CondicionProducto condicion,
     PublicacionFoto? foto,
   }) async {
-    final response = await _dio.post<Map<String, dynamic>>(
+    final response = await _client.post<Map<String, dynamic>>(
       AppConfig.marketplacePublicacionesPath,
       data: _formulario(
         titulo: titulo,
@@ -78,7 +80,7 @@ class MarketplaceRemoteDataSource {
     required CondicionProducto condicion,
     PublicacionFoto? foto,
   }) async {
-    final response = await _dio.put<Map<String, dynamic>>(
+    final response = await _client.put<Map<String, dynamic>>(
       AppConfig.marketplacePublicacionPath(id),
       data: _formulario(
         titulo: titulo,
@@ -93,21 +95,21 @@ class MarketplaceRemoteDataSource {
   }
 
   Future<PublicacionMarketplaceDto> retirar(String id) async {
-    final response = await _dio.post<Map<String, dynamic>>(
+    final response = await _client.post<Map<String, dynamic>>(
       AppConfig.marketplaceRetirarPath(id),
     );
     return _leerPublicacion(response.data);
   }
 
   Future<PublicacionMarketplaceDto> vender(String id) async {
-    final response = await _dio.post<Map<String, dynamic>>(
+    final response = await _client.post<Map<String, dynamic>>(
       AppConfig.marketplaceVenderPath(id),
     );
     return _leerPublicacion(response.data);
   }
 
   Future<void> eliminar({required String id, required String motivo}) async {
-    await _dio.delete<void>(
+    await _client.delete<void>(
       AppConfig.marketplacePublicacionPath(id),
       data: {'motivo': motivo},
     );
@@ -117,7 +119,7 @@ class MarketplaceRemoteDataSource {
     required String id,
     required bool favorito,
   }) async {
-    final response = await _dio.put<Map<String, dynamic>>(
+    final response = await _client.put<Map<String, dynamic>>(
       AppConfig.marketplaceFavoritoPath(id),
       data: {'favorito': favorito},
     );

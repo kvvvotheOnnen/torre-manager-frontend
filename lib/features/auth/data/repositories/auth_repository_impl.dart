@@ -1,4 +1,4 @@
-import 'package:dio/dio.dart';
+import '../../../../core/errors/api_exception.dart';
 import 'package:fpdart/fpdart.dart';
 
 import '../../../../core/errors/failures.dart';
@@ -24,8 +24,8 @@ class AuthRepositoryImpl implements AuthRepositoryInterface {
       await _tokenStorage.saveToken(response.accessToken);
 
       return Right(response.usuario.toEntity());
-    } on DioException catch (error) {
-      if (error.response?.statusCode == 401) {
+    } on ApiException catch (error) {
+      if (error.statusCode == 401) {
         return const Left(ServerFailure('Credenciales incorrectas'));
       }
       return const Left(ServerFailure());
@@ -46,8 +46,8 @@ class AuthRepositoryImpl implements AuthRepositoryInterface {
     try {
       final dto = await _remoteDataSource.me();
       return Right(dto.toEntity());
-    } on DioException catch (error) {
-      if (error.response?.statusCode == 401) {
+    } on ApiException catch (error) {
+      if (error.statusCode == 401) {
         await _tokenStorage.clear();
         return const Left(AuthenticationFailure());
       }

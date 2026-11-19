@@ -5,7 +5,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/tenant/proyecto_activo_store.dart';
 import '../../../auth/domain/entities/usuario.dart';
 import '../../../superadmin/domain/entities/proyecto_detalle.dart';
-import '../../../superadmin/domain/usecases/listar_mis_proyectos_usecase.dart';
+import '../../domain/usecases/listar_mis_proyectos_usecase.dart';
 
 sealed class TenantEvent extends Equatable {
   const TenantEvent();

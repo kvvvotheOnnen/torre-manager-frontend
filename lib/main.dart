@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
+import 'core/network/api_client.dart';
 import 'core/network/dio_client.dart';
 import 'core/router/app_router.dart';
 import 'core/storage/token_storage.dart';
@@ -57,7 +58,7 @@ import 'features/superadmin/domain/usecases/eliminar_proyecto_usecase.dart';
 import 'features/superadmin/domain/usecases/guardar_paso_proyecto_usecase.dart';
 import 'features/superadmin/domain/usecases/iniciar_proyecto_borrador_usecase.dart';
 import 'features/superadmin/domain/usecases/listar_administradores_usecase.dart';
-import 'features/superadmin/domain/usecases/listar_mis_proyectos_usecase.dart';
+import 'features/tenant/domain/usecases/listar_mis_proyectos_usecase.dart';
 import 'features/superadmin/domain/usecases/listar_proyectos_usecase.dart';
 import 'features/superadmin/domain/usecases/obtener_proyecto_usecase.dart';
 import 'features/superadmin/presentation/bloc/administradores_bloc.dart';
@@ -70,6 +71,7 @@ import 'features/paqueteria/data/datasources/paqueteria_remote_data_source.dart'
 import 'features/paqueteria/data/repositories/paqueteria_repository_impl.dart';
 import 'features/paqueteria/domain/usecases/actualizar_paquete_usecase.dart';
 import 'features/paqueteria/domain/usecases/listar_paquetes_usecase.dart';
+import 'features/paqueteria/domain/usecases/listar_unidades_usecase.dart';
 import 'features/paqueteria/domain/usecases/marcar_paquete_retirado_usecase.dart';
 import 'features/paqueteria/domain/usecases/registrar_paquete_usecase.dart';
 import 'features/paqueteria/presentation/bloc/paqueteria_bloc.dart';
@@ -149,15 +151,16 @@ class _TorreManagerAppState extends State<TorreManagerApp> {
     final tokenStorage = SecureTokenStorage();
     final proyectoActivoStore = SharedPreferencesProyectoActivoStore();
     final dio = DioClient(tokenStorage, proyectoActivoStore).dio;
+    final apiClient = ApiClient(dio);
 
-    final authDataSource = AuthRemoteDataSource(dio);
+    final authDataSource = AuthRemoteDataSource(apiClient);
     final authRepository = AuthRepositoryImpl(authDataSource, tokenStorage);
     final loginUseCase = LoginUseCase(authRepository);
 
     _authBloc = AuthBloc(loginUseCase, authRepository);
     _authBloc.add(const AuthCheckRequested());
 
-    final infraestructuraDataSource = InfraestructuraRemoteDataSource(dio);
+    final infraestructuraDataSource = InfraestructuraRemoteDataSource(apiClient);
     final infraestructuraRepository = InfraestructuraRepositoryImpl(
       infraestructuraDataSource,
     );
@@ -180,7 +183,7 @@ class _TorreManagerAppState extends State<TorreManagerApp> {
       ),
     );
 
-    final superadminDataSource = SuperadminRemoteDataSource(dio);
+    final superadminDataSource = SuperadminRemoteDataSource(apiClient);
     final superadminRepository = SuperadminRepositoryImpl(superadminDataSource);
 
     _superadminBloc = SuperadminBloc(
@@ -229,7 +232,7 @@ class _TorreManagerAppState extends State<TorreManagerApp> {
       proyectoActivoStore: proyectoActivoStore,
     );
 
-    final dashboardDataSource = DashboardRemoteDataSource(dio);
+    final dashboardDataSource = DashboardRemoteDataSource(apiClient);
     final dashboardRepository = DashboardRepositoryImpl(dashboardDataSource);
     _modulosDashboardBloc = ModulosDashboardBloc(
       obtenerModulosUseCase: ObtenerModulosDashboardUseCase(
@@ -237,7 +240,7 @@ class _TorreManagerAppState extends State<TorreManagerApp> {
       ),
     );
 
-    final residenteDataSource = ResidenteRemoteDataSource(dio);
+    final residenteDataSource = ResidenteRemoteDataSource(apiClient);
     final residenteRepository = ResidenteRepositoryImpl(residenteDataSource);
     _residenteMiInformacionBloc = ResidenteMiInformacionBloc(
       obtenerMiInformacionUseCase: ObtenerMiInformacionUseCase(
@@ -245,7 +248,7 @@ class _TorreManagerAppState extends State<TorreManagerApp> {
       ),
     );
 
-    final asistenteAdminDataSource = AsistenteAdminRemoteDataSource(dio);
+    final asistenteAdminDataSource = AsistenteAdminRemoteDataSource(apiClient);
     final asistenteAdminRepository = AsistenteAdminRepositoryImpl(
       asistenteAdminDataSource,
     );
@@ -257,24 +260,24 @@ class _TorreManagerAppState extends State<TorreManagerApp> {
       ),
     );
 
-    final asistenteDataSource = AsistenteRemoteDataSource(dio);
+    final asistenteDataSource = AsistenteRemoteDataSource(apiClient);
     final asistenteRepository = AsistenteRepositoryImpl(asistenteDataSource);
     _asistenteBloc = AsistenteBloc(
       consultarUseCase: ConsultarAsistenteUseCase(asistenteRepository),
     );
 
-    final paqueteriaDataSource = PaqueteriaRemoteDataSource(dio);
+    final paqueteriaDataSource = PaqueteriaRemoteDataSource(apiClient);
     final paqueteriaRepository = PaqueteriaRepositoryImpl(paqueteriaDataSource);
     _paqueteriaBloc = PaqueteriaBloc(
       listarUseCase: ListarPaquetesUseCase(paqueteriaRepository),
       registrarUseCase: RegistrarPaqueteUseCase(paqueteriaRepository),
       marcarRetiradoUseCase: MarcarPaqueteRetiradoUseCase(paqueteriaRepository),
       actualizarUseCase: ActualizarPaqueteUseCase(paqueteriaRepository),
-      remoteDataSource: paqueteriaDataSource,
+      listarUnidadesUseCase: ListarUnidadesUseCase(paqueteriaRepository),
     );
 
     final solicitudesResidenteDataSource = SolicitudesResidenteRemoteDataSource(
-      dio,
+      apiClient,
     );
     final solicitudesResidenteRepository = SolicitudesResidenteRepositoryImpl(
       solicitudesResidenteDataSource,
@@ -290,7 +293,7 @@ class _TorreManagerAppState extends State<TorreManagerApp> {
     );
 
     final funcionesDashboardDataSource = FuncionesDashboardRemoteDataSource(
-      dio,
+      apiClient,
     );
     final funcionesDashboardRepository = FuncionesDashboardRepositoryImpl(
       funcionesDashboardDataSource,
@@ -301,7 +304,7 @@ class _TorreManagerAppState extends State<TorreManagerApp> {
       ),
     );
 
-    final serviciosDataSource = ServiciosRemoteDataSource(dio);
+    final serviciosDataSource = ServiciosRemoteDataSource(apiClient);
     final serviciosRepository = ServiciosRepositoryImpl(serviciosDataSource);
     _serviciosBloc = ServiciosBloc(
       listar: ListarTrabajadoresUseCase(serviciosRepository),
@@ -310,7 +313,7 @@ class _TorreManagerAppState extends State<TorreManagerApp> {
       eliminar: EliminarTrabajadorUseCase(serviciosRepository),
     );
 
-    final marketplaceDataSource = MarketplaceRemoteDataSource(dio);
+    final marketplaceDataSource = MarketplaceRemoteDataSource(apiClient);
     final marketplaceRepository = MarketplaceRepositoryImpl(
       marketplaceDataSource,
     );

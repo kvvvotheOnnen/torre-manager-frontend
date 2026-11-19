@@ -28,35 +28,8 @@ void main() {
       };
     }
 
-    test('parsea atributos como mapa', () {
-      final dto = ProyectoDetalleDTO.fromJson(
-        baseJson(atributos: {'largo_m': 12}),
-      );
-      final entity = dto.toEntity();
 
-      expect(entity.tipoCondominio, TipoCondominio.torres);
-      expect(entity.modulos, [ModuloSistema.infraestructura]);
-      expect(entity.instalacionesExtra.single.capacidad, 40);
-      expect(
-        entity.instalacionesExtra.single.descripcion,
-        'Espacio para reuniones',
-      );
-      expect(entity.instalacionesExtra.single.atributos, {'largo_m': 12});
-    });
 
-    test('tolera atributos como lista vacía (JSON [])', () {
-      final dto = ProyectoDetalleDTO.fromJson(baseJson(atributos: <Object>[]));
-      final entity = dto.toEntity();
-
-      expect(entity.instalacionesExtra.single.atributos, isEmpty);
-    });
-
-    test('tolera atributos ausentes/null', () {
-      final dto = ProyectoDetalleDTO.fromJson(baseJson(atributos: null));
-      final entity = dto.toEntity();
-
-      expect(entity.instalacionesExtra.single.atributos, isEmpty);
-    });
 
     test('parsea el tipo de condominio edificio', () {
       final json = baseJson()..['tipo_condominio'] = 'edificio';

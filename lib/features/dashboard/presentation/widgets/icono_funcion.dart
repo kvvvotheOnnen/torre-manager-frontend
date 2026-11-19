@@ -12,6 +12,8 @@ IconData iconoDeFuncion(String nombre) {
     'package' => Icons.inventory_2_outlined,
     'storefront' => Icons.storefront_outlined,
     'info' => Icons.info_outline,
+    'star' => Icons.auto_awesome_outlined,
+    'security' => Icons.security_outlined,
     _ => Icons.widgets_outlined,
   };
 }
