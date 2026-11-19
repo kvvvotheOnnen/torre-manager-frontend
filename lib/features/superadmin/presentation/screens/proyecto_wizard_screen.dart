@@ -224,12 +224,6 @@ class _ProyectoWizardScreenState extends State<ProyectoWizardScreen> {
         return 'El piso ${excepcion.piso} está repetido en las excepciones.';
       }
 
-      if (excepcion.sinUnidades) continue;
-
-      if (excepcion.unidades.isEmpty) {
-        return 'El piso ${excepcion.piso} debe tener al menos una unidad.';
-      }
-
       for (final unidad in excepcion.unidades) {
         if (unidad.tipo == null) {
           return 'Selecciona unidad simple o instalación extra en el piso ${excepcion.piso}.';
@@ -1121,8 +1115,8 @@ class _ProyectoWizardScreenState extends State<ProyectoWizardScreen> {
         ),
         Text(
           'Las unidades de estos pisos se crean manualmente y respetan la '
-          'numeración del piso. Marca "Piso sin unidades" si el piso queda '
-          'vacío.',
+          'numeración del piso. Un piso con excepción puede quedar vacío: '
+          'nace sin unidades y salta la generación automática.',
           style: Theme.of(context).textTheme.bodySmall,
         ),
         if (form.excepciones.isEmpty)
@@ -1194,39 +1188,25 @@ class _ProyectoWizardScreenState extends State<ProyectoWizardScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-            CheckboxListTile(
-              contentPadding: EdgeInsets.zero,
-              dense: true,
-              title: const Text('Piso sin unidades'),
-              subtitle: const Text(
-                'El piso quedará vacío, sin unidades ni instalaciones.',
-              ),
-              value: excepcion.sinUnidades,
-              onChanged: (value) => setState(() {
-                excepcion.sinUnidades = value ?? false;
-                if (!excepcion.sinUnidades && excepcion.unidades.isEmpty) {
-                  excepcion.unidades.add(_UnidadExcepcionForm());
-                }
-              }),
-            ),
-            if (excepcion.sinUnidades)
+            if (excepcion.unidades.isEmpty)
               const Padding(
-                padding: EdgeInsets.only(top: 4),
-                child: Text('Este piso no tendrá unidades.'),
-              )
-            else ...[
-              ..._cardsUnidadesExcepcion(excepcion),
-              Align(
-                alignment: Alignment.centerLeft,
-                child: TextButton.icon(
-                  onPressed: () => setState(
-                    () => excepcion.unidades.add(_UnidadExcepcionForm()),
-                  ),
-                  icon: const Icon(Icons.add, size: 18),
-                  label: const Text('Agregar unidad'),
+                padding: EdgeInsets.only(top: 4, bottom: 4),
+                child: Text(
+                  'Piso vacío: sin unidades ni instalaciones. Agrega una '
+                  'unidad si quieres usar este piso.',
                 ),
               ),
-            ],
+            ..._cardsUnidadesExcepcion(excepcion),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: TextButton.icon(
+                onPressed: () => setState(
+                  () => excepcion.unidades.add(_UnidadExcepcionForm()),
+                ),
+                icon: const Icon(Icons.add, size: 18),
+                label: const Text('Agregar unidad'),
+              ),
+            ),
                 ],
               ),
             ),
@@ -1655,10 +1635,7 @@ class _AgrupacionPisosForm {
         .map(
           (excepcion) => PisoExcepcion(
             piso: excepcion.piso,
-            sinUnidades: excepcion.sinUnidades,
-            unidades: excepcion.sinUnidades
-                ? const []
-                : excepcion.unidades
+            unidades: excepcion.unidades
                       .map(
                         (unidad) => UnidadExcepcion(
                           identificador:
@@ -1881,18 +1858,14 @@ class _ClasificacionForm {
 }
 
 class _PisoExcepcionForm {
-  _PisoExcepcionForm(this.piso) {
-    unidades.add(_UnidadExcepcionForm());
-  }
+  _PisoExcepcionForm(this.piso);
 
   final int piso;
   final List<_UnidadExcepcionForm> unidades = [];
-  bool sinUnidades = false;
   bool expandido = false;
 
   String get resumen {
-    if (sinUnidades) return 'Piso vacío';
-    if (unidades.isEmpty) return 'Sin unidades';
+    if (unidades.isEmpty) return 'Piso vacío';
     if (unidades.length == 1) return '1 unidad';
     return '${unidades.length} unidades';
   }

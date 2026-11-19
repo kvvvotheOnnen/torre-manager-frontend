@@ -63,3 +63,16 @@
   - "Guardar cambios" aplica al estado del wizard y "Salir sin guardar"
     descarta; la persistencia real sigue ocurriendo al avanzar el paso.
 - Verificación: `dart analyze` limpio y **105 tests OK**.
+
+## Corrección: pisos con excepción vacíos
+
+- Al agregar un piso con excepción ya no se pre-crea una unidad: nace vacío y
+  permanece así salvo que se agreguen unidades manualmente.
+- Se retira el checkbox "Piso sin unidades" (un piso sin unidades es vacío por
+  definición) y la validación deja de exigir un mínimo de unidades.
+- La tarjeta muestra `Piso vacío` y el editor un aviso con el botón para
+  agregar unidades.
+- `GeneradorUnidadesClasificables` excluye de la generación automática todos
+  los pisos con excepción (vacíos o no), eliminando unidades fantasma en la
+  clasificación. Test nuevo con piso vacío.
+- Verificación: `dart analyze` limpio y **106 tests OK**.

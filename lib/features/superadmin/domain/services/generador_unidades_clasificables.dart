@@ -58,8 +58,9 @@ class GeneradorUnidadesClasificables {
     final base = prefijo.isNotEmpty
         ? prefijo
         : (agrupacion.tipo == TipoAgrupacion.edificio ? 'Unidad' : nombre);
+    // Todo piso con excepción (vacío o con unidades) queda fuera de la
+    // generación automática, igual que en el backend.
     final excluidos = agrupacion.pisosExcepcion
-        .where((piso) => !piso.sinUnidades)
         .map((piso) => piso.piso)
         .toSet();
 

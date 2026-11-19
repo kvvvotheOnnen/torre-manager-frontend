@@ -61,6 +61,24 @@ void main() {
     );
   });
 
+  test('un piso con excepción vacío salta la generación automática', () {
+    final unidades = generador.paraAgrupacion(
+      const DefinicionAgrupacion(
+        nombre: 'Edificio',
+        tipo: TipoAgrupacion.edificio,
+        pisoDesde: 1,
+        pisoHasta: 3,
+        unidadesPorPiso: 2,
+        pisosExcepcion: [PisoExcepcion(piso: 2, unidades: [])],
+      ),
+    );
+
+    expect(
+      unidades.map((unidad) => unidad.identificador),
+      ['Unidad-101', 'Unidad-102', 'Unidad-301', 'Unidad-302'],
+    );
+  });
+
   test('las manzanas usan la secuencia Casa', () {
     final unidades = generador.paraAgrupacion(
       const DefinicionAgrupacion(
