@@ -799,9 +799,9 @@ class _ProyectoWizardScreenState extends State<ProyectoWizardScreen> {
         for (final unidad in clasificacion.unidades)
           if (clavesValidas.contains(unidad.clave)) unidad.clave,
     };
-    final disponibles = unidades
+    final sinClasificar = unidades
         .where((unidad) => !asignadas.contains(unidad.clave))
-        .toList();
+        .length;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -858,16 +858,16 @@ class _ProyectoWizardScreenState extends State<ProyectoWizardScreen> {
             ],
           ),
           ..._clasificaciones.map(
-            (clasificacion) => _cardClasificacion(
-              clasificacion,
-              disponibles,
-              clavesValidas,
-            ),
+            (clasificacion) => _cardClasificacion(clasificacion, clavesValidas),
           ),
-          _cardEstandar(
-            unidades
-                .where((unidad) => !asignadas.contains(unidad.clave))
-                .toList(),
+          Padding(
+            padding: const EdgeInsets.only(top: 8),
+            child: Text(
+              sinClasificar == 1
+                  ? '1 unidad quedará como Estándar.'
+                  : '$sinClasificar unidades quedarán como Estándar.',
+              style: theme.textTheme.bodySmall,
+            ),
           ),
         ],
       ],
@@ -876,79 +876,37 @@ class _ProyectoWizardScreenState extends State<ProyectoWizardScreen> {
 
   Widget _cardClasificacion(
     _ClasificacionForm clasificacion,
-    List<UnidadClasificable> disponibles,
     Set<String> clavesValidas,
   ) {
     final visibles = clasificacion.unidades
         .where((unidad) => clavesValidas.contains(unidad.clave))
-        .toList();
+        .length;
 
     return Card(
       margin: const EdgeInsets.only(top: 8),
-      child: Padding(
-        padding: const EdgeInsets.all(12),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+      child: ListTile(
+        title: Text(
+          clasificacion.nombre.text.trim(),
+          style: const TextStyle(fontWeight: FontWeight.bold),
+        ),
+        subtitle: Text(
+          visibles == 1 ? '1 unidad asignada' : '$visibles unidades asignadas',
+        ),
+        trailing: Row(
+          mainAxisSize: MainAxisSize.min,
           children: [
-            Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    clasificacion.nombre.text.trim(),
-                    style: const TextStyle(fontWeight: FontWeight.bold),
-                  ),
-                ),
-                IconButton(
-                  tooltip: 'Eliminar clasificación',
-                  onPressed: () => setState(() {
-                    _clasificaciones.remove(clasificacion);
-                    clasificacion.dispose();
-                  }),
-                  icon: const Icon(Icons.delete_outline),
-                ),
-              ],
+            TextButton.icon(
+              onPressed: () => _abrirDialogoAsignacion(clasificacion),
+              icon: const Icon(Icons.playlist_add_check, size: 18),
+              label: const Text('Asignar unidades'),
             ),
-            if (visibles.isEmpty)
-              const Text('Sin unidades asignadas.')
-            else
-              Wrap(
-                spacing: 6,
-                runSpacing: 6,
-                children: visibles
-                    .map(
-                      (unidad) => InputChip(
-                        label: Text(unidad.identificador),
-                        onDeleted: () => setState(
-                          () => clasificacion.unidades.remove(unidad),
-                        ),
-                      ),
-                    )
-                    .toList(),
-              ),
-            const SizedBox(height: 8),
-            DropdownButtonFormField<UnidadClasificable>(
-              initialValue: null,
-              decoration: const InputDecoration(
-                labelText: 'Agregar unidad',
-                border: OutlineInputBorder(),
-                isDense: true,
-              ),
-              items: disponibles
-                  .map(
-                    (unidad) => DropdownMenuItem<UnidadClasificable>(
-                      value: unidad,
-                      child: Text(
-                        '${unidad.identificador} · ${unidad.agrupacion}',
-                      ),
-                    ),
-                  )
-                  .toList(),
-              onChanged: disponibles.isEmpty
-                  ? null
-                  : (unidad) {
-                      if (unidad == null) return;
-                      setState(() => clasificacion.unidades.add(unidad));
-                    },
+            IconButton(
+              tooltip: 'Eliminar clasificación',
+              onPressed: () => setState(() {
+                _clasificaciones.remove(clasificacion);
+                clasificacion.dispose();
+              }),
+              icon: const Icon(Icons.delete_outline),
             ),
           ],
         ),
@@ -956,39 +914,44 @@ class _ProyectoWizardScreenState extends State<ProyectoWizardScreen> {
     );
   }
 
-  Widget _cardEstandar(List<UnidadClasificable> unidades) {
-    return Card(
-      margin: const EdgeInsets.only(top: 8),
-      child: Padding(
-        padding: const EdgeInsets.all(12),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Estándar',
-              style: TextStyle(fontWeight: FontWeight.bold),
-            ),
-            Text(
-              'Unidades sin clasificar',
-              style: Theme.of(context).textTheme.bodySmall,
-            ),
-            const SizedBox(height: 6),
-            if (unidades.isEmpty)
-              const Text('Todas las unidades están clasificadas.')
-            else
-              Wrap(
-                spacing: 6,
-                runSpacing: 6,
-                children: unidades
-                    .map(
-                      (unidad) => Chip(label: Text(unidad.identificador)),
-                    )
-                    .toList(),
-              ),
-          ],
-        ),
+  Future<void> _abrirDialogoAsignacion(
+    _ClasificacionForm clasificacion,
+  ) async {
+    final unidades = _unidadesActuales();
+    final clavesValidas = unidades.map((unidad) => unidad.clave).toSet();
+    final clavesOtras = <String>{
+      for (final otra in _clasificaciones)
+        if (!identical(otra, clasificacion))
+          for (final unidad in otra.unidades)
+            if (clavesValidas.contains(unidad.clave)) unidad.clave,
+    };
+    final disponibles = unidades
+        .where((unidad) => !clavesOtras.contains(unidad.clave))
+        .toList();
+    final seleccionadas = clasificacion.unidades
+        .where((unidad) => clavesValidas.contains(unidad.clave))
+        .toList();
+    final mostrarAgrupacion =
+        disponibles.map((unidad) => unidad.agrupacion).toSet().length > 1;
+
+    final resultado = await showDialog<List<UnidadClasificable>>(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => _DialogoAsignarUnidades(
+        titulo: clasificacion.nombre.text.trim(),
+        unidades: disponibles,
+        seleccionadas: seleccionadas,
+        mostrarAgrupacion: mostrarAgrupacion,
       ),
     );
+
+    if (resultado == null || !mounted) return;
+
+    setState(() {
+      clasificacion.unidades
+        ..clear()
+        ..addAll(resultado);
+    });
   }
 
   Widget _cardPisos(
@@ -1181,28 +1144,56 @@ class _ProyectoWizardScreenState extends State<ProyectoWizardScreen> {
     return Card(
       key: ObjectKey(excepcion),
       margin: const EdgeInsets.only(top: 8),
-      child: Padding(
-        padding: const EdgeInsets.all(12),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Text(
-                  'Piso ${excepcion.piso}',
-                  style: const TextStyle(fontWeight: FontWeight.bold),
-                ),
-                const Spacer(),
-                IconButton(
-                  tooltip: 'Quitar piso con excepción',
-                  onPressed: () => setState(() {
-                    form.excepciones.remove(excepcion);
-                    excepcion.dispose();
-                  }),
-                  icon: const Icon(Icons.delete_outline),
-                ),
-              ],
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          InkWell(
+            onTap: () => setState(
+              () => excepcion.expandido = !excepcion.expandido,
             ),
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(12, 8, 4, 8),
+              child: Row(
+                children: [
+                  Icon(
+                    excepcion.expandido
+                        ? Icons.expand_less
+                        : Icons.expand_more,
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Piso ${excepcion.piso}',
+                          style: const TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                        Text(
+                          excepcion.resumen,
+                          style: Theme.of(context).textTheme.bodySmall,
+                        ),
+                      ],
+                    ),
+                  ),
+                  IconButton(
+                    tooltip: 'Quitar piso con excepción',
+                    onPressed: () => setState(() {
+                      form.excepciones.remove(excepcion);
+                      excepcion.dispose();
+                    }),
+                    icon: const Icon(Icons.delete_outline),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          if (excepcion.expandido)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
             CheckboxListTile(
               contentPadding: EdgeInsets.zero,
               dense: true,
@@ -1236,8 +1227,10 @@ class _ProyectoWizardScreenState extends State<ProyectoWizardScreen> {
                 ),
               ),
             ],
-          ],
-        ),
+                ],
+              ),
+            ),
+        ],
       ),
     );
   }
@@ -1702,6 +1695,179 @@ class _AgrupacionPisosForm {
   }
 }
 
+class _DialogoAsignarUnidades extends StatefulWidget {
+  const _DialogoAsignarUnidades({
+    required this.titulo,
+    required this.unidades,
+    required this.seleccionadas,
+    required this.mostrarAgrupacion,
+  });
+
+  final String titulo;
+  final List<UnidadClasificable> unidades;
+  final List<UnidadClasificable> seleccionadas;
+  final bool mostrarAgrupacion;
+
+  @override
+  State<_DialogoAsignarUnidades> createState() =>
+      _DialogoAsignarUnidadesState();
+}
+
+class _DialogoAsignarUnidadesState extends State<_DialogoAsignarUnidades> {
+  final TextEditingController _busqueda = TextEditingController();
+  late final Set<String> _seleccionadas = widget.seleccionadas
+      .map((unidad) => unidad.clave)
+      .toSet();
+
+  @override
+  void dispose() {
+    _busqueda.dispose();
+    super.dispose();
+  }
+
+  List<UnidadClasificable> get _filtradas {
+    final query = _busqueda.text.trim().toLowerCase();
+    if (query.isEmpty) return widget.unidades;
+
+    return widget.unidades
+        .where(
+          (unidad) =>
+              unidad.identificador.toLowerCase().contains(query) ||
+              unidad.agrupacion.toLowerCase().contains(query),
+        )
+        .toList();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final filtradas = _filtradas;
+
+    return AlertDialog(
+      title: Text('Asignar unidades · ${widget.titulo}'),
+      content: SizedBox(
+        width: 520,
+        height: 400,
+        child: Column(
+          children: [
+            TextField(
+              controller: _busqueda,
+              decoration: const InputDecoration(
+                hintText: 'Buscar unidad',
+                prefixIcon: Icon(Icons.search),
+                border: OutlineInputBorder(),
+                isDense: true,
+              ),
+              onChanged: (_) => setState(() {}),
+            ),
+            const SizedBox(height: 8),
+            Expanded(
+              child: filtradas.isEmpty
+                  ? const Center(
+                      child: Text('No hay unidades disponibles.'),
+                    )
+                  : GridView.builder(
+                      gridDelegate:
+                          const SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: 3,
+                            mainAxisExtent: 54,
+                            mainAxisSpacing: 8,
+                            crossAxisSpacing: 8,
+                          ),
+                      itemCount: filtradas.length,
+                      itemBuilder: (context, index) {
+                        final unidad = filtradas[index];
+                        final seleccionada = _seleccionadas.contains(
+                          unidad.clave,
+                        );
+
+                        return InkWell(
+                          borderRadius: BorderRadius.circular(8),
+                          onTap: () => setState(() {
+                            if (seleccionada) {
+                              _seleccionadas.remove(unidad.clave);
+                            } else {
+                              _seleccionadas.add(unidad.clave);
+                            }
+                          }),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 6,
+                              vertical: 4,
+                            ),
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(
+                                color: seleccionada
+                                    ? theme.colorScheme.primary
+                                    : theme.colorScheme.outlineVariant,
+                                width: seleccionada ? 2 : 1,
+                              ),
+                              color: seleccionada
+                                  ? theme.colorScheme.primary.withValues(
+                                      alpha: 0.12,
+                                    )
+                                  : null,
+                            ),
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Text(
+                                  unidad.identificador,
+                                  textAlign: TextAlign.center,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: theme.textTheme.bodySmall?.copyWith(
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                                if (widget.mostrarAgrupacion)
+                                  Text(
+                                    unidad.agrupacion,
+                                    textAlign: TextAlign.center,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: theme.textTheme.labelSmall,
+                                  ),
+                              ],
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+            ),
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                Text(
+                  '${_seleccionadas.length} seleccionadas',
+                  style: theme.textTheme.bodySmall,
+                ),
+                const Spacer(),
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  child: const Text('Salir sin guardar'),
+                ),
+                const SizedBox(width: 8),
+                FilledButton(
+                  onPressed: () => Navigator.of(context).pop(
+                    widget.unidades
+                        .where(
+                          (unidad) => _seleccionadas.contains(unidad.clave),
+                        )
+                        .toList(),
+                  ),
+                  child: const Text('Guardar cambios'),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 class _ClasificacionForm {
   _ClasificacionForm({String nombre = ''})
     : nombre = TextEditingController(text: nombre);
@@ -1722,6 +1888,14 @@ class _PisoExcepcionForm {
   final int piso;
   final List<_UnidadExcepcionForm> unidades = [];
   bool sinUnidades = false;
+  bool expandido = false;
+
+  String get resumen {
+    if (sinUnidades) return 'Piso vacío';
+    if (unidades.isEmpty) return 'Sin unidades';
+    if (unidades.length == 1) return '1 unidad';
+    return '${unidades.length} unidades';
+  }
 
   void dispose() {
     for (final unidad in unidades) {

@@ -48,3 +48,18 @@
   `Unidad-<piso><n>`.
 - Tests del generador actualizados a `Unidad-101` / `Unidad-201`.
 - Verificación: `dart analyze` limpio y **105 tests OK**.
+
+## Corrección UI: excepciones colapsables y diálogo de asignación
+
+- Los pisos con excepción ahora se expanden y contraen desde su cabecera
+  (`Piso N` + resumen de unidades + chevron). Los nuevos se agregan contraídos
+  para que varios pisos en edición no se estorben.
+- Clasificación de unidades:
+  - se eliminó el listado de unidades "Estándar"; queda solo un contador
+    discreto bajo la sección;
+  - cada clasificación muestra nombre y número de unidades asignadas;
+  - "Asignar unidades" abre un diálogo con buscador y cuadrícula de unidades
+    seleccionables, permitiendo agregar y quitar en lote;
+  - "Guardar cambios" aplica al estado del wizard y "Salir sin guardar"
+    descarta; la persistencia real sigue ocurriendo al avanzar el paso.
+- Verificación: `dart analyze` limpio y **105 tests OK**.
