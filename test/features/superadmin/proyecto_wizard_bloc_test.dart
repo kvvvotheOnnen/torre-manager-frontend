@@ -1,4 +1,5 @@
 import 'package:fpdart/fpdart.dart';
+import 'package:torre_manager_frontend/features/superadmin/domain/entities/clasificacion_unidad.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:torre_manager_frontend/core/errors/failures.dart';
 import 'package:torre_manager_frontend/features/infraestructura/domain/entities/tipo_agrupacion.dart';
@@ -23,6 +24,7 @@ class _FakeRepositorio implements SuperadminRepositoryInterface {
   String? borradorDescartadoId;
   bool finalizado = false;
   String? ultimoBorradorId;
+  List<ClasificacionUnidad>? ultimasClasificaciones;
 
   ProyectoDetalle _detalle({String id = '1', String nombre = 'Proyecto'}) {
     return ProyectoDetalle(
@@ -54,6 +56,7 @@ class _FakeRepositorio implements SuperadminRepositoryInterface {
     String? descripcion,
     TipoCondominio? tipoCondominio,
     List<DefinicionAgrupacion>? agrupaciones,
+    List<ClasificacionUnidad>? clasificaciones,
     List<InstalacionExtra>? instalaciones,
     List<ModuloSistema>? modulos,
     List<String>? adminIds,
@@ -64,6 +67,7 @@ class _FakeRepositorio implements SuperadminRepositoryInterface {
     if (failure != null) return Left(failure);
 
     ultimoBorradorId = id;
+    ultimasClasificaciones = clasificaciones;
     if (finalizar) finalizado = true;
 
     return Right(_detalle(id: id, nombre: nombre));
@@ -202,21 +206,39 @@ void main() {
       (s) => s.pasoActual == 3 && !s.guardando,
     );
     bloc.add(
-      const WizardEstructuraGuardada([
-        DefinicionAgrupacion(
-          nombre: 'Torre A',
-          tipo: TipoAgrupacion.torre,
-          pisoDesde: 1,
-          pisoHasta: 1,
-          unidadesPorPiso: 2,
-        ),
-      ]),
+      const WizardEstructuraGuardada(
+        [
+          DefinicionAgrupacion(
+            nombre: 'Torre A',
+            tipo: TipoAgrupacion.torre,
+            pisoDesde: 1,
+            pisoHasta: 1,
+            unidadesPorPiso: 2,
+          ),
+        ],
+        clasificaciones: [
+          ClasificacionUnidad(
+            nombre: 'Grande',
+            unidades: [
+              UnidadClasificable(
+                agrupacion: 'Torre A',
+                identificador: 'Torre A-101',
+              ),
+            ],
+          ),
+        ],
+      ),
     );
 
     final trasEstructura = await trasEstructuraFuture;
 
     expect(trasEstructura.pasoActual, 3);
     expect(repositorio.ultimoBorradorId, '1');
+    expect(repositorio.ultimasClasificaciones?.single.nombre, 'Grande');
+    expect(
+      repositorio.ultimasClasificaciones?.single.unidades.single.identificador,
+      'Torre A-101',
+    );
   });
 
   test('descarta el borrador y reinicia el asistente', () async {

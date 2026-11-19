@@ -3,6 +3,7 @@ import 'package:fpdart/fpdart.dart';
 
 import '../../../../core/errors/failures.dart';
 import '../../domain/entities/administrador.dart';
+import '../../domain/entities/clasificacion_unidad.dart';
 import '../../domain/entities/definicion_agrupacion.dart';
 import '../../domain/entities/instalacion_extra.dart';
 import '../../domain/entities/modulo_general.dart';
@@ -108,6 +109,7 @@ class SuperadminRepositoryImpl implements SuperadminRepositoryInterface {
     String? descripcion,
     TipoCondominio? tipoCondominio,
     List<DefinicionAgrupacion>? agrupaciones,
+    List<ClasificacionUnidad>? clasificaciones,
     List<InstalacionExtra>? instalaciones,
     List<ModuloSistema>? modulos,
     List<String>? adminIds,
@@ -122,6 +124,7 @@ class SuperadminRepositoryImpl implements SuperadminRepositoryInterface {
             descripcion: descripcion,
             tipoCondominio: tipoCondominio,
             agrupaciones: agrupaciones,
+            clasificaciones: clasificaciones,
             instalaciones: instalaciones,
             modulos: modulos,
             adminIds: adminIds,

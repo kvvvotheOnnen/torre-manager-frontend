@@ -1,6 +1,7 @@
 import 'package:fpdart/fpdart.dart';
 
 import '../../../../core/errors/failures.dart';
+import '../entities/clasificacion_unidad.dart';
 import '../entities/definicion_agrupacion.dart';
 import '../entities/instalacion_extra.dart';
 import '../entities/modulo_sistema.dart';
@@ -19,6 +20,7 @@ class GuardarPasoProyectoUseCase {
     String? descripcion,
     TipoCondominio? tipoCondominio,
     List<DefinicionAgrupacion>? agrupaciones,
+    List<ClasificacionUnidad>? clasificaciones,
     List<InstalacionExtra>? instalaciones,
     List<ModuloSistema>? modulos,
     List<String>? adminIds,
@@ -51,6 +53,7 @@ class GuardarPasoProyectoUseCase {
       descripcion: descripcion?.trim(),
       tipoCondominio: tipoCondominio,
       agrupaciones: agrupaciones,
+      clasificaciones: clasificaciones,
       instalaciones: instalaciones,
       modulos: modulos,
       adminIds: adminIds,

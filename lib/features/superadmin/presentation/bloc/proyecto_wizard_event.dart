@@ -1,5 +1,6 @@
 import 'package:equatable/equatable.dart';
 
+import '../../domain/entities/clasificacion_unidad.dart';
 import '../../domain/entities/definicion_agrupacion.dart';
 import '../../domain/entities/instalacion_extra.dart';
 import '../../domain/entities/modulo_sistema.dart';
@@ -32,12 +33,16 @@ class WizardTipoGuardado extends ProyectoWizardEvent {
 }
 
 class WizardEstructuraGuardada extends ProyectoWizardEvent {
-  const WizardEstructuraGuardada(this.agrupaciones);
+  const WizardEstructuraGuardada(
+    this.agrupaciones, {
+    this.clasificaciones = const [],
+  });
 
   final List<DefinicionAgrupacion> agrupaciones;
+  final List<ClasificacionUnidad> clasificaciones;
 
   @override
-  List<Object?> get props => [agrupaciones];
+  List<Object?> get props => [agrupaciones, clasificaciones];
 }
 
 class WizardInstalacionesGuardadas extends ProyectoWizardEvent {

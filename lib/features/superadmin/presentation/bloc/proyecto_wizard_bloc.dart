@@ -148,6 +148,7 @@ class ProyectoWizardBloc
       nombre: state.nombre,
       descripcion: state.descripcion ?? '',
       agrupaciones: event.agrupaciones,
+      clasificaciones: event.clasificaciones,
     );
 
     result.fold(

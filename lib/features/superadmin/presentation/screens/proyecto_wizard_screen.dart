@@ -2,10 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../infraestructura/domain/entities/tipo_agrupacion.dart';
+import '../../domain/entities/clasificacion_unidad.dart';
 import '../../domain/entities/definicion_agrupacion.dart';
 import '../../domain/entities/instalacion_extra.dart';
 import '../../domain/entities/modulo_sistema.dart';
 import '../../domain/entities/tipo_condominio.dart';
+import '../../domain/services/generador_unidades_clasificables.dart';
 import '../bloc/administradores_bloc.dart';
 import '../bloc/proyecto_wizard_bloc.dart';
 import '../bloc/proyecto_wizard_event.dart';
@@ -47,6 +49,9 @@ class _ProyectoWizardScreenState extends State<ProyectoWizardScreen> {
   final List<_InstalacionForm> _instalaciones = [];
   final Set<String> _adminIds = {};
   final Set<ModuloSistema> _modulos = {ModuloSistema.infraestructura};
+  final _nuevaClasificacionController = TextEditingController();
+  final List<_ClasificacionForm> _clasificaciones = [];
+  static const _generadorUnidades = GeneradorUnidadesClasificables();
 
   late final ProyectoWizardBloc _bloc;
 
@@ -62,6 +67,10 @@ class _ProyectoWizardScreenState extends State<ProyectoWizardScreen> {
   void dispose() {
     _nombreController.dispose();
     _descripcionController.dispose();
+    _nuevaClasificacionController.dispose();
+    for (final clasificacion in _clasificaciones) {
+      clasificacion.dispose();
+    }
     for (final torre in _torres) {
       torre.dispose();
     }
@@ -105,6 +114,10 @@ class _ProyectoWizardScreenState extends State<ProyectoWizardScreen> {
       ..pisoHasta.text = '1'
       ..unidadesPorPiso.text = '4'
       ..limpiarExcepciones();
+    for (final clasificacion in _clasificaciones) {
+      clasificacion.dispose();
+    }
+    _clasificaciones.clear();
   }
 
   void _seleccionarTipo(TipoCondominio? tipo) {
@@ -243,6 +256,68 @@ class _ProyectoWizardScreenState extends State<ProyectoWizardScreen> {
     return null;
   }
 
+  List<UnidadClasificable> _unidadesActuales() {
+    return _generadorUnidades.paraDefiniciones(_construirAgrupaciones());
+  }
+
+  void _agregarClasificacion() {
+    final nombre = _nuevaClasificacionController.text.trim();
+
+    if (nombre.isEmpty) {
+      _snack('Ingresa un nombre para la clasificación.');
+      return;
+    }
+
+    if (nombre.length > 100) {
+      _snack('El nombre no puede superar 100 caracteres.');
+      return;
+    }
+
+    final existe = _clasificaciones.any(
+      (clasificacion) =>
+          clasificacion.nombre.text.trim().toLowerCase() ==
+          nombre.toLowerCase(),
+    );
+
+    if (existe) {
+      _snack('Ya existe una clasificación con ese nombre.');
+      return;
+    }
+
+    setState(() {
+      _clasificaciones.add(_ClasificacionForm(nombre: nombre));
+      _nuevaClasificacionController.clear();
+    });
+  }
+
+  List<ClasificacionUnidad> _construirClasificaciones() {
+    final clavesValidas = _unidadesActuales().map((u) => u.clave).toSet();
+
+    return _clasificaciones
+        .where((clasificacion) => clasificacion.nombre.text.trim().isNotEmpty)
+        .map(
+          (clasificacion) => ClasificacionUnidad(
+            nombre: clasificacion.nombre.text.trim(),
+            unidades: clasificacion.unidades
+                .where((unidad) => clavesValidas.contains(unidad.clave))
+                .toList(),
+          ),
+        )
+        .toList();
+  }
+
+  bool _formPisosListo(_AgrupacionPisosForm form) {
+    final desde = int.tryParse(form.pisoDesde.text.trim());
+    final hasta = int.tryParse(form.pisoHasta.text.trim());
+    final unidades = int.tryParse(form.unidadesPorPiso.text.trim());
+
+    return desde != null &&
+        hasta != null &&
+        unidades != null &&
+        hasta >= desde &&
+        unidades >= 1;
+  }
+
   void _siguiente(ProyectoWizardState state) {
     switch (state.pasoActual) {
       case 0:
@@ -278,7 +353,12 @@ class _ProyectoWizardScreenState extends State<ProyectoWizardScreen> {
           _snack('Debes definir al menos una agrupación.');
           return;
         }
-        _bloc.add(WizardEstructuraGuardada(agrupaciones));
+        _bloc.add(
+          WizardEstructuraGuardada(
+            agrupaciones,
+            clasificaciones: _construirClasificaciones(),
+          ),
+        );
         return;
       case 3:
         _bloc.add(const WizardPasoAvanzado());
@@ -570,6 +650,7 @@ class _ProyectoWizardScreenState extends State<ProyectoWizardScreen> {
           ),
           const SizedBox(height: 12),
           ..._construirSeccionesEstructura(),
+          if (_tipo != null) _seccionClasificaciones(),
         ],
       ),
     );
@@ -709,6 +790,207 @@ class _ProyectoWizardScreenState extends State<ProyectoWizardScreen> {
     ];
   }
 
+  Widget _seccionClasificaciones() {
+    final theme = Theme.of(context);
+    final unidades = _unidadesActuales();
+    final clavesValidas = unidades.map((unidad) => unidad.clave).toSet();
+    final asignadas = <String>{
+      for (final clasificacion in _clasificaciones)
+        for (final unidad in clasificacion.unidades)
+          if (clavesValidas.contains(unidad.clave)) unidad.clave,
+    };
+    final disponibles = unidades
+        .where((unidad) => !asignadas.contains(unidad.clave))
+        .toList();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Divider(height: 32),
+        Row(
+          children: [
+            const Expanded(
+              child: Text(
+                'Clasificación de unidades',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+            ),
+            Text(
+              '${unidades.length} unidades',
+              style: theme.textTheme.bodySmall,
+            ),
+          ],
+        ),
+        Text(
+          'Crea clasificaciones con el nombre que decidas y asigna unidades. '
+          'Las unidades sin clasificar quedan en "Estándar" y una unidad solo '
+          'puede pertenecer a una clasificación.',
+          style: theme.textTheme.bodySmall,
+        ),
+        if (unidades.isEmpty)
+          const Padding(
+            padding: EdgeInsets.only(top: 8),
+            child: Text(
+              'Registra unidades por piso para habilitar la clasificación.',
+            ),
+          )
+        else ...[
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              Expanded(
+                child: TextField(
+                  controller: _nuevaClasificacionController,
+                  decoration: const InputDecoration(
+                    labelText: 'Nueva clasificación',
+                    hintText: 'Ej. Unidad grande',
+                    border: OutlineInputBorder(),
+                    isDense: true,
+                  ),
+                  onSubmitted: (_) => _agregarClasificacion(),
+                ),
+              ),
+              const SizedBox(width: 8),
+              FilledButton(
+                onPressed: _agregarClasificacion,
+                child: const Text('Crear'),
+              ),
+            ],
+          ),
+          ..._clasificaciones.map(
+            (clasificacion) => _cardClasificacion(
+              clasificacion,
+              disponibles,
+              clavesValidas,
+            ),
+          ),
+          _cardEstandar(
+            unidades
+                .where((unidad) => !asignadas.contains(unidad.clave))
+                .toList(),
+          ),
+        ],
+      ],
+    );
+  }
+
+  Widget _cardClasificacion(
+    _ClasificacionForm clasificacion,
+    List<UnidadClasificable> disponibles,
+    Set<String> clavesValidas,
+  ) {
+    final visibles = clasificacion.unidades
+        .where((unidad) => clavesValidas.contains(unidad.clave))
+        .toList();
+
+    return Card(
+      margin: const EdgeInsets.only(top: 8),
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    clasificacion.nombre.text.trim(),
+                    style: const TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                ),
+                IconButton(
+                  tooltip: 'Eliminar clasificación',
+                  onPressed: () => setState(() {
+                    _clasificaciones.remove(clasificacion);
+                    clasificacion.dispose();
+                  }),
+                  icon: const Icon(Icons.delete_outline),
+                ),
+              ],
+            ),
+            if (visibles.isEmpty)
+              const Text('Sin unidades asignadas.')
+            else
+              Wrap(
+                spacing: 6,
+                runSpacing: 6,
+                children: visibles
+                    .map(
+                      (unidad) => InputChip(
+                        label: Text(unidad.identificador),
+                        onDeleted: () => setState(
+                          () => clasificacion.unidades.remove(unidad),
+                        ),
+                      ),
+                    )
+                    .toList(),
+              ),
+            const SizedBox(height: 8),
+            DropdownButtonFormField<UnidadClasificable>(
+              initialValue: null,
+              decoration: const InputDecoration(
+                labelText: 'Agregar unidad',
+                border: OutlineInputBorder(),
+                isDense: true,
+              ),
+              items: disponibles
+                  .map(
+                    (unidad) => DropdownMenuItem<UnidadClasificable>(
+                      value: unidad,
+                      child: Text(
+                        '${unidad.identificador} · ${unidad.agrupacion}',
+                      ),
+                    ),
+                  )
+                  .toList(),
+              onChanged: disponibles.isEmpty
+                  ? null
+                  : (unidad) {
+                      if (unidad == null) return;
+                      setState(() => clasificacion.unidades.add(unidad));
+                    },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _cardEstandar(List<UnidadClasificable> unidades) {
+    return Card(
+      margin: const EdgeInsets.only(top: 8),
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Estándar',
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
+            Text(
+              'Unidades sin clasificar',
+              style: Theme.of(context).textTheme.bodySmall,
+            ),
+            const SizedBox(height: 6),
+            if (unidades.isEmpty)
+              const Text('Todas las unidades están clasificadas.')
+            else
+              Wrap(
+                spacing: 6,
+                runSpacing: 6,
+                children: unidades
+                    .map(
+                      (unidad) => Chip(label: Text(unidad.identificador)),
+                    )
+                    .toList(),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _cardPisos(
     String? titulo,
     _AgrupacionPisosForm form, {
@@ -807,6 +1089,27 @@ class _ProyectoWizardScreenState extends State<ProyectoWizardScreen> {
   }
 
   Widget _seccionExcepciones(_AgrupacionPisosForm form) {
+    if (!_formPisosListo(form)) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Divider(height: 24),
+          const Text(
+            'Pisos con excepción',
+            style: TextStyle(fontWeight: FontWeight.bold),
+          ),
+          Padding(
+            padding: const EdgeInsets.only(top: 4),
+            child: Text(
+              'Completa piso desde, piso hasta y unidades por piso para '
+              'habilitar esta sección.',
+              style: Theme.of(context).textTheme.bodySmall,
+            ),
+          ),
+        ],
+      );
+    }
+
     final desde = int.tryParse(form.pisoDesde.text.trim());
     final hasta = int.tryParse(form.pisoHasta.text.trim());
     final disponibles = <int>[];
@@ -1394,6 +1697,18 @@ class _AgrupacionPisosForm {
     pisoHasta.dispose();
     unidadesPorPiso.dispose();
     limpiarExcepciones();
+  }
+}
+
+class _ClasificacionForm {
+  _ClasificacionForm({String nombre = ''})
+    : nombre = TextEditingController(text: nombre);
+
+  final TextEditingController nombre;
+  final List<UnidadClasificable> unidades = [];
+
+  void dispose() {
+    nombre.dispose();
   }
 }
 

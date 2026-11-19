@@ -1,6 +1,7 @@
 import '../../../../core/network/api_client.dart';
 
 import '../../../../core/config/app_config.dart';
+import '../../domain/entities/clasificacion_unidad.dart';
 import '../../domain/entities/definicion_agrupacion.dart';
 import '../../domain/entities/instalacion_extra.dart';
 import '../../domain/entities/modulo_general.dart';
@@ -116,6 +117,7 @@ class SuperadminRemoteDataSource {
     String? descripcion,
     TipoCondominio? tipoCondominio,
     List<DefinicionAgrupacion>? agrupaciones,
+    List<ClasificacionUnidad>? clasificaciones,
     List<InstalacionExtra>? instalaciones,
     List<ModuloSistema>? modulos,
     List<String>? adminIds,
@@ -130,6 +132,8 @@ class SuperadminRemoteDataSource {
         if (tipoCondominio != null) 'tipo_condominio': tipoCondominio.name,
         if (agrupaciones != null)
           'agrupaciones': _agrupacionesJson(agrupaciones),
+        if (clasificaciones != null)
+          'clasificaciones': _clasificacionesJson(clasificaciones),
         if (instalaciones != null)
           'instalaciones': instalaciones
               .map(
@@ -201,6 +205,26 @@ class SuperadminRemoteDataSource {
     return ProyectoDetalleDTO.fromJson(
       response.data ?? const <String, dynamic>{},
     );
+  }
+
+  List<Map<String, dynamic>> _clasificacionesJson(
+    List<ClasificacionUnidad> clasificaciones,
+  ) {
+    return clasificaciones
+        .map(
+          (clasificacion) => {
+            'nombre': clasificacion.nombre,
+            'unidades': clasificacion.unidades
+                .map(
+                  (unidad) => {
+                    'agrupacion': unidad.agrupacion,
+                    'identificador': unidad.identificador,
+                  },
+                )
+                .toList(),
+          },
+        )
+        .toList();
   }
 
   List<Map<String, dynamic>> _agrupacionesJson(

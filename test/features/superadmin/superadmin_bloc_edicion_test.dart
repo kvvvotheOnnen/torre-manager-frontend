@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:torre_manager_frontend/features/superadmin/domain/entities/clasificacion_unidad.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:torre_manager_frontend/core/errors/failures.dart';
 import 'package:torre_manager_frontend/features/infraestructura/domain/entities/agrupacion.dart';
@@ -133,6 +134,7 @@ class _FakeSuperadminRepository implements SuperadminRepositoryInterface {
     String? descripcion,
     TipoCondominio? tipoCondominio,
     List<DefinicionAgrupacion>? agrupaciones,
+    List<ClasificacionUnidad>? clasificaciones,
     List<InstalacionExtra>? instalaciones,
     List<ModuloSistema>? modulos,
     List<String>? adminIds,

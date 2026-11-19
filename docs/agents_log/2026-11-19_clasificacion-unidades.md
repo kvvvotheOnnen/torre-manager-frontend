@@ -1,0 +1,41 @@
+# 2026-11-19 — Clasificación de unidades (task 13)
+
+## Contexto
+
+- **Branch:** `feature/koke/clasificacion-unidades/19-11-2026`
+- Task 13 en el cliente: el paso de Estructura del wizard incorpora la sección
+  "Clasificación de unidades", habilitada cuando hay unidades definidas por
+  piso. También se refuerza el gating de "pisos con excepción".
+
+## Cambios realizados
+
+- Entidades puras `ClasificacionUnidad` y `UnidadClasificable`.
+- Servicio de dominio `GeneradorUnidadesClasificables`: replica la generación
+  de identificadores del backend (pisos, excepciones simples, manzanas) para
+  listar las unidades que se crearán antes de persistir el paso.
+- Wizard de Estructura:
+  - nueva sección "Clasificación de unidades" en el mismo slide;
+  - permite crear clasificaciones con nombre libre y asignar unidades;
+  - el selector solo ofrece unidades sin clasificar (una unidad no puede estar
+    en dos categorías);
+  - tarjeta "Estándar" fija con las unidades sin clasificar;
+  - eliminar una clasificación devuelve sus unidades a "Estándar".
+  - "Pisos con excepción" solo muestra su contenido cuando piso desde/hasta y
+    unidades por piso son válidos.
+- El paso envía `clasificaciones` junto con `agrupaciones` mediante
+  `WizardEstructuraGuardada`, el caso de uso, el repositorio y el DataSource.
+
+## Decisiones de diseño
+
+- La sección vive en el mismo slide de Estructura (indicación del usuario),
+  por lo que las unidades se calculan en el dominio a partir de los formularios.
+- "Estándar" es informativa y de solo lectura; el backend la representa con
+  `clasificacion_id = NULL`.
+- Sin precarga adicional: el wizard ya no reanuda pasos desde el borrador y el
+  estado local mantiene las clasificaciones al retroceder dentro del asistente.
+
+## Verificación
+
+- `dart analyze lib test`: sin issues.
+- `flutter test`: **105 tests OK**, incluidos los nuevos tests del generador de
+  unidades y la verificación de que el BLoC propaga las clasificaciones.
