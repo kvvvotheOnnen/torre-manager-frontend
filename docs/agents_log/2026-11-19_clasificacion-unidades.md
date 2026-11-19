@@ -39,3 +39,12 @@
 - `dart analyze lib test`: sin issues.
 - `flutter test`: **105 tests OK**, incluidos los nuevos tests del generador de
   unidades y la verificación de que el BLoC propaga las clasificaciones.
+
+## Corrección posterior: nomenclatura de unidades del edificio
+
+- `GeneradorUnidadesClasificables` usa `Unidad-` como base para el tipo
+  edificio (paridad con backend); torres/bloques mantienen su nombre.
+- El identificador sugerido en pisos con excepción del edificio ahora es
+  `Unidad-<piso><n>`.
+- Tests del generador actualizados a `Unidad-101` / `Unidad-201`.
+- Verificación: `dart analyze` limpio y **105 tests OK**.

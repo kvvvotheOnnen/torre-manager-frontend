@@ -1267,8 +1267,10 @@ class _ProyectoWizardScreenState extends State<ProyectoWizardScreen> {
     final unidad = excepcion.unidades[index];
     final esInstalacion = unidad.tipo == TipoUnidadExcepcion.instalacionExtra;
     final esSimple = unidad.tipo == TipoUnidadExcepcion.simple;
+    // Las excepciones solo existen para el edificio; sus unidades se
+    // identifican como "Unidad-<piso><n>".
     final identificadorSugerido = _identificadorUnidad(
-      _edificio.nombre.text.trim(),
+      'Unidad',
       excepcion.piso,
       secuenciaSimple,
     );

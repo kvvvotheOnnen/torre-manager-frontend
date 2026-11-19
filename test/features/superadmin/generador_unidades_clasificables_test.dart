@@ -53,7 +53,7 @@ void main() {
 
     expect(
       unidades.map((unidad) => unidad.identificador),
-      ['Edificio-101', 'Edificio-102', 'Edificio-201'],
+      ['Unidad-101', 'Unidad-102', 'Unidad-201'],
     );
     expect(
       unidades.map((unidad) => unidad.identificador),

@@ -53,7 +53,11 @@ class GeneradorUnidadesClasificables {
       return const [];
     }
 
-    final base = prefijo.isEmpty ? nombre : prefijo;
+    // Un edificio es uno solo: sus unidades se llaman "Unidad-103", no
+    // "Edificio-103". Torres y bloques conservan su nombre.
+    final base = prefijo.isNotEmpty
+        ? prefijo
+        : (agrupacion.tipo == TipoAgrupacion.edificio ? 'Unidad' : nombre);
     final excluidos = agrupacion.pisosExcepcion
         .where((piso) => !piso.sinUnidades)
         .map((piso) => piso.piso)
