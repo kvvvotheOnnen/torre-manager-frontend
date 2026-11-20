@@ -120,6 +120,7 @@ class _FakeRepositorio implements SuperadminRepositoryInterface {
     required String nombre,
     required String correo,
     required String password,
+    List<String>? proyectoIds,
   }) async {
     return Right(Administrador(id: '1', nombre: nombre, correo: correo));
   }

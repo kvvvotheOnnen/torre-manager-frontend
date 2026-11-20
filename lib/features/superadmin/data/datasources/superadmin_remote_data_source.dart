@@ -47,10 +47,17 @@ class SuperadminRemoteDataSource {
     required String nombre,
     required String correo,
     required String password,
+    List<String>? proyectoIds,
   }) async {
     final response = await _client.post<Map<String, dynamic>>(
       AppConfig.superadminAdministradoresPath,
-      data: {'nombre': nombre, 'email': correo, 'password': password},
+      data: {
+        'nombre': nombre,
+        'email': correo,
+        'password': password,
+        if (proyectoIds != null && proyectoIds.isNotEmpty)
+          'proyecto_ids': proyectoIds,
+      },
     );
 
     return AdministradorDTO.fromJson(

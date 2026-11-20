@@ -22,14 +22,16 @@ class AdministradorCreado extends AdministradoresEvent {
     required this.nombre,
     required this.correo,
     required this.password,
+    this.proyectoIds = const [],
   });
 
   final String nombre;
   final String correo;
   final String password;
+  final List<String> proyectoIds;
 
   @override
-  List<Object?> get props => [nombre, correo, password];
+  List<Object?> get props => [nombre, correo, password, proyectoIds];
 }
 
 class AdministradoresMensajeConsumido extends AdministradoresEvent {
@@ -125,6 +127,7 @@ class AdministradoresBloc
       nombre: event.nombre,
       correo: event.correo,
       password: event.password,
+      proyectoIds: event.proyectoIds,
     );
 
     await result.fold(

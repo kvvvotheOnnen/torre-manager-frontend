@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../bloc/administradores_bloc.dart';
+import '../bloc/superadmin_bloc.dart';
 
 class AdministradoresScreen extends StatefulWidget {
   const AdministradoresScreen({super.key});
@@ -85,7 +86,24 @@ class _AdministradoresScreenState extends State<AdministradoresScreen> {
                         child: Icon(Icons.admin_panel_settings),
                       ),
                       title: Text(administrador.nombre),
-                      subtitle: Text(administrador.correo),
+                      subtitle: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(administrador.correo),
+                          if (administrador.proyectos.isEmpty)
+                            const Text(
+                              'Sin proyecto asignado',
+                              style: TextStyle(fontStyle: FontStyle.italic),
+                            )
+                          else
+                            Text(
+                              administrador.proyectos
+                                  .map((proyecto) => proyecto.nombre)
+                                  .join(', '),
+                            ),
+                        ],
+                      ),
+                      isThreeLine: true,
                     ),
                   ),
                 ),
@@ -119,7 +137,17 @@ class _DialogoNuevoAdministradorState
   final _nombreController = TextEditingController();
   final _correoController = TextEditingController();
   final _passwordController = TextEditingController();
+  final Set<String> _proyectosSeleccionados = {};
   bool _obscure = true;
+
+  @override
+  void initState() {
+    super.initState();
+    final superadmin = context.read<SuperadminBloc>();
+    if (superadmin.state.proyectos.isEmpty && !superadmin.state.cargando) {
+      superadmin.add(const ProyectosSolicitados());
+    }
+  }
 
   @override
   void dispose() {
@@ -137,6 +165,7 @@ class _DialogoNuevoAdministradorState
         nombre: _nombreController.text,
         correo: _correoController.text,
         password: _passwordController.text,
+        proyectoIds: _proyectosSeleccionados.toList(),
       ),
     );
   }
@@ -202,6 +231,72 @@ class _DialogoNuevoAdministradorState
                     ),
                     validator: (value) =>
                         (value ?? '').length < 8 ? 'Mínimo 8 caracteres' : null,
+                  ),
+                  const SizedBox(height: 16),
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      'Proyectos (opcional)',
+                      style: Theme.of(context).textTheme.titleSmall,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      'Anexa la cuenta a uno o más proyectos. Puedes hacerlo '
+                      'también luego desde la edición del proyecto.',
+                      style: Theme.of(context).textTheme.bodySmall,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  BlocBuilder<SuperadminBloc, SuperadminState>(
+                    builder: (context, superadminState) {
+                      if (superadminState.proyectos.isEmpty) {
+                        return Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 8),
+                          child: Text(
+                            superadminState.cargando
+                                ? 'Cargando proyectos...'
+                                : 'No hay proyectos disponibles.',
+                            style: Theme.of(context).textTheme.bodySmall,
+                          ),
+                        );
+                      }
+
+                      return ConstrainedBox(
+                        constraints: const BoxConstraints(maxHeight: 180),
+                        child: SingleChildScrollView(
+                          child: Column(
+                            children: superadminState.proyectos
+                                .map(
+                                  (proyecto) => CheckboxListTile(
+                                    contentPadding: EdgeInsets.zero,
+                                    dense: true,
+                                    value: _proyectosSeleccionados.contains(
+                                      proyecto.id,
+                                    ),
+                                    title: Text(proyecto.nombre),
+                                    onChanged: state.guardando
+                                        ? null
+                                        : (value) => setState(() {
+                                            if (value ?? false) {
+                                              _proyectosSeleccionados.add(
+                                                proyecto.id,
+                                              );
+                                            } else {
+                                              _proyectosSeleccionados.remove(
+                                                proyecto.id,
+                                              );
+                                            }
+                                          }),
+                                  ),
+                                )
+                                .toList(),
+                          ),
+                        ),
+                      );
+                    },
                   ),
                 ],
               ),

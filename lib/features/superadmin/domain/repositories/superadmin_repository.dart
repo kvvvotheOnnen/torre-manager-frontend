@@ -20,6 +20,7 @@ abstract interface class SuperadminRepositoryInterface {
     required String nombre,
     required String correo,
     required String password,
+    List<String>? proyectoIds,
   });
 
   Future<Either<Failure, ProyectoDetalle>> crearProyecto({

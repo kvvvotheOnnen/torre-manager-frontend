@@ -90,6 +90,7 @@ class _FakeSuperadminRepository implements SuperadminRepositoryInterface {
     required String nombre,
     required String correo,
     required String password,
+    List<String>? proyectoIds,
   }) async {
     return const Right(
       Administrador(id: '1', nombre: 'Admin', correo: 'admin@example.test'),

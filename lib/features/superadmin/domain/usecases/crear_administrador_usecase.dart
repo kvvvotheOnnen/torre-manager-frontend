@@ -15,6 +15,7 @@ class CrearAdministradorUseCase {
     required String nombre,
     required String correo,
     required String password,
+    List<String>? proyectoIds,
   }) {
     final nombreTrim = nombre.trim();
     final correoTrim = correo.trim();
@@ -43,6 +44,7 @@ class CrearAdministradorUseCase {
       nombre: nombreTrim,
       correo: correoTrim,
       password: password,
+      proyectoIds: proyectoIds,
     );
   }
 }

@@ -42,6 +42,7 @@ class SuperadminRepositoryImpl implements SuperadminRepositoryInterface {
     required String nombre,
     required String correo,
     required String password,
+    List<String>? proyectoIds,
   }) {
     return _guard(
       () => _remoteDataSource
@@ -49,6 +50,7 @@ class SuperadminRepositoryImpl implements SuperadminRepositoryInterface {
             nombre: nombre,
             correo: correo,
             password: password,
+            proyectoIds: proyectoIds,
           )
           .then((dto) => dto.toEntity()),
     );
