@@ -76,3 +76,14 @@
   los pisos con excepción (vacíos o no), eliminando unidades fantasma en la
   clasificación. Test nuevo con piso vacío.
 - Verificación: `dart analyze` limpio y **106 tests OK**.
+
+## Corrección: módulos globales en el último slide del wizard
+
+- El paso "Módulos" ahora muestra también los módulos globales
+  (`ModuloGeneral`), apagados por defecto. El superadmin enciende los que
+  tendrá el proyecto.
+- Al finalizar se envían como `modulos_deshabilitados` todos los globales no
+  encendidos; la cadena evento → use case → repositorio → datasource los
+  propaga.
+- Test del BLoC actualizado para verificar la propagación.
+- Verificación: `dart analyze` limpio y **106 tests OK**.

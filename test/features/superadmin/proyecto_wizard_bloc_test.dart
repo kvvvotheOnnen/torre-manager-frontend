@@ -25,6 +25,7 @@ class _FakeRepositorio implements SuperadminRepositoryInterface {
   bool finalizado = false;
   String? ultimoBorradorId;
   List<ClasificacionUnidad>? ultimasClasificaciones;
+  List<ModuloGeneral>? ultimosModulosDeshabilitados;
 
   ProyectoDetalle _detalle({String id = '1', String nombre = 'Proyecto'}) {
     return ProyectoDetalle(
@@ -59,6 +60,7 @@ class _FakeRepositorio implements SuperadminRepositoryInterface {
     List<ClasificacionUnidad>? clasificaciones,
     List<InstalacionExtra>? instalaciones,
     List<ModuloSistema>? modulos,
+    List<ModuloGeneral>? modulosDeshabilitados,
     List<String>? adminIds,
     bool resetEstructura = false,
     bool finalizar = false,
@@ -68,6 +70,7 @@ class _FakeRepositorio implements SuperadminRepositoryInterface {
 
     ultimoBorradorId = id;
     ultimasClasificaciones = clasificaciones;
+    ultimosModulosDeshabilitados = modulosDeshabilitados;
     if (finalizar) finalizado = true;
 
     return Right(_detalle(id: id, nombre: nombre));
@@ -280,11 +283,21 @@ void main() {
     await inicio;
 
     final future = bloc.stream.firstWhere((s) => s.finalizado);
-    bloc.add(const WizardFinalizado([ModuloSistema.infraestructura], ['2']));
+    bloc.add(
+      const WizardFinalizado(
+        [ModuloSistema.infraestructura],
+        ['2'],
+        modulosDeshabilitados: [ModuloGeneral.paqueteria],
+      ),
+    );
 
     final state = await future;
 
     expect(state.finalizado, isTrue);
     expect(repositorio.finalizado, isTrue);
+    expect(
+      repositorio.ultimosModulosDeshabilitados,
+      [ModuloGeneral.paqueteria],
+    );
   });
 }

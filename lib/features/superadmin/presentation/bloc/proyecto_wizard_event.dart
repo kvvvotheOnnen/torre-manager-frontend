@@ -3,6 +3,7 @@ import 'package:equatable/equatable.dart';
 import '../../domain/entities/clasificacion_unidad.dart';
 import '../../domain/entities/definicion_agrupacion.dart';
 import '../../domain/entities/instalacion_extra.dart';
+import '../../domain/entities/modulo_general.dart';
 import '../../domain/entities/modulo_sistema.dart';
 import '../../domain/entities/tipo_condominio.dart';
 
@@ -64,13 +65,18 @@ class WizardAdministradoresGuardados extends ProyectoWizardEvent {
 }
 
 class WizardFinalizado extends ProyectoWizardEvent {
-  const WizardFinalizado(this.modulos, this.adminIds);
+  const WizardFinalizado(
+    this.modulos,
+    this.adminIds, {
+    this.modulosDeshabilitados = const [],
+  });
 
   final List<ModuloSistema> modulos;
   final List<String> adminIds;
+  final List<ModuloGeneral> modulosDeshabilitados;
 
   @override
-  List<Object?> get props => [modulos, adminIds];
+  List<Object?> get props => [modulos, adminIds, modulosDeshabilitados];
 }
 
 class WizardPasoAvanzado extends ProyectoWizardEvent {

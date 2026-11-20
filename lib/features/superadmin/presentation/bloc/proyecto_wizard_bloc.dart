@@ -239,6 +239,7 @@ class ProyectoWizardBloc
       nombre: state.nombre,
       descripcion: state.descripcion ?? '',
       modulos: event.modulos,
+      modulosDeshabilitados: event.modulosDeshabilitados,
       adminIds: event.adminIds,
       finalizar: true,
     );

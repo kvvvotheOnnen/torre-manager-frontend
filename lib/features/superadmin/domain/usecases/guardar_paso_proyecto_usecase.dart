@@ -4,6 +4,7 @@ import '../../../../core/errors/failures.dart';
 import '../entities/clasificacion_unidad.dart';
 import '../entities/definicion_agrupacion.dart';
 import '../entities/instalacion_extra.dart';
+import '../entities/modulo_general.dart';
 import '../entities/modulo_sistema.dart';
 import '../entities/proyecto_detalle.dart';
 import '../entities/tipo_condominio.dart';
@@ -23,6 +24,7 @@ class GuardarPasoProyectoUseCase {
     List<ClasificacionUnidad>? clasificaciones,
     List<InstalacionExtra>? instalaciones,
     List<ModuloSistema>? modulos,
+    List<ModuloGeneral>? modulosDeshabilitados,
     List<String>? adminIds,
     bool resetEstructura = false,
     bool finalizar = false,
@@ -56,6 +58,7 @@ class GuardarPasoProyectoUseCase {
       clasificaciones: clasificaciones,
       instalaciones: instalaciones,
       modulos: modulos,
+      modulosDeshabilitados: modulosDeshabilitados,
       adminIds: adminIds,
       resetEstructura: resetEstructura,
       finalizar: finalizar,

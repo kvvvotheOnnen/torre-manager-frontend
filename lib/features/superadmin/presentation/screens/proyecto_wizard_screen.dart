@@ -5,6 +5,7 @@ import '../../../infraestructura/domain/entities/tipo_agrupacion.dart';
 import '../../domain/entities/clasificacion_unidad.dart';
 import '../../domain/entities/definicion_agrupacion.dart';
 import '../../domain/entities/instalacion_extra.dart';
+import '../../domain/entities/modulo_general.dart';
 import '../../domain/entities/modulo_sistema.dart';
 import '../../domain/entities/tipo_condominio.dart';
 import '../../domain/services/generador_unidades_clasificables.dart';
@@ -49,6 +50,7 @@ class _ProyectoWizardScreenState extends State<ProyectoWizardScreen> {
   final List<_InstalacionForm> _instalaciones = [];
   final Set<String> _adminIds = {};
   final Set<ModuloSistema> _modulos = {ModuloSistema.infraestructura};
+  final Set<ModuloGeneral> _modulosGlobales = {};
   final _nuevaClasificacionController = TextEditingController();
   final List<_ClasificacionForm> _clasificaciones = [];
   static const _generadorUnidades = GeneradorUnidadesClasificables();
@@ -381,7 +383,15 @@ class _ProyectoWizardScreenState extends State<ProyectoWizardScreen> {
           _snack('Habilita al menos un módulo.');
           return;
         }
-        _bloc.add(WizardFinalizado(_modulos.toList(), _adminIds.toList()));
+        _bloc.add(
+          WizardFinalizado(
+            _modulos.toList(),
+            _adminIds.toList(),
+            modulosDeshabilitados: ModuloGeneral.values
+                .where((modulo) => !_modulosGlobales.contains(modulo))
+                .toList(),
+          ),
+        );
         return;
     }
   }
@@ -1581,6 +1591,28 @@ class _ProyectoWizardScreenState extends State<ProyectoWizardScreen> {
             subtitle: const Text('Siempre habilitado para el proyecto'),
             value: true,
             onChanged: null,
+          ),
+        ),
+        const SizedBox(height: 16),
+        Text('Módulos globales', style: theme.textTheme.titleMedium),
+        const SizedBox(height: 4),
+        Text(
+          'Activa los módulos que tendrá este proyecto. Los que queden '
+          'apagados se deshabilitan para el recinto.',
+          style: theme.textTheme.bodySmall,
+        ),
+        ...ModuloGeneral.values.map(
+          (modulo) => SwitchListTile(
+            contentPadding: EdgeInsets.zero,
+            title: Text(modulo.etiqueta),
+            value: _modulosGlobales.contains(modulo),
+            onChanged: (value) => setState(() {
+              if (value) {
+                _modulosGlobales.add(modulo);
+              } else {
+                _modulosGlobales.remove(modulo);
+              }
+            }),
           ),
         ),
       ],

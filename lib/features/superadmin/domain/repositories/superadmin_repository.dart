@@ -50,6 +50,7 @@ abstract interface class SuperadminRepositoryInterface {
     List<ClasificacionUnidad>? clasificaciones,
     List<InstalacionExtra>? instalaciones,
     List<ModuloSistema>? modulos,
+    List<ModuloGeneral>? modulosDeshabilitados,
     List<String>? adminIds,
     bool resetEstructura = false,
     bool finalizar = false,

@@ -120,6 +120,7 @@ class SuperadminRemoteDataSource {
     List<ClasificacionUnidad>? clasificaciones,
     List<InstalacionExtra>? instalaciones,
     List<ModuloSistema>? modulos,
+    List<ModuloGeneral>? modulosDeshabilitados,
     List<String>? adminIds,
     bool resetEstructura = false,
     bool finalizar = false,
@@ -146,6 +147,10 @@ class SuperadminRemoteDataSource {
               .toList(),
         if (modulos != null)
           'modulos': modulos.map((modulo) => modulo.valor).toList(),
+        if (modulosDeshabilitados != null)
+          'modulos_deshabilitados': modulosDeshabilitados
+              .map((modulo) => modulo.valor)
+              .toList(),
         'admin_ids': ?adminIds,
         if (resetEstructura) 'reset_estructura': true,
         if (finalizar) 'finalizar': true,

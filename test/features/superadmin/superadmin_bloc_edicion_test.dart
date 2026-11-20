@@ -137,6 +137,7 @@ class _FakeSuperadminRepository implements SuperadminRepositoryInterface {
     List<ClasificacionUnidad>? clasificaciones,
     List<InstalacionExtra>? instalaciones,
     List<ModuloSistema>? modulos,
+    List<ModuloGeneral>? modulosDeshabilitados,
     List<String>? adminIds,
     bool resetEstructura = false,
     bool finalizar = false,
