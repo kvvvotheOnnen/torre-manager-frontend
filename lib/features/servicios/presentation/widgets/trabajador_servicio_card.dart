@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../../core/widgets/glass_card.dart';
+import '../../../../core/utils/formato_telefono.dart';
 import '../../domain/entities/trabajador_servicio.dart';
 
 class TrabajadorServicioCard extends StatelessWidget {
@@ -76,7 +77,7 @@ class TrabajadorServicioCard extends StatelessWidget {
                       const SizedBox(width: 6),
                       Expanded(
                         child: Text(
-                          trabajador.telefono,
+                          formatearTelefono(trabajador.telefono),
                           style: textos.bodyMedium,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
@@ -160,7 +161,11 @@ class _Imagen extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(Icons.image_not_supported_outlined, size: 36, color: colores.onSurfaceVariant),
+          Icon(
+            Icons.image_not_supported_outlined,
+            size: 36,
+            color: colores.onSurfaceVariant,
+          ),
           const SizedBox(height: 6),
           Text(
             'Sin imagen',

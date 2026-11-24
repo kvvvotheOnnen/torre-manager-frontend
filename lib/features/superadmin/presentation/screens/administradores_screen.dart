@@ -185,9 +185,9 @@ class _DialogoNuevoAdministradorState
                   TextFormField(
                     controller: _nombreController,
                     enabled: !state.guardando,
+                    textInputAction: TextInputAction.next,
                     decoration: const InputDecoration(
                       labelText: 'Nombre completo',
-                      border: OutlineInputBorder(),
                     ),
                     validator: (value) => (value?.trim().isEmpty ?? true)
                         ? 'Ingresa un nombre'
@@ -198,9 +198,9 @@ class _DialogoNuevoAdministradorState
                     controller: _correoController,
                     enabled: !state.guardando,
                     keyboardType: TextInputType.emailAddress,
+                    textInputAction: TextInputAction.next,
                     decoration: const InputDecoration(
                       labelText: 'Correo electrónico',
-                      border: OutlineInputBorder(),
                     ),
                     validator: (value) {
                       final email = value?.trim() ?? '';
@@ -217,9 +217,10 @@ class _DialogoNuevoAdministradorState
                     controller: _passwordController,
                     enabled: !state.guardando,
                     obscureText: _obscure,
+                    textInputAction: TextInputAction.done,
+                    onFieldSubmitted: (_) => _submit(),
                     decoration: InputDecoration(
                       labelText: 'Contraseña (mín. 8 caracteres)',
-                      border: const OutlineInputBorder(),
                       suffixIcon: IconButton(
                         icon: Icon(
                           _obscure

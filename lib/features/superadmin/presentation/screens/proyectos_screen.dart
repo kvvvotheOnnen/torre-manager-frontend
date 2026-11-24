@@ -352,10 +352,7 @@ class _ProyectoFormScreenState extends State<_ProyectoFormScreen> {
                   TextField(
                     controller: confirmacionController,
                     autofocus: true,
-                    decoration: const InputDecoration(
-                      border: OutlineInputBorder(),
-                      isDense: true,
-                    ),
+                    decoration: const InputDecoration(isDense: true),
                     onChanged: (_) => setStateDialog(() {}),
                   ),
                 ],
@@ -496,7 +493,6 @@ class _ProyectoFormScreenState extends State<_ProyectoFormScreen> {
                         controller: _nombreController,
                         decoration: const InputDecoration(
                           labelText: 'Nombre del proyecto',
-                          border: OutlineInputBorder(),
                         ),
                         validator: (value) => (value?.trim().isEmpty ?? true)
                             ? 'Ingresa un nombre'
@@ -508,7 +504,6 @@ class _ProyectoFormScreenState extends State<_ProyectoFormScreen> {
                         maxLines: 2,
                         decoration: const InputDecoration(
                           labelText: 'Descripción (opcional)',
-                          border: OutlineInputBorder(),
                         ),
                       ),
                       const SizedBox(height: 20),
@@ -585,7 +580,6 @@ class _ProyectoFormScreenState extends State<_ProyectoFormScreen> {
                                       controller: form.nombre,
                                       decoration: const InputDecoration(
                                         labelText: 'Nombre (ej. Quincho)',
-                                        border: OutlineInputBorder(),
                                         isDense: true,
                                       ),
                                     ),
@@ -597,7 +591,6 @@ class _ProyectoFormScreenState extends State<_ProyectoFormScreen> {
                                       keyboardType: TextInputType.number,
                                       decoration: const InputDecoration(
                                         labelText: 'Capacidad (1-500)',
-                                        border: OutlineInputBorder(),
                                         isDense: true,
                                       ),
                                       validator: (value) {
@@ -632,7 +625,6 @@ class _ProyectoFormScreenState extends State<_ProyectoFormScreen> {
                                 maxLength: 100,
                                 decoration: const InputDecoration(
                                   labelText: 'Descripción (opcional)',
-                                  border: OutlineInputBorder(),
                                   isDense: true,
                                   counterText: '',
                                 ),
@@ -738,10 +730,7 @@ class _ProyectoFormScreenState extends State<_ProyectoFormScreen> {
       Text('Tipo de condominio', style: theme.textTheme.titleMedium),
       const SizedBox(height: 8),
       InputDecorator(
-        decoration: const InputDecoration(
-          border: OutlineInputBorder(),
-          isDense: true,
-        ),
+        decoration: const InputDecoration(isDense: true),
         child: Text(_tipo.etiqueta),
       ),
       const SizedBox(height: 4),

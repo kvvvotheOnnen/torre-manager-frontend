@@ -481,7 +481,6 @@ class _TipoAccesoriasTabState extends State<_TipoAccesoriasTab> {
                               hintText: departamentoDeshabilitado
                                   ? 'No aplica para visita u otro'
                                   : 'Escribe para buscar',
-                              border: const OutlineInputBorder(),
                               isDense: true,
                               errorText: mostrarError
                                   ? 'Debes elegir un departamento sugerido.'

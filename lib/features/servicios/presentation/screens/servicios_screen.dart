@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/router/app_router.dart';
 import '../../../../core/router/funcion_rutas.dart';
 import '../../../../core/theme/design_tokens.dart';
+import '../../../../core/widgets/app_content.dart';
 import '../../../../core/widgets/app_scroll_view.dart';
 import '../../../../core/widgets/app_shell.dart';
 import '../../../../core/widgets/empty_state.dart';
@@ -63,6 +64,7 @@ class _ServiciosScreenState extends State<ServiciosScreen> {
   }
 
   Future<void> _abrirFormulario({TrabajadorServicio? inicial}) async {
+    FocusManager.instance.primaryFocus?.unfocus();
     final datos = await TrabajadorServicioFormDialog.mostrar(
       context,
       inicial: inicial,
@@ -158,152 +160,156 @@ class _ServiciosScreenState extends State<ServiciosScreen> {
               }
             },
             builder: (context, state) {
-              return RefreshIndicator(
-                onRefresh: () async {
-                  context.read<ServiciosBloc>().add(
-                    const ServiciosSolicitados(),
-                  );
-                },
-                child: AppScrollView(
-                  children: [
-                    SectionHeader(
-                      title: 'Servicios recomendados',
-                      subtitle: 'Directorio de trabajadores del edificio',
-                      trailing: puedeGestionar
-                          ? FilledButton.icon(
-                              onPressed: () => _abrirFormulario(),
-                              icon: const Icon(Icons.add_rounded),
-                              label: const Text('Nuevo servicio'),
-                            )
-                          : null,
-                    ),
-                    const SizedBox(height: AppSpacing.lg),
-                    GlassCard(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          TextField(
-                            controller: _busqueda,
-                            decoration: InputDecoration(
-                              labelText:
-                                  'Buscar por nombre, empresa, tipo o descripción',
-                              prefixIcon: const Icon(Icons.search_rounded),
-                              suffixIcon: _busqueda.text.isEmpty
-                                  ? null
-                                  : IconButton(
-                                      tooltip: 'Limpiar búsqueda',
-                                      onPressed: () {
-                                        _busqueda.clear();
-                                        context.read<ServiciosBloc>().add(
-                                          const BusquedaServiciosCambiada(''),
-                                        );
-                                        setState(() {});
-                                      },
-                                      icon: const Icon(Icons.close_rounded),
-                                    ),
-                            ),
-                            textInputAction: TextInputAction.search,
-                            onChanged: (texto) {
-                              context.read<ServiciosBloc>().add(
-                                BusquedaServiciosCambiada(texto),
-                              );
-                              setState(() {});
-                            },
-                          ),
-                          const SizedBox(height: AppSpacing.md),
-                          Wrap(
-                            spacing: AppSpacing.sm,
-                            runSpacing: AppSpacing.sm,
-                            children: [
-                              ChoiceChip(
-                                label: const Text('Todos'),
-                                selected: state.tipo == null,
-                                onSelected: (_) => context
-                                    .read<ServiciosBloc>()
-                                    .add(const FiltroServicioCambiado(null)),
+              return AppContent(
+                child: RefreshIndicator(
+                  onRefresh: () async {
+                    context.read<ServiciosBloc>().add(
+                      const ServiciosSolicitados(),
+                    );
+                  },
+                  child: AppScrollView(
+                    children: [
+                      SectionHeader(
+                        title: 'Servicios recomendados',
+                        subtitle: 'Directorio de trabajadores del edificio',
+                        trailing: puedeGestionar
+                            ? FilledButton.icon(
+                                onPressed: () => _abrirFormulario(),
+                                icon: const Icon(Icons.add_rounded),
+                                label: const Text('Nuevo servicio'),
+                              )
+                            : null,
+                      ),
+                      const SizedBox(height: AppSpacing.lg),
+                      GlassCard(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            AppFieldWidth(
+                              child: TextField(
+                                controller: _busqueda,
+                                decoration: InputDecoration(
+                                  labelText: 'Buscar por nombre, empresa, tipo o descripción',
+                                  prefixIcon: const Icon(Icons.search_rounded),
+                                  suffixIcon: _busqueda.text.isEmpty
+                                      ? null
+                                      : IconButton(
+                                          tooltip: 'Limpiar búsqueda',
+                                          onPressed: () {
+                                            _busqueda.clear();
+                                            context.read<ServiciosBloc>().add(
+                                              const BusquedaServiciosCambiada(
+                                                '',
+                                              ),
+                                            );
+                                            setState(() {});
+                                          },
+                                          icon: const Icon(Icons.close_rounded),
+                                        ),
+                                ),
+                                textInputAction: TextInputAction.search,
+                                onChanged: (texto) {
+                                  context.read<ServiciosBloc>().add(
+                                    BusquedaServiciosCambiada(texto),
+                                  );
+                                  setState(() {});
+                                },
                               ),
-                              ...TipoServicio.values.map(
-                                (tipo) => ChoiceChip(
-                                  label: Text(tipo.etiqueta),
-                                  selected: state.tipo == tipo,
+                            ),
+                            const SizedBox(height: AppSpacing.md),
+                            Wrap(
+                              spacing: AppSpacing.sm,
+                              runSpacing: AppSpacing.sm,
+                              children: [
+                                ChoiceChip(
+                                  label: const Text('Todos'),
+                                  selected: state.tipo == null,
                                   onSelected: (_) => context
                                       .read<ServiciosBloc>()
-                                      .add(FiltroServicioCambiado(tipo)),
+                                      .add(const FiltroServicioCambiado(null)),
                                 ),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: AppSpacing.lg),
-                    if (state.cargando && state.trabajadores.isEmpty)
-                      const Padding(
-                        padding: EdgeInsets.symmetric(
-                          vertical: AppSpacing.xxl,
-                        ),
-                        child: Center(child: CircularProgressIndicator()),
-                      )
-                    else if (state.tieneError && state.trabajadores.isEmpty)
-                      AppEmptyState(
-                        icon: Icons.error_outline_rounded,
-                        title: 'No se pudieron cargar los servicios',
-                        message: state.mensaje,
-                        actionLabel: 'Reintentar',
-                        onAction: () => context.read<ServiciosBloc>().add(
-                          const ServiciosSolicitados(),
-                        ),
-                      )
-                    else if (state.sinResultados)
-                      const AppEmptyState(
-                        icon: Icons.handyman_outlined,
-                        title: 'Sin trabajadores para mostrar',
-                        message:
-                            'Prueba con otro filtro o pide a la administración que agregue servicios.',
-                      )
-                    else
-                      LayoutBuilder(
-                        builder: (context, constraints) {
-                          final columnas = constraints.maxWidth >= 1100
-                              ? 3
-                              : (constraints.maxWidth >= 720 ? 2 : 1);
-                          const separacion = AppSpacing.md;
-                          final ancho =
-                              (constraints.maxWidth -
-                                  separacion * (columnas - 1)) /
-                              columnas;
-
-                          return Wrap(
-                            spacing: separacion,
-                            runSpacing: separacion,
-                            children: state.trabajadoresVisibles
-                                .map(
-                                  (trabajador) => SizedBox(
-                                    width: ancho,
-                                    child: TrabajadorServicioCard(
-                                      trabajador: trabajador,
-                                      onAbrir: () => _abrirDetalle(
-                                        trabajador,
-                                        puedeGestionar: puedeGestionar,
-                                      ),
-                                      onEditar: puedeGestionar
-                                          ? () => _abrirFormulario(
-                                              inicial: trabajador,
-                                            )
-                                          : null,
-                                      onEliminar: puedeGestionar
-                                          ? () => _confirmarEliminacion(
-                                              trabajador,
-                                            )
-                                          : null,
-                                    ),
+                                ...TipoServicio.values.map(
+                                  (tipo) => ChoiceChip(
+                                    label: Text(tipo.etiqueta),
+                                    selected: state.tipo == tipo,
+                                    onSelected: (_) => context
+                                        .read<ServiciosBloc>()
+                                        .add(FiltroServicioCambiado(tipo)),
                                   ),
-                                )
-                                .toList(),
-                          );
-                        },
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
                       ),
-                  ],
+                      const SizedBox(height: AppSpacing.lg),
+                      if (state.cargando && state.trabajadores.isEmpty)
+                        const Padding(
+                          padding: EdgeInsets.symmetric(
+                            vertical: AppSpacing.xxl,
+                          ),
+                          child: Center(child: CircularProgressIndicator()),
+                        )
+                      else if (state.tieneError && state.trabajadores.isEmpty)
+                        AppEmptyState(
+                          icon: Icons.error_outline_rounded,
+                          title: 'No se pudieron cargar los servicios',
+                          message: state.mensaje,
+                          actionLabel: 'Reintentar',
+                          onAction: () => context.read<ServiciosBloc>().add(
+                            const ServiciosSolicitados(),
+                          ),
+                        )
+                      else if (state.sinResultados)
+                        const AppEmptyState(
+                          icon: Icons.handyman_outlined,
+                          title: 'Sin trabajadores para mostrar',
+                          message: 'Prueba con otro filtro o pide a la administración que agregue servicios.',
+                        )
+                      else
+                        LayoutBuilder(
+                          builder: (context, constraints) {
+                            final columnas = constraints.maxWidth >= 1100
+                                ? 3
+                                : (constraints.maxWidth >= 720 ? 2 : 1);
+                            const separacion = AppSpacing.md;
+                            final ancho =
+                                (constraints.maxWidth -
+                                    separacion * (columnas - 1)) /
+                                columnas;
+
+                            return Wrap(
+                              spacing: separacion,
+                              runSpacing: separacion,
+                              children: state.trabajadoresVisibles
+                                  .map(
+                                    (trabajador) => SizedBox(
+                                      width: ancho,
+                                      child: TrabajadorServicioCard(
+                                        trabajador: trabajador,
+                                        onAbrir: () => _abrirDetalle(
+                                          trabajador,
+                                          puedeGestionar: puedeGestionar,
+                                        ),
+                                        onEditar: puedeGestionar
+                                            ? () => _abrirFormulario(
+                                                inicial: trabajador,
+                                              )
+                                            : null,
+                                        onEliminar: puedeGestionar
+                                            ? () => _confirmarEliminacion(
+                                                trabajador,
+                                              )
+                                            : null,
+                                      ),
+                                    ),
+                                  )
+                                  .toList(),
+                            );
+                          },
+                        ),
+                    ],
+                  ),
                 ),
               );
             },
@@ -345,5 +351,4 @@ class _ServiciosScreenState extends State<ServiciosScreen> {
         ),
     ];
   }
-
 }

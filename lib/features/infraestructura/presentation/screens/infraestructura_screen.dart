@@ -320,7 +320,6 @@ class _DialogoNuevaAgrupacionState extends State<_DialogoNuevaAgrupacion> {
                 controller: _nombreController,
                 decoration: const InputDecoration(
                   labelText: 'Nombre (ej. Torre A)',
-                  border: OutlineInputBorder(),
                 ),
                 validator: (value) => (value?.trim().isEmpty ?? true)
                     ? 'Ingresa un nombre'
@@ -331,7 +330,6 @@ class _DialogoNuevaAgrupacionState extends State<_DialogoNuevaAgrupacion> {
                 initialValue: _tipo,
                 decoration: const InputDecoration(
                   labelText: 'Tipo de agrupación',
-                  border: OutlineInputBorder(),
                 ),
                 items: TipoAgrupacion.values
                     .map(
@@ -348,7 +346,6 @@ class _DialogoNuevaAgrupacionState extends State<_DialogoNuevaAgrupacion> {
                 controller: _prefijoController,
                 decoration: const InputDecoration(
                   labelText: 'Prefijo (opcional, por defecto el nombre)',
-                  border: OutlineInputBorder(),
                 ),
               ),
               const SizedBox(height: 12),
@@ -360,7 +357,6 @@ class _DialogoNuevaAgrupacionState extends State<_DialogoNuevaAgrupacion> {
                       keyboardType: TextInputType.number,
                       decoration: const InputDecoration(
                         labelText: 'Piso desde',
-                        border: OutlineInputBorder(),
                       ),
                       validator: (value) =>
                           int.tryParse(value ?? '') == null ? 'Inválido' : null,
@@ -373,7 +369,6 @@ class _DialogoNuevaAgrupacionState extends State<_DialogoNuevaAgrupacion> {
                       keyboardType: TextInputType.number,
                       decoration: const InputDecoration(
                         labelText: 'Piso hasta',
-                        border: OutlineInputBorder(),
                       ),
                       validator: (value) =>
                           int.tryParse(value ?? '') == null ? 'Inválido' : null,
@@ -387,7 +382,6 @@ class _DialogoNuevaAgrupacionState extends State<_DialogoNuevaAgrupacion> {
                 keyboardType: TextInputType.number,
                 decoration: const InputDecoration(
                   labelText: 'Unidades por piso',
-                  border: OutlineInputBorder(),
                 ),
                 validator: (value) =>
                     (int.tryParse(value ?? '') ?? 0) < 1 ? 'Mínimo 1' : null,
@@ -459,16 +453,12 @@ class _DialogoNuevaAccesoriaState extends State<_DialogoNuevaAccesoria> {
             controller: _identificadorController,
             decoration: const InputDecoration(
               labelText: 'Identificador (ej. E-101)',
-              border: OutlineInputBorder(),
             ),
           ),
           const SizedBox(height: 12),
           DropdownButtonFormField<TipoUnidadAccesoria>(
             initialValue: _tipo,
-            decoration: const InputDecoration(
-              labelText: 'Tipo',
-              border: OutlineInputBorder(),
-            ),
+            decoration: const InputDecoration(labelText: 'Tipo'),
             items: TipoUnidadAccesoria.values
                 .map(
                   (tipo) => DropdownMenuItem(

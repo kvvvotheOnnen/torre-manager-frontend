@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 
+import '../../../../core/utils/formato_telefono.dart';
 import '../../domain/entities/tipo_servicio.dart';
 import '../../domain/entities/trabajador_servicio.dart';
 import '../../domain/entities/trabajador_servicio_foto.dart';
@@ -157,35 +158,34 @@ class _TrabajadorServicioFormDialogState
                 const SizedBox(height: 16),
                 TextFormField(
                   controller: _nombre,
+                  textInputAction: TextInputAction.next,
                   decoration: const InputDecoration(
                     labelText: 'Nombre de quien ofrece el servicio *',
-                    border: OutlineInputBorder(),
                   ),
                   textCapitalization: TextCapitalization.words,
-                  validator: (valor) =>
-                      (valor == null || valor.trim().isEmpty)
+                  validator: (valor) => (valor == null || valor.trim().isEmpty)
                       ? 'Ingresa el nombre.'
                       : null,
                 ),
                 const SizedBox(height: 12),
                 TextFormField(
                   controller: _empresa,
+                  textInputAction: TextInputAction.next,
                   decoration: const InputDecoration(
                     labelText: 'Empresa o servicio (opcional)',
-                    border: OutlineInputBorder(),
                   ),
                   textCapitalization: TextCapitalization.words,
                 ),
                 const SizedBox(height: 12),
                 TextFormField(
                   controller: _telefono,
+                  textInputAction: TextInputAction.next,
                   decoration: const InputDecoration(
                     labelText: 'Número de contacto *',
-                    border: OutlineInputBorder(),
                   ),
                   keyboardType: TextInputType.phone,
-                  validator: (valor) =>
-                      (valor == null || valor.trim().isEmpty)
+                  inputFormatters: const [FormateadorTelefono()],
+                  validator: (valor) => (valor == null || valor.trim().isEmpty)
                       ? 'Ingresa un número de contacto.'
                       : null,
                 ),
@@ -194,7 +194,6 @@ class _TrabajadorServicioFormDialogState
                   initialValue: _tipo,
                   decoration: const InputDecoration(
                     labelText: 'Tipo de servicio *',
-                    border: OutlineInputBorder(),
                   ),
                   items: TipoServicio.values
                       .map(
@@ -213,7 +212,6 @@ class _TrabajadorServicioFormDialogState
                   controller: _descripcion,
                   decoration: const InputDecoration(
                     labelText: 'Descripción del servicio (opcional)',
-                    border: OutlineInputBorder(),
                   ),
                   maxLines: 3,
                   textCapitalization: TextCapitalization.sentences,

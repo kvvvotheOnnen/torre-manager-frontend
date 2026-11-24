@@ -75,7 +75,6 @@ class _CantidadAccesoriasDialogState extends State<_CantidadAccesoriasDialog> {
           decoration: const InputDecoration(
             labelText: 'Cantidad',
             helperText: 'Entre 1 y 999',
-            border: OutlineInputBorder(),
           ),
           validator: (value) {
             final cantidad = int.tryParse(value?.trim() ?? '');

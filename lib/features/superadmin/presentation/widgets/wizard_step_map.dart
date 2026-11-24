@@ -15,33 +15,42 @@ class WizardStepMap extends StatelessWidget {
     final theme = Theme.of(context);
     final colores = theme.colorScheme;
 
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          for (var i = 0; i < pasos.length; i++) ...[
-            _Nodo(
-              numero: i + 1,
-              etiqueta: pasos[i],
-              estado: i < pasoActual
-                  ? _EstadoNodo.completado
-                  : i == pasoActual
-                  ? _EstadoNodo.actual
-                  : _EstadoNodo.pendiente,
-            ),
-            if (i < pasos.length - 1)
-              Container(
-                width: 32,
-                height: 2,
-                margin: const EdgeInsets.only(top: 16),
-                color: i < pasoActual
-                    ? colores.primary
-                    : colores.outlineVariant,
+    return ShaderMask(
+      blendMode: BlendMode.dstIn,
+      shaderCallback: (bounds) => const LinearGradient(
+        begin: Alignment.centerLeft,
+        end: Alignment.centerRight,
+        colors: [Colors.black, Colors.black, Colors.transparent],
+        stops: [0, 0.9, 1],
+      ).createShader(bounds),
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            for (var i = 0; i < pasos.length; i++) ...[
+              _Nodo(
+                numero: i + 1,
+                etiqueta: pasos[i],
+                estado: i < pasoActual
+                    ? _EstadoNodo.completado
+                    : i == pasoActual
+                    ? _EstadoNodo.actual
+                    : _EstadoNodo.pendiente,
               ),
+              if (i < pasos.length - 1)
+                Container(
+                  width: 32,
+                  height: 2,
+                  margin: const EdgeInsets.only(top: 16),
+                  color: i < pasoActual
+                      ? colores.primary
+                      : colores.outlineVariant,
+                ),
+            ],
           ],
-        ],
+        ),
       ),
     );
   }

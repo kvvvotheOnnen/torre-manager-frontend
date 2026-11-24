@@ -3,6 +3,10 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/router/app_router.dart';
+import '../../../../core/utils/formato_telefono.dart';
+import '../../../../core/utils/formato_texto.dart';
+import '../../../../core/widgets/app_content.dart';
+import '../../../../core/widgets/app_scroll_view.dart';
 import '../../domain/entities/solicitud_residente.dart';
 import '../bloc/solicitudes_residente_bloc.dart';
 import '../utils/solicitud_busqueda.dart';
@@ -67,22 +71,22 @@ class _GestionResidentesScreenState extends State<GestionResidentesScreen> {
             children: [
               Padding(
                 padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
-                child: TextField(
-                  controller: _busquedaController,
-                  onChanged: (value) => setState(() => _busqueda = value),
-                  decoration: InputDecoration(
-                    hintText:
-                        'Buscar por nombre, RUT, correo, teléfono, unidad...',
-                    prefixIcon: const Icon(Icons.search),
-                    suffixIcon: _busqueda.isEmpty
-                        ? null
-                        : IconButton(
-                            tooltip: 'Limpiar búsqueda',
-                            icon: const Icon(Icons.clear),
-                            onPressed: _limpiarBusqueda,
-                          ),
-                    border: const OutlineInputBorder(),
-                    isDense: true,
+                child: AppFieldWidth(
+                  child: TextField(
+                    controller: _busquedaController,
+                    onChanged: (value) => setState(() => _busqueda = value),
+                    decoration: InputDecoration(
+                      hintText:
+                          'Buscar por nombre, RUT, correo, teléfono, unidad...',
+                      prefixIcon: const Icon(Icons.search),
+                      suffixIcon: _busqueda.isEmpty
+                          ? null
+                          : IconButton(
+                              tooltip: 'Limpiar búsqueda',
+                              icon: const Icon(Icons.clear),
+                              onPressed: _limpiarBusqueda,
+                            ),
+                    ),
                   ),
                 ),
               ),
@@ -303,7 +307,7 @@ class _Contenido extends StatelessWidget {
         );
       },
       child: ListView.separated(
-        padding: const EdgeInsets.all(16),
+        padding: appScrollPadding(context, padding: const EdgeInsets.all(16)),
         itemCount: solicitudes.length,
         separatorBuilder: (_, _) => const SizedBox(height: 12),
         itemBuilder: (context, index) {
@@ -464,6 +468,7 @@ Future<void> _abrirDetalle(
   BuildContext context,
   SolicitudResidente solicitud,
 ) async {
+  FocusManager.instance.primaryFocus?.unfocus();
   final aprobada = await showDialog<bool>(
     context: context,
     builder: (context) => _DetalleSolicitudDialog(solicitud: solicitud),
@@ -552,16 +557,23 @@ class _DetalleSolicitudDialogState extends State<_DetalleSolicitudDialog> {
                               const Chip(label: Text('Principal')),
                           ],
                         ),
-                        _FilaDato(etiqueta: 'RUT', valor: persona.rut),
-                        _FilaDato(etiqueta: 'Correo', valor: persona.email),
+                        _FilaDato(
+                          etiqueta: 'RUT',
+                          valor: persona.rut.orPlaceholder(),
+                        ),
+                        _FilaDato(
+                          etiqueta: 'Correo',
+                          valor: persona.email.orPlaceholder(),
+                        ),
                         _FilaDato(
                           etiqueta: 'Teléfono',
-                          valor: persona.telefono,
+                          valor: formatearTelefono(persona.telefono),
                         ),
                         _FilaDato(
                           etiqueta: 'Emergencia',
                           valor:
-                              '${persona.nombreEmergencia} · ${persona.telefonoEmergencia}',
+                              '${persona.nombreEmergencia.orPlaceholder()} · '
+                              '${formatearTelefono(persona.telefonoEmergencia)}',
                         ),
                         _FilaDato(
                           etiqueta: 'Vínculo',
@@ -605,7 +617,6 @@ class _DetalleSolicitudDialogState extends State<_DetalleSolicitudDialog> {
                   decoration: const InputDecoration(
                     labelText: 'Razones / observaciones',
                     hintText: 'Escribe la razón del rechazo',
-                    border: OutlineInputBorder(),
                   ),
                 ),
               ],
@@ -647,6 +658,7 @@ class _DetalleSolicitudDialogState extends State<_DetalleSolicitudDialog> {
   }
 
   Future<void> _confirmarAceptacion(BuildContext context) async {
+    FocusManager.instance.primaryFocus?.unfocus();
     final confirmado = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(

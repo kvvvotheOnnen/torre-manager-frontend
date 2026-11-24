@@ -161,9 +161,9 @@ class _PublicacionFormDialogState extends State<PublicacionFormDialog> {
                         TextFormField(
                           controller: _titulo,
                           maxLength: 120,
+                          textInputAction: TextInputAction.next,
                           decoration: const InputDecoration(
                             labelText: 'Nombre del artículo',
-                            border: OutlineInputBorder(),
                           ),
                           validator: (valor) {
                             final texto = valor?.trim() ?? '';
@@ -180,7 +180,6 @@ class _PublicacionFormDialogState extends State<PublicacionFormDialog> {
                           maxLines: 4,
                           decoration: const InputDecoration(
                             labelText: 'Descripción',
-                            border: OutlineInputBorder(),
                             alignLabelWithHint: true,
                           ),
                           validator: (valor) {
@@ -195,13 +194,14 @@ class _PublicacionFormDialogState extends State<PublicacionFormDialog> {
                         TextFormField(
                           controller: _precio,
                           keyboardType: TextInputType.number,
+                          textInputAction: TextInputAction.done,
+                          onFieldSubmitted: (_) => _guardar(),
                           inputFormatters: [
                             FilteringTextInputFormatter.digitsOnly,
                           ],
                           decoration: const InputDecoration(
                             labelText: 'Precio (CLP)',
                             prefixText: '\$ ',
-                            border: OutlineInputBorder(),
                             helperText: 'Puedes dejar 0 si lo regalas.',
                           ),
                           validator: (valor) {
@@ -220,7 +220,6 @@ class _PublicacionFormDialogState extends State<PublicacionFormDialog> {
                           initialValue: _categoria,
                           decoration: const InputDecoration(
                             labelText: 'Categoría',
-                            border: OutlineInputBorder(),
                           ),
                           items: [
                             for (final categoria in CategoriaProducto.values)
@@ -240,7 +239,6 @@ class _PublicacionFormDialogState extends State<PublicacionFormDialog> {
                           initialValue: _condicion,
                           decoration: const InputDecoration(
                             labelText: 'Estado del artículo',
-                            border: OutlineInputBorder(),
                           ),
                           items: [
                             for (final condicion in CondicionProducto.values)

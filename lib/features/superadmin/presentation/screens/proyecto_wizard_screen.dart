@@ -583,10 +583,7 @@ class _ProyectoWizardScreenState extends State<ProyectoWizardScreen> {
         const SizedBox(height: 12),
         TextField(
           controller: _nombreController,
-          decoration: const InputDecoration(
-            labelText: 'Nombre del proyecto',
-            border: OutlineInputBorder(),
-          ),
+          decoration: const InputDecoration(labelText: 'Nombre del proyecto'),
         ),
         const SizedBox(height: 12),
         TextField(
@@ -594,7 +591,6 @@ class _ProyectoWizardScreenState extends State<ProyectoWizardScreen> {
           maxLines: 3,
           decoration: const InputDecoration(
             labelText: 'Descripción (opcional)',
-            border: OutlineInputBorder(),
           ),
         ),
       ],
@@ -758,7 +754,6 @@ class _ProyectoWizardScreenState extends State<ProyectoWizardScreen> {
                         controller: _manzanas[index].nombre,
                         decoration: const InputDecoration(
                           labelText: 'Nombre (ej. Manzana 1)',
-                          border: OutlineInputBorder(),
                           isDense: true,
                         ),
                         validator: (value) => (value?.trim().isEmpty ?? true)
@@ -780,7 +775,6 @@ class _ProyectoWizardScreenState extends State<ProyectoWizardScreen> {
                   keyboardType: TextInputType.number,
                   decoration: const InputDecoration(
                     labelText: 'Cantidad de casas',
-                    border: OutlineInputBorder(),
                     isDense: true,
                   ),
                   validator: (value) =>
@@ -848,7 +842,6 @@ class _ProyectoWizardScreenState extends State<ProyectoWizardScreen> {
                   decoration: const InputDecoration(
                     labelText: 'Nueva clasificación',
                     hintText: 'Ej. Unidad grande',
-                    border: OutlineInputBorder(),
                     isDense: true,
                   ),
                   onSubmitted: (_) => _agregarClasificacion(),
@@ -918,9 +911,7 @@ class _ProyectoWizardScreenState extends State<ProyectoWizardScreen> {
     );
   }
 
-  Future<void> _abrirDialogoAsignacion(
-    _ClasificacionForm clasificacion,
-  ) async {
+  Future<void> _abrirDialogoAsignacion(_ClasificacionForm clasificacion) async {
     final unidades = _unidadesActuales();
     final clavesValidas = unidades.map((unidad) => unidad.clave).toSet();
     final clavesOtras = <String>{
@@ -986,7 +977,6 @@ class _ProyectoWizardScreenState extends State<ProyectoWizardScreen> {
                     controller: form.nombre,
                     decoration: const InputDecoration(
                       labelText: 'Nombre (ej. Torre A)',
-                      border: OutlineInputBorder(),
                       isDense: true,
                     ),
                     validator: (value) =>
@@ -1009,7 +999,6 @@ class _ProyectoWizardScreenState extends State<ProyectoWizardScreen> {
                     keyboardType: TextInputType.number,
                     decoration: const InputDecoration(
                       labelText: 'Piso desde',
-                      border: OutlineInputBorder(),
                       isDense: true,
                     ),
                     validator: (value) =>
@@ -1024,7 +1013,6 @@ class _ProyectoWizardScreenState extends State<ProyectoWizardScreen> {
                     keyboardType: TextInputType.number,
                     decoration: const InputDecoration(
                       labelText: 'Piso hasta',
-                      border: OutlineInputBorder(),
                       isDense: true,
                     ),
                     validator: (value) =>
@@ -1039,7 +1027,6 @@ class _ProyectoWizardScreenState extends State<ProyectoWizardScreen> {
                     keyboardType: TextInputType.number,
                     decoration: const InputDecoration(
                       labelText: 'Unid./piso',
-                      border: OutlineInputBorder(),
                       isDense: true,
                     ),
                     validator: (value) =>
@@ -1152,17 +1139,14 @@ class _ProyectoWizardScreenState extends State<ProyectoWizardScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           InkWell(
-            onTap: () => setState(
-              () => excepcion.expandido = !excepcion.expandido,
-            ),
+            onTap: () =>
+                setState(() => excepcion.expandido = !excepcion.expandido),
             child: Padding(
               padding: const EdgeInsets.fromLTRB(12, 8, 4, 8),
               child: Row(
                 children: [
                   Icon(
-                    excepcion.expandido
-                        ? Icons.expand_less
-                        : Icons.expand_more,
+                    excepcion.expandido ? Icons.expand_less : Icons.expand_more,
                   ),
                   const SizedBox(width: 8),
                   Expanded(
@@ -1198,25 +1182,25 @@ class _ProyectoWizardScreenState extends State<ProyectoWizardScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-            if (excepcion.unidades.isEmpty)
-              const Padding(
-                padding: EdgeInsets.only(top: 4, bottom: 4),
-                child: Text(
-                  'Piso vacío: sin unidades ni instalaciones. Agrega una '
-                  'unidad si quieres usar este piso.',
-                ),
-              ),
-            ..._cardsUnidadesExcepcion(excepcion),
-            Align(
-              alignment: Alignment.centerLeft,
-              child: TextButton.icon(
-                onPressed: () => setState(
-                  () => excepcion.unidades.add(_UnidadExcepcionForm()),
-                ),
-                icon: const Icon(Icons.add, size: 18),
-                label: const Text('Agregar unidad'),
-              ),
-            ),
+                  if (excepcion.unidades.isEmpty)
+                    const Padding(
+                      padding: EdgeInsets.only(top: 4, bottom: 4),
+                      child: Text(
+                        'Piso vacío: sin unidades ni instalaciones. Agrega una '
+                        'unidad si quieres usar este piso.',
+                      ),
+                    ),
+                  ..._cardsUnidadesExcepcion(excepcion),
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: TextButton.icon(
+                      onPressed: () => setState(
+                        () => excepcion.unidades.add(_UnidadExcepcionForm()),
+                      ),
+                      icon: const Icon(Icons.add, size: 18),
+                      label: const Text('Agregar unidad'),
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -1339,7 +1323,6 @@ class _ProyectoWizardScreenState extends State<ProyectoWizardScreen> {
               InputDecorator(
                 decoration: const InputDecoration(
                   labelText: 'Identificador asignado',
-                  border: OutlineInputBorder(),
                   isDense: true,
                 ),
                 child: Text(identificadorSugerido),
@@ -1350,7 +1333,6 @@ class _ProyectoWizardScreenState extends State<ProyectoWizardScreen> {
                 controller: unidad.identificador,
                 decoration: const InputDecoration(
                   labelText: 'Nombre de la instalación',
-                  border: OutlineInputBorder(),
                   isDense: true,
                 ),
                 validator: (value) =>
@@ -1362,7 +1344,6 @@ class _ProyectoWizardScreenState extends State<ProyectoWizardScreen> {
                 keyboardType: TextInputType.number,
                 decoration: const InputDecoration(
                   labelText: 'Capacidad (1-500)',
-                  border: OutlineInputBorder(),
                   isDense: true,
                 ),
                 validator: (value) {
@@ -1380,7 +1361,6 @@ class _ProyectoWizardScreenState extends State<ProyectoWizardScreen> {
                 maxLength: 100,
                 decoration: const InputDecoration(
                   labelText: 'Descripción (opcional)',
-                  border: OutlineInputBorder(),
                   isDense: true,
                   counterText: '',
                 ),
@@ -1461,7 +1441,6 @@ class _ProyectoWizardScreenState extends State<ProyectoWizardScreen> {
                           controller: form.nombre,
                           decoration: const InputDecoration(
                             labelText: 'Nombre (ej. Quincho)',
-                            border: OutlineInputBorder(),
                             isDense: true,
                           ),
                         ),
@@ -1473,7 +1452,6 @@ class _ProyectoWizardScreenState extends State<ProyectoWizardScreen> {
                           keyboardType: TextInputType.number,
                           decoration: const InputDecoration(
                             labelText: 'Capacidad (1-500)',
-                            border: OutlineInputBorder(),
                             isDense: true,
                           ),
                           validator: (value) {
@@ -1504,7 +1482,6 @@ class _ProyectoWizardScreenState extends State<ProyectoWizardScreen> {
                     maxLength: 100,
                     decoration: const InputDecoration(
                       labelText: 'Descripción (opcional)',
-                      border: OutlineInputBorder(),
                       isDense: true,
                       counterText: '',
                     ),
@@ -1668,21 +1645,20 @@ class _AgrupacionPisosForm {
           (excepcion) => PisoExcepcion(
             piso: excepcion.piso,
             unidades: excepcion.unidades
-                      .map(
-                        (unidad) => UnidadExcepcion(
-                          identificador:
-                              unidad.tipo ==
-                                  TipoUnidadExcepcion.instalacionExtra
-                              ? unidad.identificador.text.trim()
-                              : '',
-                          tipo: unidad.tipo ?? TipoUnidadExcepcion.simple,
-                          capacidad: int.tryParse(unidad.capacidad.text.trim()),
-                          descripcion: unidad.descripcion.text.trim().isEmpty
-                              ? null
-                              : unidad.descripcion.text.trim(),
-                        ),
-                      )
-                      .toList(),
+                .map(
+                  (unidad) => UnidadExcepcion(
+                    identificador:
+                        unidad.tipo == TipoUnidadExcepcion.instalacionExtra
+                        ? unidad.identificador.text.trim()
+                        : '',
+                    tipo: unidad.tipo ?? TipoUnidadExcepcion.simple,
+                    capacidad: int.tryParse(unidad.capacidad.text.trim()),
+                    descripcion: unidad.descripcion.text.trim().isEmpty
+                        ? null
+                        : unidad.descripcion.text.trim(),
+                  ),
+                )
+                .toList(),
           ),
         )
         .toList();
@@ -1764,7 +1740,6 @@ class _DialogoAsignarUnidadesState extends State<_DialogoAsignarUnidades> {
               decoration: const InputDecoration(
                 hintText: 'Buscar unidad',
                 prefixIcon: Icon(Icons.search),
-                border: OutlineInputBorder(),
                 isDense: true,
               ),
               onChanged: (_) => setState(() {}),
@@ -1772,9 +1747,7 @@ class _DialogoAsignarUnidadesState extends State<_DialogoAsignarUnidades> {
             const SizedBox(height: 8),
             Expanded(
               child: filtradas.isEmpty
-                  ? const Center(
-                      child: Text('No hay unidades disponibles.'),
-                    )
+                  ? const Center(child: Text('No hay unidades disponibles.'))
                   : GridView.builder(
                       gridDelegate:
                           const SliverGridDelegateWithFixedCrossAxisCount(

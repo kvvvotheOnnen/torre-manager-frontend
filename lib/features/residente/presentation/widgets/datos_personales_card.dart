@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../../../core/utils/formato_telefono.dart';
+import '../../../../core/utils/formato_texto.dart';
 import '../../../auth/domain/entities/usuario.dart';
 
 class DatosPersonalesCard extends StatelessWidget {
@@ -34,13 +36,16 @@ class DatosPersonalesCard extends StatelessWidget {
             _FilaDato(
               icono: Icons.badge_outlined,
               etiqueta: 'RUT',
-              valor: usuario.rut ?? 'No registrado',
+              valor: usuario.rut.orPlaceholder('No registrado'),
             ),
             const Divider(),
             _FilaDato(
               icono: Icons.phone_outlined,
               etiqueta: 'Teléfono',
-              valor: usuario.telefono ?? 'No registrado',
+              valor: formatearTelefono(
+                usuario.telefono,
+                marcador: 'No registrado',
+              ),
             ),
             const Divider(),
             _FilaDato(
@@ -55,12 +60,15 @@ class DatosPersonalesCard extends StatelessWidget {
   }
 
   String _contactoEmergencia() {
-    final nombre = usuario.nombreEmergencia;
-    final telefono = usuario.telefonoEmergencia;
+    final nombre = usuario.nombreEmergencia.orPlaceholder('').trim();
+    final telefono = formatearTelefono(
+      usuario.telefonoEmergencia,
+      marcador: '',
+    ).trim();
 
-    if (nombre == null && telefono == null) return 'No registrado';
-    if (nombre == null) return telefono!;
-    if (telefono == null) return nombre;
+    if (nombre.isEmpty && telefono.isEmpty) return 'No registrado';
+    if (nombre.isEmpty) return telefono;
+    if (telefono.isEmpty) return nombre;
 
     return '$nombre · $telefono';
   }

@@ -24,8 +24,8 @@ void main() {
 
     expect(find.text('Datos personales'), findsOneWidget);
     expect(find.text('12345678-5'), findsOneWidget);
-    expect(find.text('+56911111111'), findsOneWidget);
-    expect(find.text('Contacto Demo · +56922222222'), findsOneWidget);
+    expect(find.text('+56 9 1111 1111'), findsOneWidget);
+    expect(find.text('Contacto Demo · +56 9 2222 2222'), findsOneWidget);
   });
 
   testWidgets('muestra "No registrado" cuando no hay datos', (tester) async {

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../../core/utils/formato_telefono.dart';
 import '../../domain/entities/trabajador_servicio.dart';
 
 /// Muestra la fotografía y los datos de un servicio recomendado.
@@ -85,7 +86,7 @@ class TrabajadorServicioDetalleDialog extends StatelessWidget {
                     _FilaDetalle(
                       icono: Icons.phone_outlined,
                       etiqueta: 'Contacto',
-                      valor: trabajador.telefono,
+                      valor: formatearTelefono(trabajador.telefono),
                     ),
                     if (trabajador.descripcion != null) ...[
                       const SizedBox(height: 12),

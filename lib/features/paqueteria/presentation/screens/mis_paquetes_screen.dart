@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../../core/widgets/app_content.dart';
+import '../../../../core/widgets/app_scroll_view.dart';
 import '../../../auth/domain/entities/usuario.dart';
 import '../../../auth/presentation/bloc/auth_bloc.dart';
 import '../../../auth/presentation/bloc/auth_event.dart';
@@ -113,24 +115,24 @@ class _MisPaquetesScreenState extends State<MisPaquetesScreen> {
             children: [
               Padding(
                 padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-                child: TextField(
-                  controller: _busquedaController,
-                  decoration: InputDecoration(
-                    hintText: 'Buscar por descripción, remitente o fecha',
-                    prefixIcon: const Icon(Icons.search),
-                    suffixIcon: _busqueda.isNotEmpty
-                        ? IconButton(
-                            icon: const Icon(Icons.clear),
-                            onPressed: () {
-                              _busquedaController.clear();
-                              setState(() => _busqueda = '');
-                            },
-                          )
-                        : null,
-                    border: const OutlineInputBorder(),
-                    isDense: true,
+                child: AppFieldWidth(
+                  child: TextField(
+                    controller: _busquedaController,
+                    decoration: InputDecoration(
+                      hintText: 'Buscar por descripción, remitente o fecha',
+                      prefixIcon: const Icon(Icons.search),
+                      suffixIcon: _busqueda.isNotEmpty
+                          ? IconButton(
+                              icon: const Icon(Icons.clear),
+                              onPressed: () {
+                                _busquedaController.clear();
+                                setState(() => _busqueda = '');
+                              },
+                            )
+                          : null,
+                    ),
+                    onChanged: (v) => setState(() => _busqueda = v),
                   ),
-                  onChanged: (v) => setState(() => _busqueda = v),
                 ),
               ),
               Expanded(
@@ -144,7 +146,10 @@ class _MisPaquetesScreenState extends State<MisPaquetesScreen> {
                     : LayoutBuilder(
                         builder: (context, constraints) {
                           return GridView.builder(
-                            padding: const EdgeInsets.all(16),
+                            padding: appScrollPadding(
+                              context,
+                              padding: const EdgeInsets.all(16),
+                            ),
                             gridDelegate:
                                 const SliverGridDelegateWithMaxCrossAxisExtent(
                                   maxCrossAxisExtent: 320,

@@ -12,6 +12,19 @@ class AppSpacing {
   static const double xxxl = 48;
 }
 
+class AppLayout {
+  const AppLayout._();
+
+  /// Ancho máximo del contenido de una pantalla en web/escritorio.
+  static const double maxContent = 1200;
+
+  /// Ancho máximo de un formulario en una sola columna.
+  static const double maxForm = 560;
+
+  /// Ancho máximo de un campo suelto (buscadores y similares).
+  static const double maxField = 520;
+}
+
 class AppRadii {
   const AppRadii._();
 
@@ -46,7 +59,11 @@ class AppShadows {
   ];
 
   static List<BoxShadow> glow(Color color) => [
-    BoxShadow(color: color.withValues(alpha: 0.35), blurRadius: 24, offset: const Offset(0, 10)),
+    BoxShadow(
+      color: color.withValues(alpha: 0.35),
+      blurRadius: 24,
+      offset: const Offset(0, 10),
+    ),
   ];
 }
 

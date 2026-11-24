@@ -478,7 +478,6 @@ class _AccesoriasProyectoScreenState extends State<AccesoriasProyectoScreen> {
                               hintText: departamentoDeshabilitado
                                   ? 'No aplica para visita u otro'
                                   : 'Escribe para buscar',
-                              border: const OutlineInputBorder(),
                               isDense: true,
                               errorText: mostrarError
                                   ? 'Debes elegir un departamento sugerido.'

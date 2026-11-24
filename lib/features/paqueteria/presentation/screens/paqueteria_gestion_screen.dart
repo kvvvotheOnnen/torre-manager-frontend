@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:image_picker/image_picker.dart';
 
+import '../../../../core/widgets/app_content.dart';
+import '../../../../core/widgets/app_scroll_view.dart';
 import '../../../auth/domain/entities/usuario.dart';
 import '../../../auth/presentation/bloc/auth_bloc.dart';
 import '../../../auth/presentation/bloc/auth_event.dart';
@@ -65,6 +67,7 @@ class _PaqueteriaGestionScreenState extends State<PaqueteriaGestionScreen> {
   }
 
   Future<void> _solicitarRetiro(BuildContext context, Paquete paquete) async {
+    FocusManager.instance.primaryFocus?.unfocus();
     final nombre = await showDialog<String>(
       context: context,
       barrierDismissible: false,
@@ -97,6 +100,7 @@ class _PaqueteriaGestionScreenState extends State<PaqueteriaGestionScreen> {
   }
 
   Future<void> _abrirFormulario() async {
+    FocusManager.instance.primaryFocus?.unfocus();
     await showDialog<void>(
       context: context,
       barrierDismissible: true,
@@ -138,6 +142,7 @@ class _PaqueteriaGestionScreenState extends State<PaqueteriaGestionScreen> {
   }
 
   Future<void> _mostrarEdicion(BuildContext context, Paquete paquete) async {
+    FocusManager.instance.primaryFocus?.unfocus();
     if (paquete.unidadPrincipalId == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -171,7 +176,6 @@ class _PaqueteriaGestionScreenState extends State<PaqueteriaGestionScreen> {
                     controller: descController,
                     decoration: const InputDecoration(
                       labelText: 'Descripción *',
-                      border: OutlineInputBorder(),
                     ),
                     validator: (v) => (v == null || v.trim().isEmpty)
                         ? 'Ingresa una descripción'
@@ -180,10 +184,7 @@ class _PaqueteriaGestionScreenState extends State<PaqueteriaGestionScreen> {
                   const SizedBox(height: 8),
                   TextFormField(
                     controller: remitenteController,
-                    decoration: const InputDecoration(
-                      labelText: 'Remitente *',
-                      border: OutlineInputBorder(),
-                    ),
+                    decoration: const InputDecoration(labelText: 'Remitente *'),
                     validator: (v) => (v == null || v.trim().isEmpty)
                         ? 'Ingresa el remitente'
                         : null,
@@ -192,7 +193,6 @@ class _PaqueteriaGestionScreenState extends State<PaqueteriaGestionScreen> {
                   InputDecorator(
                     decoration: const InputDecoration(
                       labelText: 'Unidad destinataria',
-                      border: OutlineInputBorder(),
                     ),
                     child: Align(
                       alignment: Alignment.centerLeft,
@@ -298,24 +298,24 @@ class _PaqueteriaGestionScreenState extends State<PaqueteriaGestionScreen> {
             children: [
               Padding(
                 padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
-                child: TextField(
-                  controller: _busquedaController,
-                  decoration: InputDecoration(
-                    hintText: 'Buscar por descripción, remitente o fecha',
-                    prefixIcon: const Icon(Icons.search),
-                    suffixIcon: _busqueda.isNotEmpty
-                        ? IconButton(
-                            icon: const Icon(Icons.clear),
-                            onPressed: () {
-                              _busquedaController.clear();
-                              setState(() => _busqueda = '');
-                            },
-                          )
-                        : null,
-                    border: const OutlineInputBorder(),
-                    isDense: true,
+                child: AppFieldWidth(
+                  child: TextField(
+                    controller: _busquedaController,
+                    decoration: InputDecoration(
+                      hintText: 'Buscar por descripción, remitente o fecha',
+                      prefixIcon: const Icon(Icons.search),
+                      suffixIcon: _busqueda.isNotEmpty
+                          ? IconButton(
+                              icon: const Icon(Icons.clear),
+                              onPressed: () {
+                                _busquedaController.clear();
+                                setState(() => _busqueda = '');
+                              },
+                            )
+                          : null,
+                    ),
+                    onChanged: (v) => setState(() => _busqueda = v),
                   ),
-                  onChanged: (v) => setState(() => _busqueda = v),
                 ),
               ),
               Expanded(
@@ -346,7 +346,10 @@ class _PaqueteriaGestionScreenState extends State<PaqueteriaGestionScreen> {
                         builder: (context, constraints) {
                           final paquetes = _paquetesFiltrados(state.paquetes);
                           return GridView.builder(
-                            padding: const EdgeInsets.all(16),
+                            padding: appScrollPadding(
+                              context,
+                              padding: const EdgeInsets.all(16),
+                            ),
                             gridDelegate:
                                 const SliverGridDelegateWithMaxCrossAxisExtent(
                                   maxCrossAxisExtent: 330,
@@ -433,10 +436,8 @@ class _FormularioRegistro extends StatelessWidget {
             const SizedBox(height: 12),
             TextFormField(
               controller: descripcionController,
-              decoration: const InputDecoration(
-                labelText: 'Descripción *',
-                border: OutlineInputBorder(),
-              ),
+              textInputAction: TextInputAction.next,
+              decoration: const InputDecoration(labelText: 'Descripción *'),
               validator: (v) => (v == null || v.trim().isEmpty)
                   ? 'Ingresa una descripción'
                   : null,
@@ -444,10 +445,8 @@ class _FormularioRegistro extends StatelessWidget {
             const SizedBox(height: 8),
             TextFormField(
               controller: remitenteController,
-              decoration: const InputDecoration(
-                labelText: 'Remitente *',
-                border: OutlineInputBorder(),
-              ),
+              textInputAction: TextInputAction.next,
+              decoration: const InputDecoration(labelText: 'Remitente *'),
               validator: (v) => (v == null || v.trim().isEmpty)
                   ? 'Ingresa el remitente'
                   : null,
@@ -571,9 +570,7 @@ class _BuscadorDepartamentoState extends State<_BuscadorDepartamento> {
     final q = query.toLowerCase().trim();
     if (q.isEmpty) return widget.unidades;
     return widget.unidades
-        .where(
-          (u) => u.identificador.toLowerCase().contains(q),
-        )
+        .where((u) => u.identificador.toLowerCase().contains(q))
         .toList();
   }
 
@@ -672,7 +669,6 @@ class _BuscadorDepartamentoState extends State<_BuscadorDepartamento> {
               labelText: 'Departamento destinatario *',
               hintText: 'Toca para ver la lista o escribe para buscar',
               prefixIcon: const Icon(Icons.search),
-              border: const OutlineInputBorder(),
               suffixIcon: seleccionado != null
                   ? IconButton(
                       icon: const Icon(Icons.clear),
@@ -754,7 +750,6 @@ class _DialogoRetiroState extends State<_DialogoRetiro> {
           textCapitalization: TextCapitalization.words,
           decoration: const InputDecoration(
             labelText: 'Nombres y apellidos de quien retira *',
-            border: OutlineInputBorder(),
           ),
           validator: (value) => value == null || value.trim().isEmpty
               ? 'Ingresa nombres y apellidos'
@@ -796,11 +791,14 @@ class _TarjetaPaqueteGestion extends StatelessWidget {
       margin: EdgeInsets.zero,
       clipBehavior: Clip.antiAlias,
       child: InkWell(
-        onTap: () => showDialog<void>(
-          context: context,
-          builder: (_) =>
-              PaqueteDetalleDialog(paquete: paquete, onRetirar: onRetirar),
-        ),
+        onTap: () {
+          FocusManager.instance.primaryFocus?.unfocus();
+          showDialog<void>(
+            context: context,
+            builder: (_) =>
+                PaqueteDetalleDialog(paquete: paquete, onRetirar: onRetirar),
+          );
+        },
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
