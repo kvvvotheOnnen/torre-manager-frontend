@@ -52,6 +52,18 @@
 - Toda la columna del chat queda dentro de `SafeArea` para no quedar bajo la
   barra de navegación del sistema.
 
+## Rediseño de "Mi información" (residente)
+
+- Pantalla reconstruida con `AppContent(maxWidth: 960)`, `RefreshIndicator` y
+  `AppScrollView`; se eliminó el título duplicado y el botón inferior de volver.
+- Nueva tarjeta de perfil con ícono genérico de persona, nombre, correo y chip
+  de rol sobre el degradado `hero`.
+- `DatosPersonalesCard` ahora es una grilla de tiles (RUT, correo, teléfono y
+  contacto de emergencia) en 2 columnas desde 520 px, sin divisores.
+- Nuevo `UnidadVinculadaCard`: unidad, agrupación, chip Actual/Histórico,
+  vínculo capitalizado y fechas `Desde`/`Hasta`/`Vigente`.
+- Estados: esqueletos de carga, `AppEmptyState` para error y para "sin unidades".
+
 ## Verificación
 
 - `flutter analyze`: sin issues.

@@ -12,6 +12,8 @@ class ResidenteRemoteDataSource {
     final response = await _client.get<Map<String, dynamic>>(
       AppConfig.residenteMiInformacionPath,
     );
-    return MiInformacionDto.fromJson(response.data ?? const <String, dynamic>{});
+    return MiInformacionDto.fromJson(
+      response.data ?? const <String, dynamic>{},
+    );
   }
 }

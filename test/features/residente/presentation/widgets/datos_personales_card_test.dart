@@ -24,6 +24,7 @@ void main() {
 
     expect(find.text('Datos personales'), findsOneWidget);
     expect(find.text('12345678-5'), findsOneWidget);
+    expect(find.text('demo@example.test'), findsOneWidget);
     expect(find.text('+56 9 1111 1111'), findsOneWidget);
     expect(find.text('Contacto Demo · +56 9 2222 2222'), findsOneWidget);
   });

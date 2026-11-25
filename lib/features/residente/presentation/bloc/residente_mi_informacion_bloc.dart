@@ -34,9 +34,8 @@ class ResidenteMiInformacionState extends Equatable {
 
 class ResidenteMiInformacionBloc
     extends Bloc<ResidenteMiInformacionEvent, ResidenteMiInformacionState> {
-  ResidenteMiInformacionBloc({
-    required this._obtenerMiInformacionUseCase,
-  }) : super(const ResidenteMiInformacionState()) {
+  ResidenteMiInformacionBloc({required this._obtenerMiInformacionUseCase})
+    : super(const ResidenteMiInformacionState()) {
     on<ResidenteMiInformacionSolicitada>(_onSolicitada);
   }
 

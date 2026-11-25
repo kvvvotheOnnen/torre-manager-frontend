@@ -1,4 +1,5 @@
 import '../../../../core/errors/api_exception.dart';
+
 import 'package:fpdart/fpdart.dart';
 
 import '../../../../core/errors/failures.dart';
