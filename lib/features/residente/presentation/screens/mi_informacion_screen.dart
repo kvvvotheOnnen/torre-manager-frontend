@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/router/app_router.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/design_tokens.dart';
+import '../../../../core/widgets/app_content.dart';
 import '../../../../core/widgets/app_scroll_view.dart';
 import '../../../../core/widgets/empty_state.dart';
 import '../../../../core/widgets/section_header.dart';
@@ -98,48 +99,21 @@ class _MiInformacionScreenState extends State<MiInformacionScreen> {
                 );
               }
 
-              return LayoutBuilder(
-                builder: (context, constraints) {
-                  final padding = appScrollPadding(
-                    context,
-                    padding: const EdgeInsets.all(AppSpacing.xl),
-                  );
-                  final altoMinimo = (constraints.maxHeight - padding.vertical)
-                      .clamp(0.0, double.infinity);
-
-                  return RefreshIndicator(
-                    onRefresh: () async => _recargar(),
-                    child: SingleChildScrollView(
-                      physics: const AlwaysScrollableScrollPhysics(),
-                      padding: padding,
-                      child: ConstrainedBox(
-                        constraints: BoxConstraints(minHeight: altoMinimo),
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            ConstrainedBox(
-                              constraints: const BoxConstraints(maxWidth: 620),
-                              child: Column(
-                                mainAxisSize: MainAxisSize.min,
-                                crossAxisAlignment: CrossAxisAlignment.stretch,
-                                children: [
-                                  CredencialResidenteCard(
-                                    usuario: widget.usuario,
-                                    unidad: info?.unidadPrincipal,
-                                  ),
-                                  const SizedBox(height: AppSpacing.xl),
-                                  _UnidadesSection(
-                                    unidades: info?.unidades ?? const [],
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
+              return AppContent(
+                maxWidth: 620,
+                child: RefreshIndicator(
+                  onRefresh: () async => _recargar(),
+                  child: AppScrollView(
+                    children: [
+                      CredencialResidenteCard(
+                        usuario: widget.usuario,
+                        unidad: info?.unidadPrincipal,
                       ),
-                    ),
-                  );
-                },
+                      const SizedBox(height: AppSpacing.xl),
+                      _UnidadesSection(unidades: info?.unidades ?? const []),
+                    ],
+                  ),
+                ),
               );
             },
           ),
@@ -216,43 +190,21 @@ class _CargandoMiInformacion extends StatelessWidget {
       );
     }
 
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final padding = appScrollPadding(
-          context,
-          padding: const EdgeInsets.all(AppSpacing.xl),
-        );
-        final altoMinimo = (constraints.maxHeight - padding.vertical).clamp(
-          0.0,
-          double.infinity,
-        );
-
-        return SingleChildScrollView(
-          padding: padding,
-          child: ConstrainedBox(
-            constraints: BoxConstraints(minHeight: altoMinimo),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 620),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      bloque(height: 116),
-                      const SizedBox(height: AppSpacing.xl),
-                      bloque(height: 180),
-                      const SizedBox(height: AppSpacing.xl),
-                      bloque(height: 140),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-        );
-      },
+    return AppContent(
+      maxWidth: 620,
+      child: Padding(
+        padding: const EdgeInsets.all(AppSpacing.xl),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            bloque(height: 116),
+            const SizedBox(height: AppSpacing.xl),
+            bloque(height: 180),
+            const SizedBox(height: AppSpacing.xl),
+            bloque(height: 140),
+          ],
+        ),
+      ),
     );
   }
 }
