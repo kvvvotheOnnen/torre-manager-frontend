@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 
+import '../../../../core/router/app_router.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/design_tokens.dart';
 import '../../../../core/widgets/app_background.dart';
@@ -495,6 +497,24 @@ class _LoginCard extends StatelessWidget {
                       style: theme.textTheme.labelSmall?.copyWith(
                         color: p.inkMuted,
                       ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: AppSpacing.md),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      '¿Aún no tienes cuenta?',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: p.inkMuted,
+                      ),
+                    ),
+                    TextButton(
+                      onPressed: isLoading
+                          ? null
+                          : () => context.go(AppRoutes.registro),
+                      child: const Text('Regístrate'),
                     ),
                   ],
                 ),

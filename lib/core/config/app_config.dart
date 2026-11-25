@@ -80,4 +80,9 @@ class AppConfig {
       '${solicitudResidentePath(id)}/rechazar';
   static const String misSolicitudesResidentesPath =
       '/api/mis-solicitudes-residentes';
+
+  static const String registroProyectosPath = '/api/registro/proyectos';
+  static String registroUnidadesPath(String proyectoId) =>
+      '$registroProyectosPath/${Uri.encodeComponent(proyectoId)}/unidades';
+  static const String registroSolicitudPath = '/api/registro/solicitud';
 }

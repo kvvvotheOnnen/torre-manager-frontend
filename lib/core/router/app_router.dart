@@ -10,6 +10,7 @@ import '../../features/asistente/presentation/screens/asistente_screen.dart';
 import '../../features/auth/presentation/screens/login_screen.dart';
 import '../../features/dashboard/presentation/screens/dashboard_screen.dart';
 import '../../features/dashboard/presentation/screens/modulo_proximamente_screen.dart';
+import '../../features/registro_residente/presentation/screens/registro_wizard_screen.dart';
 import '../../features/residente/presentation/screens/mi_informacion_screen.dart';
 import '../../features/paqueteria/presentation/screens/mis_paquetes_screen.dart';
 import '../../features/paqueteria/presentation/screens/paqueteria_gestion_screen.dart';
@@ -32,6 +33,7 @@ class AppRoutes {
 
   static const String splash = '/';
   static const String login = '/login';
+  static const String registro = '/registro';
   static const String dashboard = '/dashboard';
   static const String residenteMiInformacion = '/residente/mi-informacion';
   static const String residenteAsistente = '/residente/ia';
@@ -66,6 +68,7 @@ GoRouter buildRouter(AuthBloc authBloc, TenantBloc tenantBloc) {
 
       final isSplash = location == AppRoutes.splash;
       final isLogin = location == AppRoutes.login;
+      final isRegistro = location == AppRoutes.registro;
       final isSelector = location == AppRoutes.selectorProyecto;
       final isAdminRoute = location.startsWith('/admin');
       final isSuperadminRoute = location.startsWith('/superadmin');
@@ -74,13 +77,13 @@ GoRouter buildRouter(AuthBloc authBloc, TenantBloc tenantBloc) {
       switch (authState) {
         case AuthInitial():
         case AuthLoading():
-          return isSplash ? null : AppRoutes.splash;
+          return isSplash || isRegistro ? null : AppRoutes.splash;
         case AuthSuccess():
           final rol = authState.usuario.rol;
           final rolActivo = rol == Rol.superadmin
               ? rol
               : (tenantState.rolActivo ?? rol);
-          if (isSplash || isLogin) return AppRoutes.dashboard;
+          if (isSplash || isLogin || isRegistro) return AppRoutes.dashboard;
 
           final esSolicitudPendiente = location == AppRoutes.solicitudPendiente;
 
@@ -143,7 +146,7 @@ GoRouter buildRouter(AuthBloc authBloc, TenantBloc tenantBloc) {
           return null;
         case AuthUnauthenticated():
         case AuthError():
-          return isLogin ? null : AppRoutes.login;
+          return (isLogin || isRegistro) ? null : AppRoutes.login;
       }
     },
     routes: [
@@ -154,6 +157,13 @@ GoRouter buildRouter(AuthBloc authBloc, TenantBloc tenantBloc) {
       GoRoute(
         path: AppRoutes.login,
         builder: (context, state) => const AppTitle(title: 'Ingresar', child: LoginScreen()),
+      ),
+      GoRoute(
+        path: AppRoutes.registro,
+        builder: (context, state) => const AppTitle(
+          title: 'Registro de residente',
+          child: RegistroWizardScreen(),
+        ),
       ),
       GoRoute(
         path: AppRoutes.dashboard,

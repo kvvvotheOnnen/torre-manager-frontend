@@ -92,6 +92,12 @@ import 'features/servicios/domain/usecases/crear_trabajador_usecase.dart';
 import 'features/servicios/domain/usecases/eliminar_trabajador_usecase.dart';
 import 'features/servicios/domain/usecases/listar_trabajadores_usecase.dart';
 import 'features/servicios/presentation/bloc/servicios_bloc.dart';
+import 'features/registro_residente/data/datasources/registro_residente_remote_data_source.dart';
+import 'features/registro_residente/data/repositories/registro_residente_repository_impl.dart';
+import 'features/registro_residente/domain/usecases/listar_proyectos_registro_usecase.dart';
+import 'features/registro_residente/domain/usecases/listar_unidades_registro_usecase.dart';
+import 'features/registro_residente/domain/usecases/registrar_solicitud_residente_usecase.dart';
+import 'features/registro_residente/presentation/bloc/registro_residente_bloc.dart';
 import 'features/marketplace/data/datasources/marketplace_remote_data_source.dart';
 import 'features/marketplace/data/repositories/marketplace_repository_impl.dart';
 import 'features/marketplace/domain/usecases/actualizar_publicacion_usecase.dart';
@@ -135,6 +141,7 @@ class _TorreManagerAppState extends State<TorreManagerApp> {
   late final MiSolicitudResidenteBloc _miSolicitudResidenteBloc;
   late final ServiciosBloc _serviciosBloc;
   late final MarketplaceBloc _marketplaceBloc;
+  late final RegistroResidenteBloc _registroResidenteBloc;
   late final GoRouter _router;
   late final ThemeModeController _themeModeController;
 
@@ -292,6 +299,24 @@ class _TorreManagerAppState extends State<TorreManagerApp> {
       ListarMisSolicitudesUseCase(solicitudesResidenteRepository),
     );
 
+    final registroResidenteDataSource = RegistroResidenteRemoteDataSource(
+      apiClient,
+    );
+    final registroResidenteRepository = RegistroResidenteRepositoryImpl(
+      registroResidenteDataSource,
+    );
+    _registroResidenteBloc = RegistroResidenteBloc(
+      listarProyectosUseCase: ListarProyectosRegistroUseCase(
+        registroResidenteRepository,
+      ),
+      listarUnidadesUseCase: ListarUnidadesRegistroUseCase(
+        registroResidenteRepository,
+      ),
+      registrarUseCase: RegistrarSolicitudResidenteUseCase(
+        registroResidenteRepository,
+      ),
+    );
+
     final funcionesDashboardDataSource = FuncionesDashboardRemoteDataSource(
       apiClient,
     );
@@ -362,6 +387,7 @@ class _TorreManagerAppState extends State<TorreManagerApp> {
     _serviciosBloc.close();
     _marketplaceBloc.close();
     _miSolicitudResidenteBloc.close();
+    _registroResidenteBloc.close();
     _themeModeController.dispose();
     super.dispose();
   }
@@ -383,6 +409,7 @@ class _TorreManagerAppState extends State<TorreManagerApp> {
         BlocProvider.value(value: _paqueteriaBloc),
         BlocProvider.value(value: _solicitudesResidenteBloc),
         BlocProvider.value(value: _miSolicitudResidenteBloc),
+        BlocProvider.value(value: _registroResidenteBloc),
         BlocProvider.value(value: _funcionesDashboardBloc),
         BlocProvider.value(value: _serviciosBloc),
         BlocProvider.value(value: _marketplaceBloc),
