@@ -90,69 +90,55 @@ class CredencialResidenteCard extends StatelessWidget {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          _Encabezado(),
+                          const _Encabezado(),
                           const SizedBox(height: AppSpacing.xl),
-                          Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
+                          const Center(child: _FotoGenerica()),
+                          const SizedBox(height: AppSpacing.lg),
+                          Text(
+                            usuario.nombre.orPlaceholder('Residente'),
+                            textAlign: TextAlign.center,
+                            style: theme.textTheme.headlineSmall?.copyWith(
+                              color: Colors.white,
+                            ),
+                          ),
+                          const SizedBox(height: AppSpacing.sm),
+                          Wrap(
+                            alignment: WrapAlignment.center,
+                            spacing: AppSpacing.xs,
+                            runSpacing: AppSpacing.xs,
                             children: [
-                              const _FotoGenerica(),
-                              const SizedBox(width: AppSpacing.lg),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      usuario.nombre.orPlaceholder('Residente'),
-                                      style: theme.textTheme.headlineSmall
-                                          ?.copyWith(color: Colors.white),
-                                    ),
-                                    const SizedBox(height: AppSpacing.xs),
-                                    Wrap(
-                                      spacing: AppSpacing.xs,
-                                      runSpacing: AppSpacing.xs,
-                                      children: [
-                                        _Etiqueta(
-                                          texto: _rol,
-                                          color: Colors.white,
-                                          fondo: Colors.white.withValues(
-                                            alpha: 0.14,
-                                          ),
-                                        ),
-                                        _Etiqueta(
-                                          texto: _estado,
-                                          color: estadoColor,
-                                          fondo: estadoColor.withValues(
-                                            alpha: 0.16,
-                                          ),
-                                          letterSpacing: 1.1,
-                                        ),
-                                      ],
-                                    ),
-                                    const SizedBox(height: AppSpacing.sm),
-                                    Row(
-                                      children: [
-                                        const Icon(
-                                          Icons.mail_outline_rounded,
-                                          size: 14,
-                                          color: Colors.white70,
-                                        ),
-                                        const SizedBox(width: 4),
-                                        Flexible(
-                                          child: Text(
-                                            usuario.correo.orPlaceholder(
-                                              'Sin correo',
-                                            ),
-                                            maxLines: 1,
-                                            overflow: TextOverflow.ellipsis,
-                                            style: theme.textTheme.bodySmall
-                                                ?.copyWith(
-                                                  color: Colors.white70,
-                                                ),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ],
+                              _Etiqueta(
+                                texto: _rol,
+                                color: Colors.white,
+                                fondo: Colors.white.withValues(alpha: 0.14),
+                              ),
+                              _Etiqueta(
+                                texto: _estado,
+                                color: estadoColor,
+                                fondo: estadoColor.withValues(alpha: 0.16),
+                                letterSpacing: 1.1,
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: AppSpacing.sm),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              const Icon(
+                                Icons.mail_outline_rounded,
+                                size: 14,
+                                color: Colors.white70,
+                              ),
+                              const SizedBox(width: 4),
+                              Flexible(
+                                child: Text(
+                                  usuario.correo.orPlaceholder('Sin correo'),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  textAlign: TextAlign.center,
+                                  style: theme.textTheme.bodySmall?.copyWith(
+                                    color: Colors.white70,
+                                  ),
                                 ),
                               ),
                             ],
@@ -235,40 +221,41 @@ class CredencialResidenteCard extends StatelessWidget {
 }
 
 class _Encabezado extends StatelessWidget {
+  const _Encabezado();
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    return Row(
+    return Column(
       children: [
         Container(
-          width: 34,
-          height: 34,
+          width: 38,
+          height: 38,
           decoration: BoxDecoration(
             color: Colors.white.withValues(alpha: 0.12),
-            borderRadius: BorderRadius.circular(10),
+            borderRadius: BorderRadius.circular(11),
             border: Border.all(color: Colors.white.withValues(alpha: 0.18)),
           ),
           child: const Icon(
             Icons.apartment_rounded,
-            size: 19,
+            size: 21,
             color: Colors.white,
           ),
         ),
-        const SizedBox(width: AppSpacing.sm),
-        Expanded(
-          child: Text(
-            'TORRE MANAGER',
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: theme.textTheme.labelSmall?.copyWith(
-              color: Colors.white,
-              letterSpacing: 1.8,
-            ),
+        const SizedBox(height: AppSpacing.sm),
+        Text(
+          'TORRE MANAGER',
+          textAlign: TextAlign.center,
+          style: theme.textTheme.labelSmall?.copyWith(
+            color: Colors.white,
+            letterSpacing: 1.8,
           ),
         ),
+        const SizedBox(height: 2),
         Text(
           'CREDENCIAL DE RESIDENTE',
+          textAlign: TextAlign.center,
           style: theme.textTheme.labelSmall?.copyWith(
             color: Colors.white70,
             letterSpacing: 1.2,
@@ -352,30 +339,21 @@ class _Dato extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         Icon(icono, size: 18, color: Colors.white70),
-        const SizedBox(width: AppSpacing.sm),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                etiqueta,
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: Colors.white60,
-                ),
-              ),
-              const SizedBox(height: 1),
-              Text(
-                valor,
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  color: Colors.white,
-                ),
-              ),
-            ],
-          ),
+        const SizedBox(height: AppSpacing.xs),
+        Text(
+          etiqueta,
+          textAlign: TextAlign.center,
+          style: theme.textTheme.bodySmall?.copyWith(color: Colors.white60),
+        ),
+        const SizedBox(height: 1),
+        Text(
+          valor,
+          textAlign: TextAlign.center,
+          style: theme.textTheme.bodyMedium?.copyWith(color: Colors.white),
         ),
       ],
     );

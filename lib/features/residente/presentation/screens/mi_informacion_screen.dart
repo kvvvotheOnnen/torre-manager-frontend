@@ -100,7 +100,7 @@ class _MiInformacionScreenState extends State<MiInformacionScreen> {
               }
 
               return AppContent(
-                maxWidth: 960,
+                maxWidth: 760,
                 child: RefreshIndicator(
                   onRefresh: () async => _recargar(),
                   child: AppScrollView(
@@ -191,7 +191,7 @@ class _CargandoMiInformacion extends StatelessWidget {
     }
 
     return AppContent(
-      maxWidth: 960,
+      maxWidth: 760,
       child: Padding(
         padding: const EdgeInsets.all(AppSpacing.xl),
         child: Column(
