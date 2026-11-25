@@ -45,3 +45,14 @@ solicitud pendiente y el panel de aprobación del administrador (task 11).
 
 - Funcionalidad de subida de foto de mascota.
 - Pruebas de widget específicas del wizard (no incluidas en esta entrega).
+
+## Corrección posterior: mensaje engañoso en el paso de unidad
+
+- **Síntoma:** un fallo al cargar unidades se mostraba como "este proyecto aún
+  no tiene unidades".
+- **Corrección:** el bloc ahora distingue `errorUnidades` de una lista vacía. El
+  paso 3 muestra un estado de error con botón "Reintentar" cuando falla la
+  carga, y conserva el mensaje de "sin unidades" solo cuando la carga fue
+  exitosa y realmente no hay unidades.
+- **Verificación:** nuevo test del bloc para el caso de error de unidades;
+  `flutter test` y `flutter analyze` en verde.

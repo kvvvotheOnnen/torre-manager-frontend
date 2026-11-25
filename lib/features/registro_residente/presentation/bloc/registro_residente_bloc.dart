@@ -53,6 +53,7 @@ class RegistroResidenteState extends Equatable {
     this.unidades = const [],
     this.mensajeExito,
     this.error,
+    this.errorUnidades,
   });
 
   final bool cargandoProyectos;
@@ -63,6 +64,7 @@ class RegistroResidenteState extends Equatable {
   final List<UnidadRegistro> unidades;
   final String? mensajeExito;
   final String? error;
+  final String? errorUnidades;
 
   RegistroResidenteState copyWith({
     bool? cargandoProyectos,
@@ -73,7 +75,9 @@ class RegistroResidenteState extends Equatable {
     List<UnidadRegistro>? unidades,
     String? mensajeExito,
     String? error,
+    String? errorUnidades,
     bool limpiarError = false,
+    bool limpiarErrorUnidades = false,
   }) {
     return RegistroResidenteState(
       cargandoProyectos: cargandoProyectos ?? this.cargandoProyectos,
@@ -84,6 +88,9 @@ class RegistroResidenteState extends Equatable {
       unidades: unidades ?? this.unidades,
       mensajeExito: mensajeExito ?? this.mensajeExito,
       error: limpiarError ? null : (error ?? this.error),
+      errorUnidades: limpiarErrorUnidades
+          ? null
+          : (errorUnidades ?? this.errorUnidades),
     );
   }
 
@@ -97,6 +104,7 @@ class RegistroResidenteState extends Equatable {
     unidades,
     mensajeExito,
     error,
+    errorUnidades,
   ];
 }
 
@@ -150,6 +158,7 @@ class RegistroResidenteBloc
         cargandoUnidades: true,
         unidades: const [],
         limpiarError: true,
+        limpiarErrorUnidades: true,
       ),
     );
 
@@ -157,10 +166,19 @@ class RegistroResidenteBloc
 
     result.fold(
       (failure) => emit(
-        state.copyWith(cargandoUnidades: false, error: failure.message),
+        state.copyWith(
+          cargandoUnidades: false,
+          error: failure.message,
+          errorUnidades: failure.message,
+        ),
       ),
-      (unidades) =>
-          emit(state.copyWith(cargandoUnidades: false, unidades: unidades)),
+      (unidades) => emit(
+        state.copyWith(
+          cargandoUnidades: false,
+          unidades: unidades,
+          limpiarErrorUnidades: true,
+        ),
+      ),
     );
   }
 

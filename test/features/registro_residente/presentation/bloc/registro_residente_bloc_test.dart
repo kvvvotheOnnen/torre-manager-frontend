@@ -17,9 +17,10 @@ const _unidad = UnidadRegistro(
 );
 
 class _FakeRepository implements RegistroResidenteRepository {
-  _FakeRepository({this.fallaRegistro = false});
+  _FakeRepository({this.fallaRegistro = false, this.fallaUnidades = false});
 
   final bool fallaRegistro;
+  final bool fallaUnidades;
 
   @override
   Future<Either<Failure, List<ProyectoRegistro>>> listarProyectos() async =>
@@ -28,7 +29,9 @@ class _FakeRepository implements RegistroResidenteRepository {
   @override
   Future<Either<Failure, List<UnidadRegistro>>> listarUnidades(
     String proyectoId,
-  ) async => const Right([_unidad]);
+  ) async => fallaUnidades
+      ? const Left(ServerFailure('No fue posible cargar las unidades.'))
+      : const Right([_unidad]);
 
   @override
   Future<Either<Failure, String>> registrar(
@@ -101,6 +104,33 @@ void main() {
 
     bloc.add(const RegistroUnidadesSolicitadas('1'));
     await esperadoUnidades;
+    await bloc.close();
+  });
+
+  test('expone error de unidades distinto de una lista vacía', () async {
+    final bloc = _crearBloc(_FakeRepository(fallaUnidades: true));
+
+    final esperado = expectLater(
+      bloc.stream,
+      emitsInOrder([
+        isA<RegistroResidenteState>().having(
+          (s) => s.cargandoUnidades,
+          'cargando',
+          true,
+        ),
+        isA<RegistroResidenteState>()
+            .having((s) => s.cargandoUnidades, 'cargando', false)
+            .having((s) => s.unidades, 'unidades', isEmpty)
+            .having(
+              (s) => s.errorUnidades,
+              'errorUnidades',
+              'No fue posible cargar las unidades.',
+            ),
+      ]),
+    );
+
+    bloc.add(const RegistroUnidadesSolicitadas('1'));
+    await esperado;
     await bloc.close();
   });
 

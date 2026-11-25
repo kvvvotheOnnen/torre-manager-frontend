@@ -343,6 +343,13 @@ class _RegistroWizardScreenState extends State<RegistroWizardScreen> {
           _unidadController.text = unidad.etiqueta;
         }),
         onInvalidar: () => setState(() => _unidad = null),
+        onReintentar: () {
+          final proyecto = _proyecto;
+          if (proyecto == null) return;
+          context.read<RegistroResidenteBloc>().add(
+            RegistroUnidadesSolicitadas(proyecto.id),
+          );
+        },
       ),
       3 => _PasoResidentes(
         residentes: _residentes,
@@ -544,6 +551,7 @@ class _PasoUnidad extends StatelessWidget {
     required this.seleccionada,
     required this.onSeleccionar,
     required this.onInvalidar,
+    required this.onReintentar,
   });
 
   final RegistroResidenteState state;
@@ -551,6 +559,7 @@ class _PasoUnidad extends StatelessWidget {
   final UnidadRegistro? seleccionada;
   final ValueChanged<UnidadRegistro> onSeleccionar;
   final VoidCallback onInvalidar;
+  final VoidCallback onReintentar;
 
   @override
   Widget build(BuildContext context) {
@@ -561,6 +570,11 @@ class _PasoUnidad extends StatelessWidget {
           'sugeridas. Debes seleccionar una opción válida.',
       child: state.cargandoUnidades
           ? const _Cargando()
+          : state.errorUnidades != null
+          ? _ErrorCarga(
+              mensaje: state.errorUnidades!,
+              onReintentar: onReintentar,
+            )
           : state.unidades.isEmpty
           ? const _Vacio(mensaje: 'Este proyecto aún no tiene unidades.')
           : Autocomplete<UnidadRegistro>(
@@ -1301,6 +1315,47 @@ class _Cargando extends StatelessWidget {
     return const Padding(
       padding: EdgeInsets.symmetric(vertical: AppSpacing.xl),
       child: Center(child: CircularProgressIndicator()),
+    );
+  }
+}
+
+class _ErrorCarga extends StatelessWidget {
+  const _ErrorCarga({required this.mensaje, required this.onReintentar});
+
+  final String mensaje;
+  final VoidCallback onReintentar;
+
+  @override
+  Widget build(BuildContext context) {
+    final p = context.palette;
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: AppSpacing.xl),
+      child: Column(
+        children: [
+          Icon(Icons.cloud_off_rounded, size: 42, color: p.danger),
+          const SizedBox(height: AppSpacing.sm),
+          Text(
+            'No pudimos cargar las unidades de este proyecto.',
+            textAlign: TextAlign.center,
+            style: Theme.of(context).textTheme.titleSmall,
+          ),
+          const SizedBox(height: AppSpacing.xs),
+          Text(
+            mensaje,
+            textAlign: TextAlign.center,
+            style: Theme.of(
+              context,
+            ).textTheme.bodySmall?.copyWith(color: p.inkMuted),
+          ),
+          const SizedBox(height: AppSpacing.md),
+          OutlinedButton.icon(
+            onPressed: onReintentar,
+            icon: const Icon(Icons.refresh_rounded, size: 18),
+            label: const Text('Reintentar'),
+          ),
+        ],
+      ),
     );
   }
 }
