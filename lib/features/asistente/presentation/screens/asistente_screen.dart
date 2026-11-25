@@ -255,17 +255,20 @@ class _AvisoReglamento extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    return Container(
-      width: double.infinity,
-      color: theme.colorScheme.surfaceContainerHighest,
-      padding: const EdgeInsets.symmetric(
-        vertical: AppSpacing.sm,
-        horizontal: AppSpacing.lg,
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(
+        AppSpacing.xl,
+        0,
+        AppSpacing.xl,
+        AppSpacing.sm,
       ),
       child: Text(
         'Las respuestas se basan únicamente en el documento cargado por la administración.',
         textAlign: TextAlign.center,
-        style: theme.textTheme.bodySmall,
+        style: theme.textTheme.bodySmall?.copyWith(
+          fontSize: 11,
+          color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
+        ),
       ),
     );
   }
