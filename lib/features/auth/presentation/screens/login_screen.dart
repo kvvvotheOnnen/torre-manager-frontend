@@ -54,6 +54,7 @@ class _LoginScreenState extends State<LoginScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: AppBackground(
+        showPattern: true,
         child: SafeArea(
           child: LayoutBuilder(
             builder: (context, constraints) {
@@ -64,9 +65,8 @@ class _LoginScreenState extends State<LoginScreen> {
                   emailController: _emailController,
                   passwordController: _passwordController,
                   obscurePassword: _obscurePassword,
-                  onTogglePassword: () => setState(
-                    () => _obscurePassword = !_obscurePassword,
-                  ),
+                  onTogglePassword: () =>
+                      setState(() => _obscurePassword = !_obscurePassword),
                   onSubmit: _submit,
                 );
               }
@@ -161,10 +161,22 @@ class _BrandPanel extends StatelessWidget {
             spacing: AppSpacing.sm,
             runSpacing: AppSpacing.sm,
             children: [
-              _FeaturePill(icon: Icons.security_rounded, label: 'Control de acceso'),
-              _FeaturePill(icon: Icons.inventory_2_rounded, label: 'Paquetería'),
-              _FeaturePill(icon: Icons.receipt_long_rounded, label: 'Gastos comunes'),
-              _FeaturePill(icon: Icons.event_available_rounded, label: 'Reservas'),
+              _FeaturePill(
+                icon: Icons.security_rounded,
+                label: 'Control de acceso',
+              ),
+              _FeaturePill(
+                icon: Icons.inventory_2_rounded,
+                label: 'Paquetería',
+              ),
+              _FeaturePill(
+                icon: Icons.receipt_long_rounded,
+                label: 'Gastos comunes',
+              ),
+              _FeaturePill(
+                icon: Icons.event_available_rounded,
+                label: 'Reservas',
+              ),
             ],
           ),
           const Spacer(),
@@ -330,9 +342,8 @@ class _MobileLogin extends StatelessWidget {
               Text(
                 'Administra accesos, paquetería, reservas y gastos comunes '
                 'desde un solo lugar.',
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: p.inkMuted,
-                ),
+                style: Theme.of(context).textTheme.bodyMedium
+                    ?.copyWith(color: p.inkMuted),
               ),
               const SizedBox(height: AppSpacing.xl),
               _LoginCard(
@@ -425,9 +436,8 @@ class _LoginCard extends StatelessWidget {
                   validator: (value) {
                     final email = value?.trim() ?? '';
                     if (email.isEmpty) return 'Ingresa tu correo';
-                    final isValid = RegExp(
-                      r'^[^@\s]+@[^@\s]+\.[^@\s]+$',
-                    ).hasMatch(email);
+                    final isValid = RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$')
+                        .hasMatch(email);
                     if (!isValid) return 'Correo inválido';
                     return null;
                   },
@@ -468,9 +478,7 @@ class _LoginCard extends StatelessWidget {
                         ? const SizedBox(
                             height: 22,
                             width: 22,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2.5,
-                            ),
+                            child: CircularProgressIndicator(strokeWidth: 2.5),
                           )
                         : const Row(
                             mainAxisAlignment: MainAxisAlignment.center,

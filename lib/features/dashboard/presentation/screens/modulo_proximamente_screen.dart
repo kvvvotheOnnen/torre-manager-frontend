@@ -56,7 +56,7 @@ class ModuloProximamenteScreen extends StatelessWidget {
               AppSpacing.xxl + MediaQuery.viewPaddingOf(context).bottom,
             ),
             child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 500),
+              constraints: const BoxConstraints(maxWidth: AppLayout.maxForm),
               child: GlassCard(
                 glowColor: p.primary,
                 child: Column(

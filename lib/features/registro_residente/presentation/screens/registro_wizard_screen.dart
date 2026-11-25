@@ -9,11 +9,19 @@ import '../../../../core/theme/design_tokens.dart';
 import '../../../../core/utils/rut_validator.dart';
 import '../../../../core/widgets/app_background.dart';
 import '../../../../core/widgets/brand_mark.dart';
+import '../../../../core/widgets/glass_card.dart';
 import '../../../superadmin/presentation/widgets/wizard_step_map.dart';
 import '../../domain/entities/registro_residente.dart';
 import '../bloc/registro_residente_bloc.dart';
 
-const _pasos = ['Proyecto', 'Vínculo', 'Unidad', 'Residentes', 'Mascotas', 'Listo'];
+const _pasos = [
+  'Proyecto',
+  'Vínculo',
+  'Unidad',
+  'Residentes',
+  'Mascotas',
+  'Listo',
+];
 const _maxResidentes = 6;
 
 bool _emailValido(String value) {
@@ -285,15 +293,15 @@ class _RegistroWizardScreenState extends State<RegistroWizardScreen> {
                   constraints: const BoxConstraints(maxWidth: 780),
                   child: Padding(
                     padding: const EdgeInsets.symmetric(
-                      horizontal: AppSpacing.lg,
-                      vertical: AppSpacing.md,
+                      horizontal: AppSpacing.xl,
+                      vertical: AppSpacing.lg,
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
                         _Encabezado(onSalir: _confirmarSalida),
                         WizardStepMap(pasos: _pasos, pasoActual: pasoVisual),
-                        const SizedBox(height: AppSpacing.sm),
+                        const SizedBox(height: AppSpacing.lg),
                         Expanded(
                           child: SingleChildScrollView(
                             keyboardDismissBehavior:
@@ -301,17 +309,29 @@ class _RegistroWizardScreenState extends State<RegistroWizardScreen> {
                             padding: const EdgeInsets.only(
                               bottom: AppSpacing.lg,
                             ),
-                            child: _contenidoPaso(state),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                // Navegación junto al contenido
+                                GlassCard(
+                                  glowColor: p.primary,
+                                  child: _contenidoPaso(state),
+                                ),
+                                if (!state.enviado) ...[
+                                  const SizedBox(height: AppSpacing.xl),
+                                  _Navegacion(
+                                    paso: _paso,
+                                    enviando: state.enviando,
+                                    habilitado: _puedeAvanzar(state),
+                                    onAtras: _atras,
+                                    onSiguiente: _siguiente,
+                                  ),
+                                ],
+                                const SizedBox(height: AppSpacing.xl),
+                              ],
+                            ),
                           ),
                         ),
-                        if (!state.enviado)
-                          _Navegacion(
-                            paso: _paso,
-                            enviando: state.enviando,
-                            habilitado: _puedeAvanzar(state),
-                            onAtras: _atras,
-                            onSiguiente: _siguiente,
-                          ),
                       ],
                     ),
                   ),
@@ -404,7 +424,8 @@ class _RegistroWizardScreenState extends State<RegistroWizardScreen> {
         }),
       ),
       5 => _PasoFinalizado(
-        mensaje: state.mensajeExito ??
+        mensaje:
+            state.mensajeExito ??
             'Tu solicitud de ingreso fue registrada correctamente.',
         onIrLogin: () => context.go(AppRoutes.login),
         onNuevoRegistro: _reiniciar,
@@ -504,8 +525,7 @@ class _PasoProyecto extends StatelessWidget {
   Widget build(BuildContext context) {
     return _Seccion(
       titulo: 'Elige tu condominio',
-      descripcion:
-          'Selecciona el recinto en el que te estás registrando.',
+      descripcion: 'Selecciona el recinto en el que te estás registrando.',
       child: state.cargandoProyectos
           ? const _Cargando()
           : state.proyectos.isEmpty
@@ -807,8 +827,9 @@ class _ResumenResidente extends StatelessWidget {
       ),
       decoration: BoxDecoration(
         color: p.surface.withValues(alpha: p.isDark ? 0.14 : 0.6),
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: AppRadii.lgAll,
         border: Border.all(color: p.border),
+        boxShadow: AppShadows.soft(p.isDark),
       ),
       child: Row(
         children: [
@@ -824,9 +845,8 @@ class _ResumenResidente extends StatelessWidget {
               children: [
                 Text(
                   etiqueta,
-                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                    color: p.inkMuted,
-                  ),
+                  style: Theme.of(context).textTheme.labelSmall
+                      ?.copyWith(color: p.inkMuted),
                 ),
                 Text(
                   form.nombre.text.trim().isEmpty
@@ -838,9 +858,8 @@ class _ResumenResidente extends StatelessWidget {
                   '${form.rut.text.trim()} · ${form.email.text.trim()}',
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: Theme.of(
-                    context,
-                  ).textTheme.bodySmall?.copyWith(color: p.inkMuted),
+                  style: Theme.of(context).textTheme.bodySmall
+                      ?.copyWith(color: p.inkMuted),
                 ),
               ],
             ),
@@ -886,8 +905,9 @@ class _TarjetaResidenteState extends State<_TarjetaResidente> {
       padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
         color: p.surface.withValues(alpha: p.isDark ? 0.18 : 0.8),
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: AppRadii.lgAll,
         border: Border.all(color: p.border),
+        boxShadow: AppShadows.soft(p.isDark),
       ),
       child: Form(
         key: form.formKey,
@@ -907,8 +927,7 @@ class _TarjetaResidenteState extends State<_TarjetaResidente> {
                 Expanded(
                   child: Text(
                     esPrincipal
-                        ? (widget.tipoVinculo ==
-                                  TipoVinculoRegistro.propietario
+                        ? (widget.tipoVinculo == TipoVinculoRegistro.propietario
                               ? 'Propietario principal'
                               : 'Arrendatario principal')
                         : 'Conviviente ${widget.indice + 1}',
@@ -934,9 +953,8 @@ class _TarjetaResidenteState extends State<_TarjetaResidente> {
                       : 'Este formulario corresponde a los datos del '
                             'arrendatario. Los siguientes se consideran '
                             'convivientes.',
-                  style: Theme.of(
-                    context,
-                  ).textTheme.bodySmall?.copyWith(color: p.inkMuted),
+                  style: Theme.of(context).textTheme.bodySmall
+                      ?.copyWith(color: p.inkMuted),
                 ),
               ),
             _Campo(
@@ -959,9 +977,8 @@ class _TarjetaResidenteState extends State<_TarjetaResidente> {
               validator: (value) {
                 final email = value?.trim() ?? '';
                 if (email.isEmpty) return 'Ingresa el correo';
-                final valido = RegExp(
-                  r'^[^@\s]+@[^@\s]+\.[^@\s]+$',
-                ).hasMatch(email);
+                final valido = RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$')
+                    .hasMatch(email);
                 return valido ? null : 'Correo inválido';
               },
             ),
@@ -1097,9 +1114,8 @@ class _PasoMascotas extends StatelessWidget {
           Text(
             'La asociación de la mascota quedará vinculada a la unidad '
             'seleccionada en el paso anterior.',
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: context.palette.inkMuted,
-            ),
+            style: Theme.of(context).textTheme.bodySmall
+                ?.copyWith(color: context.palette.inkMuted),
           ),
         ],
       ),
@@ -1127,8 +1143,9 @@ class _TarjetaMascota extends StatelessWidget {
       padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
         color: p.surface.withValues(alpha: p.isDark ? 0.18 : 0.8),
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: AppRadii.lgAll,
         border: Border.all(color: p.border),
+        boxShadow: AppShadows.soft(p.isDark),
       ),
       child: Form(
         key: form.formKey,
@@ -1245,9 +1262,8 @@ class _PasoFinalizado extends StatelessWidget {
             '$mensaje\n\nUn administrador revisará tu solicitud. Cuando sea '
             'aprobada podrás ingresar con tu correo y contraseña.',
             textAlign: TextAlign.center,
-            style: Theme.of(
-              context,
-            ).textTheme.bodyMedium?.copyWith(color: p.inkMuted),
+            style: Theme.of(context).textTheme.bodyMedium
+                ?.copyWith(color: p.inkMuted),
           ),
           const SizedBox(height: AppSpacing.xl),
           SizedBox(
@@ -1292,9 +1308,8 @@ class _Seccion extends StatelessWidget {
         const SizedBox(height: AppSpacing.xs),
         Text(
           descripcion,
-          style: Theme.of(
-            context,
-          ).textTheme.bodyMedium?.copyWith(color: p.inkMuted),
+          style: Theme.of(context).textTheme.bodyMedium
+              ?.copyWith(color: p.inkMuted),
         ),
         const SizedBox(height: AppSpacing.lg),
         child,
@@ -1325,7 +1340,7 @@ class _OpcionCard extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.only(bottom: AppSpacing.sm),
       child: InkWell(
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: AppRadii.lgAll,
         onTap: onTap,
         child: Container(
           padding: const EdgeInsets.all(AppSpacing.md),
@@ -1333,33 +1348,27 @@ class _OpcionCard extends StatelessWidget {
             color: seleccionado
                 ? p.accent.withValues(alpha: 0.12)
                 : p.surface.withValues(alpha: p.isDark ? 0.18 : 0.8),
-            borderRadius: BorderRadius.circular(18),
+            borderRadius: AppRadii.lgAll,
             border: Border.all(
               color: seleccionado ? p.accent : p.border,
               width: seleccionado ? 2 : 1,
             ),
+            boxShadow: seleccionado ? AppShadows.soft(p.isDark) : null,
           ),
           child: Row(
             children: [
-              Icon(
-                icono,
-                color: seleccionado ? p.accent : p.inkMuted,
-              ),
+              Icon(icono, color: seleccionado ? p.accent : p.inkMuted),
               const SizedBox(width: AppSpacing.md),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      titulo,
-                      style: Theme.of(context).textTheme.titleSmall,
-                    ),
+                    Text(titulo, style: Theme.of(context).textTheme.titleSmall),
                     if (descripcion != null)
                       Text(
                         descripcion!,
-                        style: Theme.of(
-                          context,
-                        ).textTheme.bodySmall?.copyWith(color: p.inkMuted),
+                        style: Theme.of(context).textTheme.bodySmall
+                            ?.copyWith(color: p.inkMuted),
                       ),
                   ],
                 ),
@@ -1460,9 +1469,8 @@ class _ErrorCarga extends StatelessWidget {
           Text(
             mensaje,
             textAlign: TextAlign.center,
-            style: Theme.of(
-              context,
-            ).textTheme.bodySmall?.copyWith(color: p.inkMuted),
+            style: Theme.of(context).textTheme.bodySmall
+                ?.copyWith(color: p.inkMuted),
           ),
           const SizedBox(height: AppSpacing.md),
           OutlinedButton.icon(
@@ -1487,11 +1495,7 @@ class _Vacio extends StatelessWidget {
       padding: const EdgeInsets.symmetric(vertical: AppSpacing.xl),
       child: Column(
         children: [
-          Icon(
-            Icons.inbox_outlined,
-            size: 42,
-            color: context.palette.inkMuted,
-          ),
+          Icon(Icons.inbox_outlined, size: 42, color: context.palette.inkMuted),
           const SizedBox(height: AppSpacing.sm),
           Text(mensaje, textAlign: TextAlign.center),
         ],

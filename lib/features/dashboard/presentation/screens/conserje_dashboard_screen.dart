@@ -79,8 +79,7 @@ class _ConserjeDashboardScreenState extends State<ConserjeDashboardScreen> {
           sections: sections,
           userName: widget.usuario.nombre,
           roleLabel: widget.usuario.rol.name,
-          onLogout: () =>
-              context.read<AuthBloc>().add(const LogoutRequested()),
+          onLogout: () => context.read<AuthBloc>().add(const LogoutRequested()),
           topBar: AppTopBar(
             greeting: 'Bienvenido, ${widget.usuario.nombre}',
             avatarName: widget.usuario.nombre,
@@ -123,7 +122,7 @@ class _ContenidoConserje extends StatelessWidget {
 
         return Center(
           child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 1280),
+            constraints: const BoxConstraints(maxWidth: AppLayout.maxContent),
             child: SingleChildScrollView(
               keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
               padding: EdgeInsets.fromLTRB(
@@ -160,9 +159,9 @@ class _ContenidoConserje extends StatelessWidget {
                           state.mensaje ??
                           'Revisa tu conexión e inténtalo de nuevo.',
                       actionLabel: 'Reintentar',
-                      onAction: () => context.read<FuncionesDashboardBloc>().add(
-                        const FuncionesRefrescadas(),
-                      ),
+                      onAction: () => context
+                          .read<FuncionesDashboardBloc>()
+                          .add(const FuncionesRefrescadas()),
                     )
                   else if (funciones.isEmpty)
                     const AppEmptyState(
@@ -304,9 +303,8 @@ class _HeroChip extends StatelessWidget {
           const SizedBox(width: AppSpacing.sm),
           Text(
             label,
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: Colors.white.withValues(alpha: 0.88),
-            ),
+            style: Theme.of(context).textTheme.bodySmall
+                ?.copyWith(color: Colors.white.withValues(alpha: 0.88)),
           ),
         ],
       ),

@@ -1,56 +1,29 @@
-# Hallazgos de diseño · rama mejoras visuales
+# Mejoras de diseño — hallazgos seleccionados
 
-Revisión con el catálogo `flutter-improve-design` (2026-11-24). Cada hallazgo fue
-implementado en la rama `feature/koke/mejoras-visuales/2026-11-24`, salvo el
-indicado como pendiente.
+> Revisión de UI/UX del app Flutter (`torre_manager_frontend`). Solo se
+> seleccionaron las peticiones directas del desarrollador; no se eligieron
+> reglas del catálogo. Cada hallazgo tiene su plan en `plans/`.
 
-## 1. Give every text field the right keyboard action
+**12. Botón "Siguiente" pegado al fondo de la pantalla (tu petición)**
 
-Users should be able to fill a form and submit it with the keyboard's action key alone: it moves them to the next field, and on the last one, submits. No tapping each field by hand.
+En el wizard de registro, la barra de navegación ("Atrás / Siguiente") queda anclada casi al borde inferior del eje Y, lejos del contenido, así que el pulgar o el cursor recorren un camino largo entre el último campo y la acción. La navegación debería quedar más cerca del contenido que el usuario acaba de llenar, con una separación visual coherente.
 
-Link: https://flutterpro.design/details/md/text-input-action
+- **Origen:** petición directa del desarrollador (no es una regla del catálogo).
 
-## 2. Format phone numbers
+**13. Armonía de separaciones y centrado de componentes (tu petición)**
 
-A phone number shown or typed as one long run of digits is hard to read and easy to mistype. It should be formatted everywhere the user sees one, including while they type to a text field.
+Las pantallas mezclan valores de espaciado distintos entre componentes (márgenes, paddings y huecos que no siguen una misma escala), y el contenido no siempre queda centrado en pantalla: en algunas vistas se ve pegado a un lado o con anchos inconsistentes. Unificar la escala de separación y centrar los bloques de contenido da calma visual y consistencia entre pantallas.
 
-Link: https://flutterpro.design/details/md/format-phone-numbers
+- **Origen:** petición directa del desarrollador (no es una regla del catálogo).
 
-## 3. Never show "null" on screen
+**14. Mejora del aspecto visual general (tu petición)**
 
-When a string field comes back `null` or empty from the API and gets displayed directly, the user sees the word "null" or a blank spot on screen. A bad experience, and something they should never see. Instead, gate those values to show "-" or "N/A".
+El wizard y otras pantallas nuevas se ven funcionales pero planas comparadas con el login: jerarquía de títulos, peso de las tarjetas y acabado de los controles no siguen el mismo lenguaje visual. Un repaso general de aspecto (tarjetas, botones, cabeceras, estados vacíos) elevaría la percepción de calidad del resto del sistema.
 
-Link: https://flutterpro.design/details/md/never-show-null
+- **Origen:** petición directa del desarrollador (no es una regla del catálogo).
 
-## 4. Don't let the system navigation bar cover the bottom of scrollable lists
+**15. Quitar el fondo de cuadros de todo el sistema, salvo el login (tu petición)**
 
-The last item of scrollable lists gets obscured by the system navigation bar. Leave space as tall as that bar at the end of the list so the last item has a breathing room against the bar.
+El fondo con patrón de cuadros (grid) se usa actualmente en varias pantallas del sistema. Ese fondo debería existir únicamente en el login, como firma visual de entrada; el resto del sistema debería usar un fondo sobrio para no competir con el contenido.
 
-Link: https://flutterpro.design/details/md/safe-area-replacement
-
-## 5. Make horizontal lists feel scrollable
-
-A horizontal scrollable list might not always signal that it's scrollable. Especially when the visible content just fits the view and no item is cut in half. Fading the edge hints users that there's more and they can scroll it.
-
-Link: https://flutterpro.design/details/md/shader-mask
-
-## 6. Unfocus the text field before opening a modal
-
-Opening a modal while a text field is focused brings the keyboard back when the modal closes, even though the user was done typing. Unfocus before opening and it stays away.
-
-Link: https://flutterpro.design/details/md/unfocus-before-modal
-
-## 7. Give Flutter web links a preview card
-
-Shared in WhatsApp, Slack or X, the app's link shows as a bare URL. It should show a proper preview card with a title, description and image.
-
-Link: https://flutterpro.design/details/md/flutter-web-og-image
-
-Estado: implementado con dominio de ejemplo. Pendiente reemplazar
-`torre-manager.example.com` en `web/index.html` por el dominio público real.
-
-## Fuera del catálogo · inputs a ancho completo
-
-En pantallas anchas (web/escritorio) los formularios y buscadores se estiraban a
-todo el ancho disponible. Se introdujo `AppContent`/`AppFieldWidth` y se
-aplicaron en marketplace, servicios, paquetería y gestión de residentes.
+- **Origen:** petición directa del desarrollador (no es una regla del catálogo).

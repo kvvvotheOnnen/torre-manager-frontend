@@ -68,7 +68,8 @@ class DashboardScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final rolActivo = context.watch<TenantBloc>().state.rolActivo ?? usuario.rol;
+    final rolActivo =
+        context.watch<TenantBloc>().state.rolActivo ?? usuario.rol;
 
     if (rolActivo == Rol.administrador) {
       return AdminDashboardScreen(usuario: usuario);
@@ -124,9 +125,7 @@ class DashboardScreen extends StatelessWidget {
               showThemeToggle: !esEscritorio,
               onLogout: esEscritorio
                   ? null
-                  : () => context.read<AuthBloc>().add(
-                      const LogoutRequested(),
-                    ),
+                  : () => context.read<AuthBloc>().add(const LogoutRequested()),
             ),
             body: _ContenidoSuperadmin(usuario: usuario, modulos: modulos),
           );
@@ -158,7 +157,7 @@ class _ContenidoSuperadmin extends StatelessWidget {
 
         return Center(
           child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 1280),
+            constraints: const BoxConstraints(maxWidth: AppLayout.maxContent),
             child: SingleChildScrollView(
               keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
               padding: EdgeInsets.fromLTRB(

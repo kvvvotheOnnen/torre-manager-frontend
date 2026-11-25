@@ -10,11 +10,13 @@ class AppBackground extends StatelessWidget {
     super.key,
     required this.child,
     this.showGlow = true,
+    this.showPattern = false,
     this.dark = false,
   });
 
   final Widget child;
   final bool showGlow;
+  final bool showPattern;
   final bool dark;
 
   @override
@@ -28,25 +30,34 @@ class AppBackground extends StatelessWidget {
             ? const LinearGradient(
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
-                colors: [Color(0xFF060A12), Color(0xFF0B1424), Color(0xFF131F3A)],
+                colors: [
+                  Color(0xFF060A12),
+                  Color(0xFF0B1424),
+                  Color(0xFF131F3A),
+                ],
               )
             : const LinearGradient(
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
-                colors: [Color(0xFFF7F9FE), Color(0xFFEEF2FA), Color(0xFFE6ECF8)],
+                colors: [
+                  Color(0xFFF7F9FE),
+                  Color(0xFFEEF2FA),
+                  Color(0xFFE6ECF8),
+                ],
               ),
       ),
       child: Stack(
         children: [
-          Positioned.fill(
-            child: CustomPaint(
-              painter: _BlueprintPainter(
-                lineColor: (isDark ? Colors.white : const Color(0xFF0B1220))
-                    .withValues(alpha: isDark ? 0.05 : 0.045),
-                step: 46,
+          if (showPattern)
+            Positioned.fill(
+              child: CustomPaint(
+                painter: _BlueprintPainter(
+                  lineColor: (isDark ? Colors.white : const Color(0xFF0B1220))
+                      .withValues(alpha: isDark ? 0.05 : 0.045),
+                  step: 46,
+                ),
               ),
             ),
-          ),
           if (showGlow) ...[
             Positioned(
               top: -140,
@@ -86,9 +97,7 @@ class _Glow extends StatelessWidget {
         height: size,
         decoration: BoxDecoration(
           shape: BoxShape.circle,
-          gradient: RadialGradient(
-            colors: [color, color.withValues(alpha: 0)],
-          ),
+          gradient: RadialGradient(colors: [color, color.withValues(alpha: 0)]),
         ),
       ),
     );

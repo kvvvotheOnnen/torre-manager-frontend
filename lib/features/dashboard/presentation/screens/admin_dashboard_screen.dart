@@ -7,6 +7,7 @@ import '../../../../core/router/app_router.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/design_tokens.dart';
 import '../../../../core/widgets/app_background.dart';
+import '../../../../core/widgets/app_content.dart';
 import '../../../../core/widgets/app_shell.dart';
 import '../../../../core/widgets/empty_state.dart';
 import '../../../../core/widgets/module_card.dart';
@@ -270,70 +271,72 @@ class _ContenidoDashboard extends StatelessWidget {
             ? 2
             : 1;
 
-        return SingleChildScrollView(
-          keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
-          padding: EdgeInsets.fromLTRB(
-            AppSpacing.xl,
-            AppSpacing.xl,
-            AppSpacing.xl,
-            AppSpacing.xxl + MediaQuery.viewPaddingOf(context).bottom,
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              _HeroPanel(
-                usuario: usuario,
-                proyectoNombre: proyectoNombre,
-                totalModulos: modulos.length,
-                habilitados: habilitados,
-              ),
-              const SizedBox(height: AppSpacing.xl),
-              SectionHeader(
-                title: 'Módulos disponibles',
-                subtitle: 'Accesos habilitados para este recinto',
-                trailing: StatusPill(
-                  label: '$habilitados/${modulos.length} activos',
-                  color: habilitados == modulos.length
-                      ? context.palette.success
-                      : context.palette.accent,
-                  compact: true,
+        return AppContent(
+          child: SingleChildScrollView(
+            keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+            padding: EdgeInsets.fromLTRB(
+              AppSpacing.xl,
+              AppSpacing.xl,
+              AppSpacing.xl,
+              AppSpacing.xxl + MediaQuery.viewPaddingOf(context).bottom,
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                _HeroPanel(
+                  usuario: usuario,
+                  proyectoNombre: proyectoNombre,
+                  totalModulos: modulos.length,
+                  habilitados: habilitados,
                 ),
-              ),
-              const SizedBox(height: AppSpacing.sm),
-              if (modulos.isEmpty)
-                AppEmptyState(
-                  icon: Icons.widgets_outlined,
-                  title: 'Aún no hay módulos',
-                  message:
-                      'Este proyecto todavía no tiene módulos configurados.',
-                  actionLabel: 'Actualizar',
-                  onAction: () => context.read<ModulosDashboardBloc>().add(
-                    const ModulosDashboardSolicitados(),
+                const SizedBox(height: AppSpacing.xl),
+                SectionHeader(
+                  title: 'Módulos disponibles',
+                  subtitle: 'Accesos habilitados para este recinto',
+                  trailing: StatusPill(
+                    label: '$habilitados/${modulos.length} activos',
+                    color: habilitados == modulos.length
+                        ? context.palette.success
+                        : context.palette.accent,
+                    compact: true,
                   ),
-                )
-              else
-                GridView.builder(
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  itemCount: modulos.length,
-                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: columnas,
-                    mainAxisSpacing: AppSpacing.md,
-                    crossAxisSpacing: AppSpacing.md,
-                    mainAxisExtent: 196,
-                  ),
-                  itemBuilder: (context, index) {
-                    final modulo = modulos[index];
-                    return ModuleCard(
-                      title: modulo.nombre,
-                      description: modulo.descripcion,
-                      icon: _iconoPara(modulo.id),
-                      enabled: modulo.habilitado,
-                      onTap: () => _abrirModulo(context, modulo),
-                    );
-                  },
                 ),
-            ],
+                const SizedBox(height: AppSpacing.sm),
+                if (modulos.isEmpty)
+                  AppEmptyState(
+                    icon: Icons.widgets_outlined,
+                    title: 'Aún no hay módulos',
+                    message:
+                        'Este proyecto todavía no tiene módulos configurados.',
+                    actionLabel: 'Actualizar',
+                    onAction: () => context.read<ModulosDashboardBloc>().add(
+                      const ModulosDashboardSolicitados(),
+                    ),
+                  )
+                else
+                  GridView.builder(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    itemCount: modulos.length,
+                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: columnas,
+                      mainAxisSpacing: AppSpacing.md,
+                      crossAxisSpacing: AppSpacing.md,
+                      mainAxisExtent: 196,
+                    ),
+                    itemBuilder: (context, index) {
+                      final modulo = modulos[index];
+                      return ModuleCard(
+                        title: modulo.nombre,
+                        description: modulo.descripcion,
+                        icon: _iconoPara(modulo.id),
+                        enabled: modulo.habilitado,
+                        onTap: () => _abrirModulo(context, modulo),
+                      );
+                    },
+                  ),
+              ],
+            ),
           ),
         );
       },
