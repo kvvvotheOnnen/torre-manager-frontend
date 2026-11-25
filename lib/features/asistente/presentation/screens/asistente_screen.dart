@@ -1,6 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 
+import '../../../../core/router/app_router.dart';
+import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/design_tokens.dart';
+import '../../../../core/widgets/app_content.dart';
 import '../../../auth/presentation/bloc/auth_bloc.dart';
 import '../../../auth/presentation/bloc/auth_event.dart';
 import '../../domain/entities/fuente_asistente.dart';
@@ -14,6 +19,9 @@ class AsistenteScreen extends StatefulWidget {
 }
 
 class _AsistenteScreenState extends State<AsistenteScreen> {
+  static const String _preguntaSugerida =
+      '¿En qué piso se encuentra el Quincho?';
+
   final _controller = TextEditingController();
   final _scrollController = ScrollController();
 
@@ -54,7 +62,8 @@ class _AsistenteScreenState extends State<AsistenteScreen> {
           current.status != previous.status,
       listener: (context, state) {
         _desplazarAlFinal();
-        if (state.status == AsistenteStatus.error && state.mensajeError != null) {
+        if (state.status == AsistenteStatus.error &&
+            state.mensajeError != null) {
           ScaffoldMessenger.of(context)
             ..hideCurrentSnackBar()
             ..showSnackBar(SnackBar(content: Text(state.mensajeError!)));
@@ -62,7 +71,19 @@ class _AsistenteScreenState extends State<AsistenteScreen> {
       },
       child: Scaffold(
         appBar: AppBar(
-          title: const Text('IA'),
+          leading: IconButton(
+            tooltip: 'Volver al panel',
+            icon: const Icon(Icons.arrow_back_rounded),
+            onPressed: () => context.go(AppRoutes.dashboard),
+          ),
+          title: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text('Asistente'),
+              Text('Reglamento del edificio', style: theme.textTheme.bodySmall),
+            ],
+          ),
           actions: [
             IconButton(
               tooltip: 'Cerrar sesión',
@@ -70,103 +91,205 @@ class _AsistenteScreenState extends State<AsistenteScreen> {
               onPressed: () =>
                   context.read<AuthBloc>().add(const LogoutRequested()),
             ),
+            const SizedBox(width: AppSpacing.sm),
           ],
         ),
-        body: Column(
-          children: [
-            Expanded(
-              child: BlocBuilder<AsistenteBloc, AsistenteState>(
-                builder: (context, state) {
-                  if (state.mensajes.isEmpty) {
-                    return _MensajeInicial();
-                  }
+        body: AppContent(
+          maxWidth: 880,
+          alignment: Alignment.bottomCenter,
+          child: SafeArea(
+            top: false,
+            child: Column(
+              children: [
+                Expanded(
+                  child: BlocBuilder<AsistenteBloc, AsistenteState>(
+                    builder: (context, state) {
+                      if (state.mensajes.isEmpty) {
+                        return const _MensajeInicial();
+                      }
 
-                  return ListView.builder(
-                    controller: _scrollController,
-                    padding: const EdgeInsets.all(16),
-                    itemCount: state.mensajes.length,
-                    itemBuilder: (context, index) {
-                      return _BurbujaMensaje(mensaje: state.mensajes[index]);
+                      final enviando = state.status == AsistenteStatus.enviando;
+
+                      return ListView.builder(
+                        controller: _scrollController,
+                        keyboardDismissBehavior:
+                            ScrollViewKeyboardDismissBehavior.onDrag,
+                        padding: const EdgeInsets.fromLTRB(
+                          AppSpacing.lg,
+                          AppSpacing.lg,
+                          AppSpacing.lg,
+                          AppSpacing.sm,
+                        ),
+                        itemCount: state.mensajes.length + (enviando ? 1 : 0),
+                        itemBuilder: (context, index) {
+                          if (index >= state.mensajes.length) {
+                            return const _BurbujaEscribiendo();
+                          }
+                          return _BurbujaMensaje(
+                            mensaje: state.mensajes[index],
+                          );
+                        },
+                      );
                     },
-                  );
-                },
-              ),
-            ),
-            BlocBuilder<AsistenteBloc, AsistenteState>(
-              builder: (context, state) {
-                final enviando = state.status == AsistenteStatus.enviando;
-
-                return SafeArea(
-                  top: false,
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.end,
-                      children: [
-                        Expanded(
-                          child: TextField(
-                            controller: _controller,
-                            minLines: 1,
-                            maxLines: 4,
-                            textInputAction: TextInputAction.send,
-                            onSubmitted: (_) => enviando ? null : _enviar(),
-                            decoration: InputDecoration(
-                              hintText: 'Escribe tu consulta sobre el reglamento…',
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(14),
-                              ),
-                              isDense: true,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 10),
-                        IconButton.filled(
-                          onPressed: enviando ? null : _enviar,
-                          icon: enviando
-                              ? const SizedBox(
-                                  width: 20,
-                                  height: 20,
-                                  child: CircularProgressIndicator(strokeWidth: 2),
-                                )
-                              : const Icon(Icons.send),
-                          tooltip: 'Enviar',
-                        ),
-                      ],
-                    ),
                   ),
-                );
-              },
+                ),
+                BlocBuilder<AsistenteBloc, AsistenteState>(
+                  builder: (context, state) {
+                    final enviando = state.status == AsistenteStatus.enviando;
+
+                    return Padding(
+                      padding: const EdgeInsets.fromLTRB(
+                        AppSpacing.lg,
+                        AppSpacing.sm,
+                        AppSpacing.lg,
+                        AppSpacing.md,
+                      ),
+                      child: _CompositorMensaje(
+                        controller: _controller,
+                        enviando: enviando,
+                        onEnviar: _enviar,
+                        hintText: _preguntaSugerida,
+                      ),
+                    );
+                  },
+                ),
+                _AvisoReglamento(),
+              ],
             ),
-            Container(
-              width: double.infinity,
-              color: theme.colorScheme.surfaceContainerHighest,
-              padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 16),
-              child: Text(
-                'Las respuestas se basan únicamente en el documento cargado por la administración.',
-                textAlign: TextAlign.center,
-                style: theme.textTheme.bodySmall,
-              ),
-            ),
-          ],
+          ),
         ),
       ),
     );
   }
 }
 
+class _CompositorMensaje extends StatelessWidget {
+  const _CompositorMensaje({
+    required this.controller,
+    required this.enviando,
+    required this.onEnviar,
+    required this.hintText,
+  });
+
+  final TextEditingController controller;
+  final bool enviando;
+  final VoidCallback onEnviar;
+  final String hintText;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final p = context.palette;
+
+    return Container(
+      padding: const EdgeInsets.fromLTRB(
+        AppSpacing.sm,
+        AppSpacing.sm,
+        AppSpacing.sm,
+        AppSpacing.sm,
+      ),
+      decoration: BoxDecoration(
+        color: p.surface,
+        borderRadius: BorderRadius.circular(AppRadii.xl),
+        border: Border.all(color: p.border),
+        boxShadow: AppShadows.soft(p.isDark),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: [
+          Expanded(
+            child: TextField(
+              controller: controller,
+              minLines: 1,
+              maxLines: 5,
+              keyboardType: TextInputType.multiline,
+              textInputAction: TextInputAction.send,
+              textCapitalization: TextCapitalization.sentences,
+              onSubmitted: (_) => enviando ? null : onEnviar(),
+              decoration: InputDecoration(
+                hintText: hintText,
+                filled: false,
+                isDense: true,
+                border: InputBorder.none,
+                enabledBorder: InputBorder.none,
+                focusedBorder: InputBorder.none,
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: AppSpacing.md,
+                  vertical: AppSpacing.md,
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(width: AppSpacing.sm),
+          ValueListenableBuilder<TextEditingValue>(
+            valueListenable: controller,
+            builder: (context, value, _) {
+              final puedeEnviar = !enviando && value.text.trim().isNotEmpty;
+
+              return SizedBox(
+                width: 44,
+                height: 44,
+                child: IconButton.filled(
+                  onPressed: puedeEnviar ? onEnviar : null,
+                  style: IconButton.styleFrom(
+                    backgroundColor: theme.colorScheme.primary,
+                    foregroundColor: theme.colorScheme.onPrimary,
+                    disabledBackgroundColor: p.surfaceStrong,
+                    disabledForegroundColor: p.inkMuted,
+                    shape: const CircleBorder(),
+                  ),
+                  icon: const Icon(Icons.send_rounded),
+                  tooltip: 'Enviar',
+                ),
+              );
+            },
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _AvisoReglamento extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return Container(
+      width: double.infinity,
+      color: theme.colorScheme.surfaceContainerHighest,
+      padding: const EdgeInsets.symmetric(
+        vertical: AppSpacing.sm,
+        horizontal: AppSpacing.lg,
+      ),
+      child: Text(
+        'Las respuestas se basan únicamente en el documento cargado por la administración.',
+        textAlign: TextAlign.center,
+        style: theme.textTheme.bodySmall,
+      ),
+    );
+  }
+}
+
 class _MensajeInicial extends StatelessWidget {
+  const _MensajeInicial();
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
     return Center(
       child: Padding(
-        padding: const EdgeInsets.all(32),
+        padding: const EdgeInsets.all(AppSpacing.xxl),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.star, size: 64, color: theme.colorScheme.primary),
-            const SizedBox(height: 16),
+            Icon(
+              Icons.auto_awesome_rounded,
+              size: 56,
+              color: theme.colorScheme.primary,
+            ),
+            const SizedBox(height: AppSpacing.lg),
             Text(
               'Consulta el reglamento del edificio',
               style: theme.textTheme.titleMedium?.copyWith(
@@ -174,10 +297,13 @@ class _MensajeInicial extends StatelessWidget {
               ),
               textAlign: TextAlign.center,
             ),
-            const SizedBox(height: 8),
-            const Text(
+            const SizedBox(height: AppSpacing.sm),
+            Text(
               'Pregunta por horarios, zonas seguras, retiro de vidrio o cajas, tarifas y más.',
               textAlign: TextAlign.center,
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
             ),
           ],
         ),
@@ -200,17 +326,20 @@ class _BurbujaMensaje extends StatelessWidget {
       alignment: esUsuario ? Alignment.centerRight : Alignment.centerLeft,
       child: Container(
         constraints: const BoxConstraints(maxWidth: 560),
-        margin: const EdgeInsets.symmetric(vertical: 6),
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        margin: const EdgeInsets.symmetric(vertical: AppSpacing.xs),
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.lg,
+          vertical: AppSpacing.md,
+        ),
         decoration: BoxDecoration(
           color: esUsuario
               ? theme.colorScheme.primary
               : theme.colorScheme.surfaceContainerHighest,
           borderRadius: BorderRadius.only(
-            topLeft: const Radius.circular(16),
-            topRight: const Radius.circular(16),
-            bottomLeft: Radius.circular(esUsuario ? 16 : 4),
-            bottomRight: Radius.circular(esUsuario ? 4 : 16),
+            topLeft: const Radius.circular(AppRadii.md),
+            topRight: const Radius.circular(AppRadii.md),
+            bottomLeft: Radius.circular(esUsuario ? AppRadii.md : 4),
+            bottomRight: Radius.circular(esUsuario ? 4 : AppRadii.md),
           ),
         ),
         child: Column(
@@ -223,7 +352,7 @@ class _BurbujaMensaje extends StatelessWidget {
               ),
             ),
             if (mensaje.fuentes.isNotEmpty) ...[
-              const SizedBox(height: 10),
+              const SizedBox(height: AppSpacing.sm),
               Wrap(
                 spacing: 6,
                 runSpacing: 6,
@@ -233,6 +362,92 @@ class _BurbujaMensaje extends StatelessWidget {
               ),
             ],
           ],
+        ),
+      ),
+    );
+  }
+}
+
+class _BurbujaEscribiendo extends StatefulWidget {
+  const _BurbujaEscribiendo();
+
+  @override
+  State<_BurbujaEscribiendo> createState() => _BurbujaEscribiendoState();
+}
+
+class _BurbujaEscribiendoState extends State<_BurbujaEscribiendo>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 1200),
+  )..repeat();
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return Align(
+      alignment: Alignment.centerLeft,
+      child: Semantics(
+        label: 'El asistente está escribiendo',
+        child: Container(
+          margin: const EdgeInsets.symmetric(vertical: AppSpacing.xs),
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.lg,
+            vertical: AppSpacing.md,
+          ),
+          decoration: BoxDecoration(
+            color: theme.colorScheme.surfaceContainerHighest,
+            borderRadius: const BorderRadius.only(
+              topLeft: Radius.circular(AppRadii.md),
+              topRight: Radius.circular(AppRadii.md),
+              bottomLeft: Radius.circular(4),
+              bottomRight: Radius.circular(AppRadii.md),
+            ),
+          ),
+          child: AnimatedBuilder(
+            animation: _controller,
+            builder: (context, _) {
+              return Row(
+                mainAxisSize: MainAxisSize.min,
+                children: List.generate(3, (index) {
+                  final inicio = index * 0.2;
+                  final curva = CurvedAnimation(
+                    parent: _controller,
+                    curve: Interval(
+                      inicio,
+                      inicio + 0.6,
+                      curve: Curves.easeInOut,
+                    ),
+                  );
+                  final valor = (curva.value * 2 - 1).abs();
+                  return Padding(
+                    padding: EdgeInsets.only(right: index == 2 ? 0 : 5),
+                    child: Transform.translate(
+                      offset: Offset(0, -3 * (1 - valor)),
+                      child: Opacity(
+                        opacity: 0.35 + 0.65 * valor,
+                        child: Container(
+                          width: 7,
+                          height: 7,
+                          decoration: BoxDecoration(
+                            color: theme.colorScheme.onSurfaceVariant,
+                            shape: BoxShape.circle,
+                          ),
+                        ),
+                      ),
+                    ),
+                  );
+                }),
+              );
+            },
+          ),
         ),
       ),
     );

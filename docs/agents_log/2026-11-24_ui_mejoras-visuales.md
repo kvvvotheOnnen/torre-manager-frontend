@@ -38,10 +38,24 @@
 - Se priorizó no agregar dependencias: formateo de teléfono y texto con helpers
   propios.
 
+## Chat del Asistente IA (residente)
+
+- `asistente_screen.dart`: el chat se centra con `AppContent(maxWidth: 880)` y
+  el compositor deja de ocupar todo el ancho de la pantalla.
+- El input vive en una barra flotante redondeada; el botón de enviar es circular
+  y se deshabilita mientras el asistente responde o el campo está vacío.
+- El spinner del botón se reemplazó por una burbuja animada de tres puntos
+  ("escribiendo") del lado del asistente.
+- El placeholder del campo muestra siempre la pregunta sugerida
+  "¿En qué piso se encuentra el Quincho?" mientras está vacío.
+- AppBar con flecha de volver al panel y subtítulo "Reglamento del edificio".
+- Toda la columna del chat queda dentro de `SafeArea` para no quedar bajo la
+  barra de navegación del sistema.
+
 ## Verificación
 
 - `flutter analyze`: sin issues.
-- `flutter test`: 109 tests en verde (incluye tests nuevos de formateo de
+- `flutter test`: 116 tests en verde (incluye tests nuevos de formateo de
   teléfono y de `orPlaceholder`).
 
 ## Pendientes
