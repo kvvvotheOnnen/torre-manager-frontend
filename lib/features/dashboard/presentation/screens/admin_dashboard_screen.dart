@@ -121,8 +121,10 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                   selector: AppProjectSelector(
                     projects: tenantState.proyectos
                         .map(
-                          (proyecto) =>
-                              ProjectOption(id: proyecto.id, nombre: proyecto.nombre),
+                          (proyecto) => ProjectOption(
+                            id: proyecto.id,
+                            nombre: proyecto.nombre,
+                          ),
                         )
                         .toList(),
                     value: tenantState.proyectoActivoId,
@@ -155,9 +157,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
         AppNavSection(
           title: 'Módulos del proyecto',
           items: modulosState.modulosProyecto
-              .map(
-                (modulo) => _navItem(modulo, location),
-              )
+              .map((modulo) => _navItem(modulo, location))
               .toList(),
         ),
       );
@@ -168,9 +168,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
         AppNavSection(
           title: 'Módulos generales',
           items: modulosState.modulosGenerales
-              .map(
-                (modulo) => _navItem(modulo, location),
-              )
+              .map((modulo) => _navItem(modulo, location))
               .toList(),
         ),
       );
@@ -205,9 +203,8 @@ class _EstadoDashboardCargando extends StatelessWidget {
             const SizedBox(height: AppSpacing.lg),
             Text(
               'Preparando tu panel…',
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: p.inkMuted,
-              ),
+              style: Theme.of(context).textTheme.bodyMedium
+                  ?.copyWith(color: p.inkMuted),
             ),
           ],
         ),
@@ -223,9 +220,7 @@ class _EstadoDashboard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return AppBackground(
-      child: SafeArea(child: child),
-    );
+    return AppBackground(child: SafeArea(child: child));
   }
 }
 
@@ -242,8 +237,6 @@ class _ContenidoDashboard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
     if (modulosState.status == ModulosDashboardStatus.cargando &&
         modulosState.modulos.isEmpty) {
       return const Center(child: CircularProgressIndicator());
@@ -254,7 +247,8 @@ class _ContenidoDashboard extends StatelessWidget {
       return AppEmptyState(
         icon: Icons.cloud_off_rounded,
         title: 'No pudimos cargar tus módulos',
-        message: modulosState.mensaje ?? 'Revisa tu conexión e inténtalo de nuevo.',
+        message:
+            modulosState.mensaje ?? 'Revisa tu conexión e inténtalo de nuevo.',
         actionLabel: 'Reintentar',
         onAction: () => context.read<ModulosDashboardBloc>().add(
           const ModulosDashboardSolicitados(),
@@ -339,14 +333,6 @@ class _ContenidoDashboard extends StatelessWidget {
                     );
                   },
                 ),
-              const SizedBox(height: AppSpacing.lg),
-              Text(
-                'Los módulos bloqueados se habilitan desde la configuración del proyecto.',
-                textAlign: TextAlign.center,
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: context.palette.inkMuted,
-                ),
-              ),
             ],
           ),
         );
@@ -476,16 +462,14 @@ class _HeroStat extends StatelessWidget {
           const SizedBox(width: AppSpacing.sm),
           Text(
             value,
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-              color: Colors.white,
-            ),
+            style: Theme.of(context).textTheme.titleMedium
+                ?.copyWith(color: Colors.white),
           ),
           const SizedBox(width: 4),
           Text(
             label,
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: Colors.white.withValues(alpha: 0.72),
-            ),
+            style: Theme.of(context).textTheme.bodySmall
+                ?.copyWith(color: Colors.white.withValues(alpha: 0.72)),
           ),
         ],
       ),
