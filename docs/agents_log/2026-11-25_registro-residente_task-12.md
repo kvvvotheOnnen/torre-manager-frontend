@@ -56,3 +56,21 @@ solicitud pendiente y el panel de aprobación del administrador (task 11).
   exitosa y realmente no hay unidades.
 - **Verificación:** nuevo test del bloc para el caso de error de unidades;
   `flutter test` y `flutter analyze` en verde.
+
+## Mejora: residentes completados como resumen
+
+- **Cambio:** al agregar otro residente, el formulario completado se colapsa a
+  una tarjeta resumen (etiqueta, nombre, RUT y correo) y solo se muestra un
+  formulario activo a la vez. El nuevo formulario reemplaza visualmente al
+  anterior en lugar de apilarse debajo.
+- **Reglas:**
+  - El botón "Agregar otro residente" se habilita solo cuando el formulario
+    activo está completo y con RUT, correo y contraseña válidos; al agregar se
+    valida el formulario y, si es válido, se colapsa.
+  - Los resúmenes de convivientes permiten eliminarse; el principal no.
+  - Eliminar el formulario activo (cuando hay 2+) restaura al residente
+    completado anterior como formulario activo.
+  - La validación al avanzar valida solo el formulario activo; los colapsados
+    ya fueron validados antes de colapsarse.
+- **Verificación:** `flutter analyze` sin issues y suite `flutter test` en verde.
+

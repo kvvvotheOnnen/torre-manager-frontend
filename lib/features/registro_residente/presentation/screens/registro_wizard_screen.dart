@@ -16,6 +16,12 @@ import '../bloc/registro_residente_bloc.dart';
 const _pasos = ['Proyecto', 'Vínculo', 'Unidad', 'Residentes', 'Mascotas', 'Listo'];
 const _maxResidentes = 6;
 
+bool _emailValido(String value) {
+  final email = value.trim();
+  if (email.isEmpty) return false;
+  return RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$').hasMatch(email);
+}
+
 class RegistroWizardScreen extends StatefulWidget {
   const RegistroWizardScreen({super.key});
 
@@ -117,9 +123,24 @@ class _RegistroWizardScreenState extends State<RegistroWizardScreen> {
   bool _residentesValidos() {
     if (_residentes.isEmpty) return false;
     for (final residente in _residentes) {
-      if (!residente.formKey.currentState!.validate()) return false;
+      // Los formularios colapsados ya se validaron al agregar el siguiente;
+      // solo el formulario activo sigue montado en el árbol.
+      final formState = residente.formKey.currentState;
+      if (formState != null && !formState.validate()) return false;
     }
     return true;
+  }
+
+  void _agregarResidente() {
+    if (_residentes.length >= _maxResidentes) return;
+
+    final activo = _residentes.last;
+    if (!activo.completo) return;
+    if (!(activo.formKey.currentState?.validate() ?? false)) return;
+
+    setState(() {
+      _residentes.add(_ResidenteForm(esPrincipal: false));
+    });
   }
 
   bool _mascotasValidas() {
@@ -355,11 +376,7 @@ class _RegistroWizardScreenState extends State<RegistroWizardScreen> {
         residentes: _residentes,
         tipoVinculo: _tipoVinculo,
         onAgregar: _residentes.length < _maxResidentes
-            ? () => setState(() {
-                _residentes.add(
-                  _ResidenteForm(esPrincipal: false),
-                );
-              })
+            ? _agregarResidente
             : null,
         onEliminar: (index) => setState(() {
           final eliminado = _residentes.removeAt(index);
@@ -708,19 +725,35 @@ class _PasoResidentesState extends State<_PasoResidentes> {
           'Puedes registrar hasta 6 residentes.',
       child: Column(
         children: [
-          for (var i = 0; i < residentes.length; i++)
-            _TarjetaResidente(
+          for (var i = 0; i < residentes.length - 1; i++)
+            _ResumenResidente(
               form: residentes[i],
               indice: i,
               tipoVinculo: widget.tipoVinculo,
               onEliminar: i == 0 ? null : () => widget.onEliminar(i),
             ),
+          _TarjetaResidente(
+            form: ultimo,
+            indice: residentes.length - 1,
+            tipoVinculo: widget.tipoVinculo,
+            onEliminar: residentes.length - 1 == 0
+                ? null
+                : () => widget.onEliminar(residentes.length - 1),
+          ),
           const SizedBox(height: AppSpacing.sm),
           ListenableBuilder(
             listenable: listenable,
             builder: (context, _) {
+              final passwordOk =
+                  !ultimo.esPrincipal ||
+                  ((ultimo.password?.text.length ?? 0) >= 8 &&
+                      ultimo.password!.text == ultimo.passwordConfirm!.text);
               final puedeAgregar =
-                  residentes.length < _maxResidentes && ultimo.completo;
+                  residentes.length < _maxResidentes &&
+                  ultimo.completo &&
+                  RutValidator.esValido(ultimo.rut.text) &&
+                  _emailValido(ultimo.email.text) &&
+                  passwordOk;
 
               return Align(
                 alignment: Alignment.centerLeft,
@@ -736,6 +769,88 @@ class _PasoResidentesState extends State<_PasoResidentes> {
               );
             },
           ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ResumenResidente extends StatelessWidget {
+  const _ResumenResidente({
+    required this.form,
+    required this.indice,
+    required this.tipoVinculo,
+    required this.onEliminar,
+  });
+
+  final _ResidenteForm form;
+  final int indice;
+  final TipoVinculoRegistro? tipoVinculo;
+  final VoidCallback? onEliminar;
+
+  @override
+  Widget build(BuildContext context) {
+    final p = context.palette;
+    final esPrincipal = form.esPrincipal;
+
+    final etiqueta = esPrincipal
+        ? (tipoVinculo == TipoVinculoRegistro.propietario
+              ? 'Propietario principal'
+              : 'Arrendatario principal')
+        : 'Conviviente ${indice + 1}';
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: AppSpacing.sm),
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.md,
+        vertical: AppSpacing.sm,
+      ),
+      decoration: BoxDecoration(
+        color: p.surface.withValues(alpha: p.isDark ? 0.14 : 0.6),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: p.border),
+      ),
+      child: Row(
+        children: [
+          Icon(
+            esPrincipal ? Icons.person_rounded : Icons.people_outline_rounded,
+            size: 20,
+            color: p.accent,
+          ),
+          const SizedBox(width: AppSpacing.sm),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  etiqueta,
+                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                    color: p.inkMuted,
+                  ),
+                ),
+                Text(
+                  form.nombre.text.trim().isEmpty
+                      ? 'Residente sin nombre'
+                      : form.nombre.text.trim(),
+                  style: Theme.of(context).textTheme.titleSmall,
+                ),
+                Text(
+                  '${form.rut.text.trim()} · ${form.email.text.trim()}',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodySmall?.copyWith(color: p.inkMuted),
+                ),
+              ],
+            ),
+          ),
+          if (onEliminar != null)
+            IconButton(
+              tooltip: 'Quitar',
+              onPressed: onEliminar,
+              icon: const Icon(Icons.delete_outline_rounded),
+            ),
         ],
       ),
     );
