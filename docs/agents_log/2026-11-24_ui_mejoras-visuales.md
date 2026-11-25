@@ -64,6 +64,18 @@
   vínculo capitalizado y fechas `Desde`/`Hasta`/`Vigente`.
 - Estados: esqueletos de carga, `AppEmptyState` para error y para "sin unidades".
 
+## Credencial de residente
+
+- Nuevo `credencial_residente_card.dart`: tarjeta tipo carnet sobre el
+  degradado `hero`, con acento dorado, foto genérica (silueta), nombre, rol,
+  estado (ACTIVA/HISTÓRICA/SIN UNIDAD), correo, RUT, teléfono, unidad y
+  contacto de emergencia. Ancho máximo 620 px y grilla de datos a 2 columnas
+  desde 460 px. Sin folio ni ID.
+- `mi_informacion_screen.dart`: la credencial reemplaza a la tarjeta de perfil;
+  se retiró `DatosPersonalesCard` de la pantalla (el widget y sus tests se
+  conservan para reutilización).
+- La sección de unidades vinculadas se mantiene debajo.
+
 ## Verificación
 
 - `flutter analyze`: sin issues.

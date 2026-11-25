@@ -5,18 +5,16 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/router/app_router.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/design_tokens.dart';
-import '../../../../core/utils/formato_texto.dart';
 import '../../../../core/widgets/app_content.dart';
 import '../../../../core/widgets/app_scroll_view.dart';
 import '../../../../core/widgets/empty_state.dart';
-import '../../../../core/widgets/glass_card.dart';
 import '../../../../core/widgets/section_header.dart';
 import '../../../auth/domain/entities/usuario.dart';
 import '../../../auth/presentation/bloc/auth_bloc.dart';
 import '../../../auth/presentation/bloc/auth_event.dart';
 import '../../domain/entities/mi_informacion.dart';
 import '../bloc/residente_mi_informacion_bloc.dart';
-import '../widgets/datos_personales_card.dart';
+import '../widgets/credencial_residente_card.dart';
 import '../widgets/unidad_vinculada_card.dart';
 
 class MiInformacionScreen extends StatefulWidget {
@@ -107,9 +105,10 @@ class _MiInformacionScreenState extends State<MiInformacionScreen> {
                   onRefresh: () async => _recargar(),
                   child: AppScrollView(
                     children: [
-                      _PerfilCard(usuario: widget.usuario),
-                      const SizedBox(height: AppSpacing.xl),
-                      DatosPersonalesCard(usuario: widget.usuario),
+                      CredencialResidenteCard(
+                        usuario: widget.usuario,
+                        unidad: info?.unidadPrincipal,
+                      ),
                       const SizedBox(height: AppSpacing.xl),
                       _UnidadesSection(unidades: info?.unidades ?? const []),
                     ],
@@ -118,99 +117,6 @@ class _MiInformacionScreenState extends State<MiInformacionScreen> {
               );
             },
           ),
-    );
-  }
-}
-
-class _PerfilCard extends StatelessWidget {
-  const _PerfilCard({required this.usuario});
-
-  final Usuario usuario;
-
-  String get _rol {
-    final texto = usuario.rol.name;
-    return texto[0].toUpperCase() + texto.substring(1);
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final p = context.palette;
-    final theme = Theme.of(context);
-
-    return GlassCard(
-      gradient: p.hero,
-      glowColor: p.primary,
-      padding: const EdgeInsets.all(AppSpacing.xl),
-      child: Row(
-        children: [
-          Container(
-            width: 56,
-            height: 56,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: Colors.white.withValues(alpha: 0.14),
-              border: Border.all(color: Colors.white.withValues(alpha: 0.22)),
-            ),
-            child: const Icon(
-              Icons.person_rounded,
-              color: Colors.white,
-              size: 30,
-            ),
-          ),
-          const SizedBox(width: AppSpacing.lg),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  usuario.nombre.orPlaceholder('Residente'),
-                  style: theme.textTheme.headlineSmall?.copyWith(
-                    color: Colors.white,
-                  ),
-                ),
-                const SizedBox(height: AppSpacing.xs),
-                Row(
-                  children: [
-                    const Icon(
-                      Icons.mail_outline_rounded,
-                      size: 14,
-                      color: Colors.white70,
-                    ),
-                    const SizedBox(width: 4),
-                    Flexible(
-                      child: Text(
-                        usuario.correo.orPlaceholder('Sin correo'),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: Colors.white70,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: AppSpacing.sm),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: AppSpacing.sm,
-                    vertical: 3,
-                  ),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.14),
-                    borderRadius: BorderRadius.circular(999),
-                  ),
-                  child: Text(
-                    _rol,
-                    style: theme.textTheme.labelSmall?.copyWith(
-                      color: Colors.white,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
     );
   }
 }
