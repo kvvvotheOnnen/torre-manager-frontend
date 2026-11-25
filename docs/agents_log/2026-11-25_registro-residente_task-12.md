@@ -74,3 +74,16 @@ solicitud pendiente y el panel de aprobación del administrador (task 11).
     ya fueron validados antes de colapsarse.
 - **Verificación:** `flutter analyze` sin issues y suite `flutter test` en verde.
 
+## Mejora: validación visible en vivo
+
+- **Problema:** el botón "Agregar otro residente" se habilita solo con datos
+  válidos (RUT módulo 11, correo, contraseña ≥ 8 y coincidente), pero esos
+  errores solo se mostraban al validar el formulario, lo que nunca ocurría
+  mientras el botón estaba deshabilitado. El usuario no sabía qué dato corregir.
+- **Cambio:** los campos de residente y mascota ahora usan
+  `AutovalidateMode.onUserInteraction`, de modo que cada campo muestra su error
+  (formato de correo, dígito verificador, longitud/mismatch de contraseña,
+  obligatorio) apenas se interactúa con él.
+- **Verificación:** `flutter analyze` sin issues y suite `flutter test` en verde.
+
+

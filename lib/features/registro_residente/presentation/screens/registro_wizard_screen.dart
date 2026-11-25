@@ -1404,6 +1404,7 @@ class _Campo extends StatelessWidget {
         keyboardType: keyboardType,
         obscureText: obscure,
         inputFormatters: inputFormatters,
+        autovalidateMode: AutovalidateMode.onUserInteraction,
         decoration: InputDecoration(
           labelText: label,
           hintText: hint,
