@@ -24,6 +24,8 @@ class PublicacionMarketplaceDto {
     required this.motivoEliminacion,
     required this.eliminadoPorRol,
     required this.eliminadoEn,
+    required this.motivoRechazo,
+    required this.rechazadoEn,
     required this.creadoEn,
   });
 
@@ -48,6 +50,8 @@ class PublicacionMarketplaceDto {
       motivoEliminacion: _texto(json['motivo_eliminacion']),
       eliminadoPorRol: _texto(json['eliminado_por_rol']),
       eliminadoEn: _fecha(json['eliminado_en']),
+      motivoRechazo: _texto(json['motivo_rechazo']),
+      rechazadoEn: _fecha(json['rechazado_en']),
       creadoEn: _fecha(json['creado_en']),
     );
   }
@@ -71,6 +75,8 @@ class PublicacionMarketplaceDto {
   final String? motivoEliminacion;
   final String? eliminadoPorRol;
   final DateTime? eliminadoEn;
+  final String? motivoRechazo;
+  final DateTime? rechazadoEn;
   final DateTime? creadoEn;
 
   PublicacionMarketplace toEntity() {
@@ -94,6 +100,8 @@ class PublicacionMarketplaceDto {
       motivoEliminacion: motivoEliminacion,
       eliminadoPorRol: eliminadoPorRol,
       eliminadoEn: eliminadoEn,
+      motivoRechazo: motivoRechazo,
+      rechazadoEn: rechazadoEn,
       creadoEn: creadoEn,
     );
   }

@@ -154,6 +154,29 @@ class PublicacionDetalleDialog extends StatelessWidget {
                           ),
                         ),
                       ],
+                      if (publicacion.motivoRechazo != null) ...[
+                        const SizedBox(height: 12),
+                        Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: theme.colorScheme.errorContainer,
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Text(
+                            'Motivo del rechazo: ${publicacion.motivoRechazo}',
+                            style: theme.textTheme.bodyMedium?.copyWith(
+                              color: theme.colorScheme.onErrorContainer,
+                            ),
+                          ),
+                        ),
+                      ],
+                      if (publicacion.rechazadoEn != null) ...[
+                        const SizedBox(height: 12),
+                        Text(
+                          'Rechazada el ${formatearFecha(publicacion.rechazadoEn)}.',
+                          style: theme.textTheme.bodyMedium,
+                        ),
+                      ],
                       if (publicacion.estaDisponible && !publicacion.esMia) ...[
                         const SizedBox(height: 16),
                         Tooltip(

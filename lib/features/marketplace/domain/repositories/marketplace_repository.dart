@@ -6,6 +6,7 @@ import '../entities/condicion_producto.dart';
 import '../entities/estado_publicacion.dart';
 import '../entities/publicacion_foto.dart';
 import '../entities/publicacion_marketplace.dart';
+import '../entities/solicitudes_marketplace.dart';
 
 abstract interface class MarketplaceRepositoryInterface {
   Future<Either<Failure, List<PublicacionMarketplace>>> listar({
@@ -43,6 +44,15 @@ abstract interface class MarketplaceRepositoryInterface {
   Future<Either<Failure, PublicacionMarketplace>> vender(String id);
 
   Future<Either<Failure, bool>> eliminar({
+    required String id,
+    required String motivo,
+  });
+
+  Future<Either<Failure, SolicitudesMarketplace>> solicitudes();
+
+  Future<Either<Failure, PublicacionMarketplace>> aprobarSolicitud(String id);
+
+  Future<Either<Failure, PublicacionMarketplace>> rechazarSolicitud({
     required String id,
     required String motivo,
   });

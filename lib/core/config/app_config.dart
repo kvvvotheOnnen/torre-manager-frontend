@@ -42,6 +42,13 @@ class AppConfig {
   static const String misProyectosPath = '/api/mis-proyectos';
   static const String dashboardModulosPath = '/api/dashboard/modulos';
   static const String dashboardFuncionesPath = '/api/dashboard/funciones';
+  static const String notificacionesPath = '/api/notificaciones';
+  static const String notificacionesNoLeidasPath =
+      '$notificacionesPath/no-leidas';
+  static const String notificacionesLeerTodasPath =
+      '$notificacionesPath/leer-todas';
+  static String notificacionLeerPath(String id) =>
+      '$notificacionesPath/${Uri.encodeComponent(id)}/leer';
   static const String serviciosPath = '/api/servicios';
   static String servicioPath(String id) =>
       '$serviciosPath/${Uri.encodeComponent(id)}';
@@ -62,6 +69,12 @@ class AppConfig {
       '${marketplacePublicacionPath(id)}/vender';
   static String marketplaceFavoritoPath(String id) =>
       '${marketplacePublicacionPath(id)}/favorito';
+  static const String marketplaceSolicitudesPath =
+      '$marketplaceBasePath/solicitudes';
+  static String marketplaceAprobarPath(String id) =>
+      '${marketplacePublicacionPath(id)}/aprobar';
+  static String marketplaceRechazarPath(String id) =>
+      '${marketplacePublicacionPath(id)}/rechazar';
   static const String residenteMiInformacionPath =
       '/api/residente/mi-informacion';
   static const String residenteAsistenteConsultasPath =

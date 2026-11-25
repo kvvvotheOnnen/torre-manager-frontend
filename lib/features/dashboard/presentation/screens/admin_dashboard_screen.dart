@@ -19,7 +19,8 @@ import '../../../auth/presentation/bloc/auth_event.dart';
 import '../../../tenant/presentation/bloc/tenant_bloc.dart';
 import '../../domain/entities/modulo_dashboard.dart';
 import '../bloc/modulos_dashboard_bloc.dart';
-import 'modulo_proximamente_screen.dart';
+import '../../../notificaciones/presentation/bloc/notificaciones_bloc.dart';
+import '../../../notificaciones/presentation/screens/notificaciones_screen.dart';
 
 class AdminDashboardScreen extends StatefulWidget {
   const AdminDashboardScreen({super.key, required this.usuario});
@@ -46,13 +47,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
   }
 
   void _notificaciones() {
-    context.push(
-      AppRoutes.adminModulo('notificaciones'),
-      extra: const ProximamenteArgs(
-        titulo: 'Notificaciones',
-        descripcion: 'Avisos y notificaciones del recinto (próximamente)',
-      ),
-    );
+    NotificacionesDialog.mostrar(context);
   }
 
   @override
@@ -117,6 +112,10 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                       : () => context.read<AuthBloc>().add(
                           const LogoutRequested(),
                         ),
+                  notificationsCount: context
+                      .watch<NotificacionesBloc>()
+                      .state
+                      .noLeidas,
                   onNotifications: _notificaciones,
                   selector: AppProjectSelector(
                     projects: tenantState.proyectos

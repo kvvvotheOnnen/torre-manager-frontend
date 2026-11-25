@@ -11,6 +11,13 @@ import 'package:torre_manager_frontend/features/dashboard/domain/repositories/da
 import 'package:torre_manager_frontend/features/dashboard/domain/usecases/obtener_modulos_dashboard_usecase.dart';
 import 'package:torre_manager_frontend/features/dashboard/presentation/bloc/modulos_dashboard_bloc.dart';
 import 'package:torre_manager_frontend/features/dashboard/presentation/screens/admin_dashboard_screen.dart';
+import 'package:torre_manager_frontend/features/notificaciones/domain/entities/notificacion.dart';
+import 'package:torre_manager_frontend/features/notificaciones/domain/repositories/notificaciones_repository.dart';
+import 'package:torre_manager_frontend/features/notificaciones/domain/usecases/contar_notificaciones_no_leidas_usecase.dart';
+import 'package:torre_manager_frontend/features/notificaciones/domain/usecases/listar_notificaciones_usecase.dart';
+import 'package:torre_manager_frontend/features/notificaciones/domain/usecases/marcar_notificacion_leida_usecase.dart';
+import 'package:torre_manager_frontend/features/notificaciones/domain/usecases/marcar_todas_notificaciones_leidas_usecase.dart';
+import 'package:torre_manager_frontend/features/notificaciones/presentation/bloc/notificaciones_bloc.dart';
 import 'package:torre_manager_frontend/features/superadmin/domain/entities/modulo_sistema.dart';
 import 'package:torre_manager_frontend/features/superadmin/domain/entities/proyecto_detalle.dart';
 import 'package:torre_manager_frontend/features/superadmin/domain/entities/tipo_condominio.dart';
@@ -104,6 +111,25 @@ class _FakeDashboardRepository implements DashboardRepository {
   }
 }
 
+class _FakeNotificacionesRepository
+    implements NotificacionesRepositoryInterface {
+  @override
+  Future<Either<Failure, List<Notificacion>>> listar() async {
+    return const Right([]);
+  }
+
+  @override
+  Future<Either<Failure, int>> contarNoLeidas() async => const Right(0);
+
+  @override
+  Future<Either<Failure, Notificacion>> marcarLeida(String id) async {
+    return const Left(ServerFailure('No disponible en la prueba.'));
+  }
+
+  @override
+  Future<Either<Failure, int>> marcarTodasLeidas() async => const Right(0);
+}
+
 class _MemoriaProyectoActivoStore implements ProyectoActivoStore {
   String? _proyectoId;
 
@@ -128,7 +154,11 @@ const _usuario = Usuario(
   rol: Rol.administrador,
 );
 
-Future<({TenantBloc tenantBloc, ModulosDashboardBloc modulosBloc})>
+Future<({
+  TenantBloc tenantBloc,
+  ModulosDashboardBloc modulosBloc,
+  NotificacionesBloc notificacionesBloc,
+})>
 _crearBlocs() async {
   final tenantBloc = TenantBloc(
     listarMisProyectosUseCase: ListarMisProyectosUseCase(
@@ -154,10 +184,31 @@ _crearBlocs() async {
   tenantBloc.add(const TenantProyectoSeleccionado('1'));
   await seleccion;
 
-  return (tenantBloc: tenantBloc, modulosBloc: modulosBloc);
+  final notificacionesBloc = NotificacionesBloc(
+    listar: ListarNotificacionesUseCase(_FakeNotificacionesRepository()),
+    contarNoLeidas: ContarNotificacionesNoLeidasUseCase(
+      _FakeNotificacionesRepository(),
+    ),
+    marcarLeida: MarcarNotificacionLeidaUseCase(
+      _FakeNotificacionesRepository(),
+    ),
+    marcarTodas: MarcarTodasNotificacionesLeidasUseCase(
+      _FakeNotificacionesRepository(),
+    ),
+  );
+
+  return (
+    tenantBloc: tenantBloc,
+    modulosBloc: modulosBloc,
+    notificacionesBloc: notificacionesBloc,
+  );
 }
 
-Widget _app(TenantBloc tenantBloc, ModulosDashboardBloc modulosBloc) {
+Widget _app(
+  TenantBloc tenantBloc,
+  ModulosDashboardBloc modulosBloc,
+  NotificacionesBloc notificacionesBloc,
+) {
   final router = GoRouter(
     initialLocation: '/dashboard',
     routes: [
@@ -173,6 +224,7 @@ Widget _app(TenantBloc tenantBloc, ModulosDashboardBloc modulosBloc) {
     providers: [
       BlocProvider<TenantBloc>.value(value: tenantBloc),
       BlocProvider<ModulosDashboardBloc>.value(value: modulosBloc),
+      BlocProvider<NotificacionesBloc>.value(value: notificacionesBloc),
     ],
     child: MaterialApp.router(routerConfig: router),
   );
@@ -190,8 +242,11 @@ void main() {
     final blocs = await _crearBlocs();
     addTearDown(blocs.tenantBloc.close);
     addTearDown(blocs.modulosBloc.close);
+    addTearDown(blocs.notificacionesBloc.close);
 
-    await tester.pumpWidget(_app(blocs.tenantBloc, blocs.modulosBloc));
+    await tester.pumpWidget(
+      _app(blocs.tenantBloc, blocs.modulosBloc, blocs.notificacionesBloc),
+    );
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 300));
 
@@ -216,8 +271,11 @@ void main() {
     final blocs = await _crearBlocs();
     addTearDown(blocs.tenantBloc.close);
     addTearDown(blocs.modulosBloc.close);
+    addTearDown(blocs.notificacionesBloc.close);
 
-    await tester.pumpWidget(_app(blocs.tenantBloc, blocs.modulosBloc));
+    await tester.pumpWidget(
+      _app(blocs.tenantBloc, blocs.modulosBloc, blocs.notificacionesBloc),
+    );
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 300));
 

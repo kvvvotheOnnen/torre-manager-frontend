@@ -13,6 +13,8 @@ class PublicacionCard extends StatelessWidget {
     this.onEditar,
     this.onEliminar,
     this.onFavorito,
+    this.onAprobar,
+    this.onRechazar,
     this.procesando = false,
   });
 
@@ -21,6 +23,8 @@ class PublicacionCard extends StatelessWidget {
   final VoidCallback? onEditar;
   final VoidCallback? onEliminar;
   final VoidCallback? onFavorito;
+  final VoidCallback? onAprobar;
+  final VoidCallback? onRechazar;
   final bool procesando;
 
   @override
@@ -148,6 +152,31 @@ class PublicacionCard extends StatelessWidget {
                       ],
                     ),
                   ],
+                  if (onAprobar != null || onRechazar != null) ...[
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        if (onAprobar != null)
+                          Expanded(
+                            child: FilledButton.icon(
+                              onPressed: procesando ? null : onAprobar,
+                              icon: const Icon(Icons.check_rounded, size: 18),
+                              label: const Text('Aprobar'),
+                            ),
+                          ),
+                        if (onAprobar != null && onRechazar != null)
+                          const SizedBox(width: 8),
+                        if (onRechazar != null)
+                          Expanded(
+                            child: OutlinedButton.icon(
+                              onPressed: procesando ? null : onRechazar,
+                              icon: const Icon(Icons.block_rounded, size: 18),
+                              label: const Text('Rechazar'),
+                            ),
+                          ),
+                      ],
+                    ),
+                  ],
                 ],
               ),
             ),
@@ -244,6 +273,14 @@ class _EstadoBadge extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final (fondo, texto) = switch (estado) {
+      EstadoPublicacion.pendiente => (
+        theme.colorScheme.tertiaryContainer,
+        theme.colorScheme.onTertiaryContainer,
+      ),
+      EstadoPublicacion.rechazada => (
+        theme.colorScheme.errorContainer,
+        theme.colorScheme.onErrorContainer,
+      ),
       EstadoPublicacion.vendida => (
         theme.colorScheme.primaryContainer,
         theme.colorScheme.onPrimaryContainer,

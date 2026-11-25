@@ -14,6 +14,7 @@ import '../../features/residente/presentation/screens/mi_informacion_screen.dart
 import '../../features/paqueteria/presentation/screens/mis_paquetes_screen.dart';
 import '../../features/paqueteria/presentation/screens/paqueteria_gestion_screen.dart';
 import '../../features/marketplace/presentation/screens/marketplace_screen.dart';
+import '../../features/notificaciones/presentation/screens/notificaciones_screen.dart';
 import '../../features/servicios/presentation/screens/servicios_screen.dart';
 import '../../features/infraestructura/presentation/screens/infraestructura_screen.dart';
 import '../../features/superadmin/presentation/screens/administradores_screen.dart';
@@ -39,6 +40,7 @@ class AppRoutes {
   static const String solicitudesResidente =
       '/admin/modulos/solicitudes_residente';
   static const String solicitudPendiente = '/solicitud-pendiente';
+  static const String notificaciones = '/notificaciones';
   static const String paqueteria = '/paqueteria';
   static const String paqueteriaGestion = '/paqueteria/gestion';
   static const String servicios = '/servicios';
@@ -185,6 +187,11 @@ GoRouter buildRouter(AuthBloc authBloc, TenantBloc tenantBloc) {
         path: AppRoutes.solicitudPendiente,
         builder: (context, state) =>
             const AppTitle(title: 'Solicitud pendiente', child: SolicitudPendienteScreen()),
+      ),
+      GoRoute(
+        path: AppRoutes.notificaciones,
+        builder: (context, state) =>
+            const AppTitle(title: 'Notificaciones', child: NotificacionesScreen()),
       ),
       GoRoute(
         path: AppRoutes.adminModulo('servicios_recomendados'),

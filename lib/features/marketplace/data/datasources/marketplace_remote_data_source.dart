@@ -8,6 +8,7 @@ import '../../domain/entities/condicion_producto.dart';
 import '../../domain/entities/estado_publicacion.dart';
 import '../../domain/entities/publicacion_foto.dart';
 import '../models/publicacion_marketplace_dto.dart';
+import '../models/solicitudes_marketplace_dto.dart';
 
 class MarketplaceRemoteDataSource {
   const MarketplaceRemoteDataSource(this._client);
@@ -124,6 +125,35 @@ class MarketplaceRemoteDataSource {
       data: {'favorito': favorito},
     );
     return response.data?['es_favorita'] == true;
+  }
+
+  Future<SolicitudesMarketplaceDto> solicitudes() async {
+    final response = await _client.get<Map<String, dynamic>>(
+      AppConfig.marketplaceSolicitudesPath,
+    );
+    final data = response.data;
+    if (data == null) {
+      throw const FormatException('Respuesta inesperada del servidor.');
+    }
+    return SolicitudesMarketplaceDto.fromJson(data);
+  }
+
+  Future<PublicacionMarketplaceDto> aprobar(String id) async {
+    final response = await _client.post<Map<String, dynamic>>(
+      AppConfig.marketplaceAprobarPath(id),
+    );
+    return _leerPublicacion(response.data);
+  }
+
+  Future<PublicacionMarketplaceDto> rechazar({
+    required String id,
+    required String motivo,
+  }) async {
+    final response = await _client.post<Map<String, dynamic>>(
+      AppConfig.marketplaceRechazarPath(id),
+      data: {'motivo': motivo},
+    );
+    return _leerPublicacion(response.data);
   }
 
   List<PublicacionMarketplaceDto> _leerLista(Map<String, dynamic>? data) {

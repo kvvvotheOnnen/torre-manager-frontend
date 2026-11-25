@@ -9,13 +9,16 @@ import '../../domain/entities/publicacion_foto.dart';
 import '../../domain/entities/publicacion_marketplace.dart';
 import '../../domain/usecases/actualizar_publicacion_usecase.dart';
 import '../../domain/usecases/alternar_favorito_usecase.dart';
+import '../../domain/usecases/aprobar_solicitud_usecase.dart';
 import '../../domain/usecases/crear_publicacion_usecase.dart';
 import '../../domain/usecases/eliminar_publicacion_usecase.dart';
 import '../../domain/usecases/listar_favoritos_marketplace_usecase.dart';
 import '../../domain/usecases/listar_historial_marketplace_usecase.dart';
 import '../../domain/usecases/listar_mis_publicaciones_usecase.dart';
 import '../../domain/usecases/listar_publicaciones_usecase.dart';
+import '../../domain/usecases/listar_solicitudes_usecase.dart';
 import '../../domain/usecases/marcar_publicacion_vendida_usecase.dart';
+import '../../domain/usecases/rechazar_solicitud_usecase.dart';
 import '../../domain/usecases/retirar_publicacion_usecase.dart';
 
 const _acentos = <String, String>{
@@ -39,7 +42,14 @@ String _normalizar(String texto) {
   return buffer.toString();
 }
 
-enum MarketplaceVista { catalogo, mias, favoritos, historial, eliminadas }
+enum MarketplaceVista {
+  catalogo,
+  mias,
+  favoritos,
+  historial,
+  eliminadas,
+  solicitudes,
+}
 
 sealed class MarketplaceEvent {
   const MarketplaceEvent();
@@ -128,8 +138,25 @@ final class FavoritoMarketplaceAlternado extends MarketplaceEvent {
   final bool favorito;
 }
 
+final class SolicitudAprobadaSolicitada extends MarketplaceEvent {
+  const SolicitudAprobadaSolicitada(this.id);
+
+  final String id;
+}
+
+final class SolicitudRechazadaSolicitada extends MarketplaceEvent {
+  const SolicitudRechazadaSolicitada({required this.id, required this.motivo});
+
+  final String id;
+  final String motivo;
+}
+
 final class MensajeMarketplaceConsumido extends MarketplaceEvent {
   const MensajeMarketplaceConsumido();
+}
+
+final class ContadorSolicitudesSolicitado extends MarketplaceEvent {
+  const ContadorSolicitudesSolicitado();
 }
 
 enum MarketplaceStatus { inicial, cargando, cargado, error }
@@ -145,6 +172,7 @@ class MarketplaceState extends Equatable {
     this.mensaje,
     this.guardando = false,
     this.procesandoId,
+    this.pendientes = 0,
   });
 
   final MarketplaceStatus status;
@@ -156,6 +184,7 @@ class MarketplaceState extends Equatable {
   final String? mensaje;
   final bool guardando;
   final String? procesandoId;
+  final int pendientes;
 
   bool get cargando => status == MarketplaceStatus.cargando;
   bool get tieneError => status == MarketplaceStatus.error;
@@ -214,6 +243,7 @@ class MarketplaceState extends Equatable {
     bool? guardando,
     String? procesandoId,
     bool limpiarProcesando = false,
+    int? pendientes,
   }) {
     return MarketplaceState(
       status: status ?? this.status,
@@ -227,6 +257,7 @@ class MarketplaceState extends Equatable {
       procesandoId: limpiarProcesando
           ? null
           : (procesandoId ?? this.procesandoId),
+      pendientes: pendientes ?? this.pendientes,
     );
   }
 
@@ -241,6 +272,7 @@ class MarketplaceState extends Equatable {
     mensaje,
     guardando,
     procesandoId,
+    pendientes,
   ];
 }
 
@@ -256,6 +288,9 @@ class MarketplaceBloc extends Bloc<MarketplaceEvent, MarketplaceState> {
     required MarcarPublicacionVendidaUseCase vender,
     required EliminarPublicacionUseCase eliminar,
     required AlternarFavoritoUseCase favorito,
+    required ListarSolicitudesUseCase listarSolicitudes,
+    required AprobarSolicitudMarketplaceUseCase aprobarSolicitud,
+    required RechazarSolicitudMarketplaceUseCase rechazarSolicitud,
   }) : _listar = listar,
        _listarMias = listarMias,
        _listarFavoritos = listarFavoritos,
@@ -266,6 +301,9 @@ class MarketplaceBloc extends Bloc<MarketplaceEvent, MarketplaceState> {
        _vender = vender,
        _eliminar = eliminar,
        _favorito = favorito,
+       _listarSolicitudes = listarSolicitudes,
+       _aprobarSolicitud = aprobarSolicitud,
+       _rechazarSolicitud = rechazarSolicitud,
        super(const MarketplaceState()) {
     on<MarketplaceSolicitadas>(_cargar);
     on<VistaMarketplaceCambiada>(_cambiarVista);
@@ -277,6 +315,9 @@ class MarketplaceBloc extends Bloc<MarketplaceEvent, MarketplaceState> {
     on<PublicacionVendidaSolicitada>(_venderPublicacion);
     on<PublicacionEliminadaSolicitada>(_eliminarPublicacion);
     on<FavoritoMarketplaceAlternado>(_alternarFavorito);
+    on<SolicitudAprobadaSolicitada>(_aprobarSolicitudSolicitada);
+    on<SolicitudRechazadaSolicitada>(_rechazarSolicitudSolicitada);
+    on<ContadorSolicitudesSolicitado>(_cargarContadorSolicitudes);
     on<MensajeMarketplaceConsumido>(
       (event, emit) => emit(state.copyWith(limpiarMensaje: true)),
     );
@@ -292,6 +333,9 @@ class MarketplaceBloc extends Bloc<MarketplaceEvent, MarketplaceState> {
   final MarcarPublicacionVendidaUseCase _vender;
   final EliminarPublicacionUseCase _eliminar;
   final AlternarFavoritoUseCase _favorito;
+  final ListarSolicitudesUseCase _listarSolicitudes;
+  final AprobarSolicitudMarketplaceUseCase _aprobarSolicitud;
+  final RechazarSolicitudMarketplaceUseCase _rechazarSolicitud;
 
   Future<void> _cargar(
     MarketplaceSolicitadas event,
@@ -299,6 +343,27 @@ class MarketplaceBloc extends Bloc<MarketplaceEvent, MarketplaceState> {
   ) async {
     final todas = event.todas ?? state.todas;
     emit(state.copyWith(status: MarketplaceStatus.cargando, todas: todas));
+
+    if (state.vista == MarketplaceVista.solicitudes) {
+      final solicitudes = await _listarSolicitudes();
+
+      solicitudes.fold(
+        (failure) => emit(
+          state.copyWith(
+            status: MarketplaceStatus.error,
+            mensaje: failure.message,
+          ),
+        ),
+        (resultado) => emit(
+          state.copyWith(
+            status: MarketplaceStatus.cargado,
+            publicaciones: resultado.solicitudes,
+            pendientes: resultado.pendientes,
+          ),
+        ),
+      );
+      return;
+    }
 
     final resultado = switch (state.vista) {
       MarketplaceVista.catalogo => await _listar(todas: todas),
@@ -308,6 +373,9 @@ class MarketplaceBloc extends Bloc<MarketplaceEvent, MarketplaceState> {
       MarketplaceVista.eliminadas => await _listar(
         todas: true,
         estado: EstadoPublicacion.eliminada,
+      ),
+      MarketplaceVista.solicitudes => (await _listarSolicitudes()).map(
+        (solicitudes) => solicitudes.solicitudes,
       ),
     };
 
@@ -324,6 +392,21 @@ class MarketplaceBloc extends Bloc<MarketplaceEvent, MarketplaceState> {
           publicaciones: publicaciones,
         ),
       ),
+    );
+  }
+
+  Future<void> _cargarContadorSolicitudes(
+    ContadorSolicitudesSolicitado event,
+    Emitter<MarketplaceState> emit,
+  ) async {
+    if (state.vista == MarketplaceVista.solicitudes) {
+      return;
+    }
+
+    final solicitudes = await _listarSolicitudes();
+    solicitudes.fold(
+      (_) {},
+      (resultado) => emit(state.copyWith(pendientes: resultado.pendientes)),
     );
   }
 
@@ -443,7 +526,9 @@ class MarketplaceBloc extends Bloc<MarketplaceEvent, MarketplaceState> {
         ],
         guardando: false,
         limpiarProcesando: true,
-        mensaje: 'Publicación creada.',
+        mensaje: publicacion.esPendiente
+            ? 'Publicación enviada a revisión.'
+            : 'Publicación creada.',
       ),
     );
   }
@@ -548,7 +633,64 @@ class MarketplaceBloc extends Bloc<MarketplaceEvent, MarketplaceState> {
         return reemplazada;
       case MarketplaceVista.eliminadas:
         return publicacion.estado.estaEliminada ? reemplazada : _quitar(id);
+      case MarketplaceVista.solicitudes:
+        return _quitar(id);
     }
+  }
+
+  Future<void> _aprobarSolicitudSolicitada(
+    SolicitudAprobadaSolicitada event,
+    Emitter<MarketplaceState> emit,
+  ) async {
+    emit(state.copyWith(procesandoId: event.id, limpiarMensaje: true));
+
+    final resultado = await _aprobarSolicitud(event.id);
+
+    resultado.fold(
+      (failure) => emit(
+        state.copyWith(limpiarProcesando: true, mensaje: failure.message),
+      ),
+      (publicacion) {
+        final restantes = _quitar(event.id);
+        emit(
+          state.copyWith(
+            publicaciones: restantes,
+            pendientes: restantes.length,
+            limpiarProcesando: true,
+            mensaje: 'Publicación aprobada.',
+          ),
+        );
+      },
+    );
+  }
+
+  Future<void> _rechazarSolicitudSolicitada(
+    SolicitudRechazadaSolicitada event,
+    Emitter<MarketplaceState> emit,
+  ) async {
+    emit(state.copyWith(procesandoId: event.id, limpiarMensaje: true));
+
+    final resultado = await _rechazarSolicitud(
+      id: event.id,
+      motivo: event.motivo,
+    );
+
+    resultado.fold(
+      (failure) => emit(
+        state.copyWith(limpiarProcesando: true, mensaje: failure.message),
+      ),
+      (publicacion) {
+        final restantes = _quitar(event.id);
+        emit(
+          state.copyWith(
+            publicaciones: restantes,
+            pendientes: restantes.length,
+            limpiarProcesando: true,
+            mensaje: 'Solicitud rechazada.',
+          ),
+        );
+      },
+    );
   }
 
   Future<void> _alternarFavorito(
