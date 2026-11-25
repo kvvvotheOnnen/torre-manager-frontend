@@ -5,7 +5,6 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/router/app_router.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/design_tokens.dart';
-import '../../../../core/widgets/app_content.dart';
 import '../../../../core/widgets/app_scroll_view.dart';
 import '../../../../core/widgets/empty_state.dart';
 import '../../../../core/widgets/section_header.dart';
@@ -99,20 +98,40 @@ class _MiInformacionScreenState extends State<MiInformacionScreen> {
                 );
               }
 
-              return AppContent(
-                maxWidth: 620,
-                child: RefreshIndicator(
-                  onRefresh: () async => _recargar(),
-                  child: AppScrollView(
-                    children: [
-                      CredencialResidenteCard(
-                        usuario: widget.usuario,
-                        unidad: info?.unidadPrincipal,
+              return RefreshIndicator(
+                onRefresh: () async => _recargar(),
+                child: CustomScrollView(
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  slivers: [
+                    SliverPadding(
+                      padding: appScrollPadding(
+                        context,
+                        padding: const EdgeInsets.all(AppSpacing.xl),
                       ),
-                      const SizedBox(height: AppSpacing.xl),
-                      _UnidadesSection(unidades: info?.unidades ?? const []),
-                    ],
-                  ),
+                      sliver: SliverFillRemaining(
+                        hasScrollBody: false,
+                        child: Center(
+                          child: ConstrainedBox(
+                            constraints: const BoxConstraints(maxWidth: 620),
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                CredencialResidenteCard(
+                                  usuario: widget.usuario,
+                                  unidad: info?.unidadPrincipal,
+                                ),
+                                const SizedBox(height: AppSpacing.xl),
+                                _UnidadesSection(
+                                  unidades: info?.unidades ?? const [],
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               );
             },
@@ -190,19 +209,22 @@ class _CargandoMiInformacion extends StatelessWidget {
       );
     }
 
-    return AppContent(
-      maxWidth: 620,
-      child: Padding(
+    return Center(
+      child: SingleChildScrollView(
         padding: const EdgeInsets.all(AppSpacing.xl),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            bloque(height: 116),
-            const SizedBox(height: AppSpacing.xl),
-            bloque(height: 180),
-            const SizedBox(height: AppSpacing.xl),
-            bloque(height: 140),
-          ],
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 620),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              bloque(height: 116),
+              const SizedBox(height: AppSpacing.xl),
+              bloque(height: 180),
+              const SizedBox(height: AppSpacing.xl),
+              bloque(height: 140),
+            ],
+          ),
         ),
       ),
     );
