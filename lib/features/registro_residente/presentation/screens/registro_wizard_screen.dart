@@ -303,44 +303,33 @@ class _RegistroWizardScreenState extends State<RegistroWizardScreen> {
                         WizardStepMap(pasos: _pasos, pasoActual: pasoVisual),
                         const SizedBox(height: AppSpacing.lg),
                         Expanded(
-                          child: LayoutBuilder(
-                            builder: (context, constraints) {
-                              return SingleChildScrollView(
-                                keyboardDismissBehavior:
-                                    ScrollViewKeyboardDismissBehavior.onDrag,
-                                padding: const EdgeInsets.only(
-                                  bottom: AppSpacing.lg,
+                          child: SingleChildScrollView(
+                            keyboardDismissBehavior:
+                                ScrollViewKeyboardDismissBehavior.onDrag,
+                            padding: const EdgeInsets.only(
+                              bottom: AppSpacing.lg,
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                // Navegación junto al contenido
+                                GlassCard(
+                                  glowColor: p.primary,
+                                  child: _contenidoPaso(state),
                                 ),
-                                child: ConstrainedBox(
-                                  constraints: BoxConstraints(
-                                    minHeight: constraints.maxHeight,
+                                if (!state.enviado) ...[
+                                  const SizedBox(height: AppSpacing.xl),
+                                  _Navegacion(
+                                    paso: _paso,
+                                    enviando: state.enviando,
+                                    habilitado: _puedeAvanzar(state),
+                                    onAtras: _atras,
+                                    onSiguiente: _siguiente,
                                   ),
-                                  child: Column(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.stretch,
-                                    children: [
-                                      // Navegación junto al contenido
-                                      GlassCard(
-                                        glowColor: p.primary,
-                                        child: _contenidoPaso(state),
-                                      ),
-                                      if (!state.enviado) ...[
-                                        const SizedBox(height: AppSpacing.xl),
-                                        _Navegacion(
-                                          paso: _paso,
-                                          enviando: state.enviando,
-                                          habilitado: _puedeAvanzar(state),
-                                          onAtras: _atras,
-                                          onSiguiente: _siguiente,
-                                        ),
-                                      ],
-                                      const SizedBox(height: AppSpacing.xl),
-                                    ],
-                                  ),
-                                ),
-                              );
-                            },
+                                ],
+                                const SizedBox(height: AppSpacing.xl),
+                              ],
+                            ),
                           ),
                         ),
                       ],

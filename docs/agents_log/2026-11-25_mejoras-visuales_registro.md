@@ -45,14 +45,3 @@ la pantalla de registro de residente y en la consistencia visual general:
   contraste del fondo sobrio).
 - Las reglas del catálogo que no se seleccionaron quedaron documentadas en
   `docs/improvements/design/findings.md` para futuras iteraciones.
-
-## Ajuste: halos fuera del login y centrado vertical del wizard
-
-- Los halos luminosos de las esquinas ahora son opt-in (`showGlow` por defecto
-  `false`); solo el login los conserva junto con la retícula de cuadros. El
-  resto del sistema queda con el gradiente sobrio.
-- El contenido del wizard de registro se centra verticalmente cuando cabe en
-  pantalla (patrón `LayoutBuilder` + `ConstrainedBox(minHeight)` + `Column` con
-  `MainAxisAlignment.center`), manteniendo el scroll cuando el contenido excede
-  la altura disponible.
-- Verificación: `flutter analyze` sin issues y `flutter test` 127 en verde.

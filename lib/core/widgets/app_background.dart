@@ -9,7 +9,7 @@ class AppBackground extends StatelessWidget {
   const AppBackground({
     super.key,
     required this.child,
-    this.showGlow = false,
+    this.showGlow = true,
     this.showPattern = false,
     this.dark = false,
   });

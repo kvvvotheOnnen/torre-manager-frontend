@@ -55,7 +55,6 @@ class _LoginScreenState extends State<LoginScreen> {
     return Scaffold(
       body: AppBackground(
         showPattern: true,
-        showGlow: true,
         child: SafeArea(
           child: LayoutBuilder(
             builder: (context, constraints) {
