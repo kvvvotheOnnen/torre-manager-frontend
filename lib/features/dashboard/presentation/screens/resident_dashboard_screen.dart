@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../../core/router/app_router.dart';
 import '../../../../core/router/funcion_rutas.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/design_tokens.dart';
@@ -17,7 +16,8 @@ import '../../../auth/presentation/bloc/auth_bloc.dart';
 import '../../../auth/presentation/bloc/auth_event.dart';
 import '../bloc/funciones_dashboard_bloc.dart';
 import '../widgets/icono_funcion.dart';
-import 'modulo_proximamente_screen.dart';
+import '../../../notificaciones/presentation/bloc/notificaciones_bloc.dart';
+import '../../../notificaciones/presentation/screens/notificaciones_screen.dart';
 
 /// Dashboard del residente/propietario.
 ///
@@ -35,8 +35,6 @@ class ResidentDashboardScreen extends StatefulWidget {
 }
 
 class _ResidentDashboardScreenState extends State<ResidentDashboardScreen> {
-  final int _notificacionesCount = 0;
-
   @override
   void initState() {
     super.initState();
@@ -44,13 +42,7 @@ class _ResidentDashboardScreenState extends State<ResidentDashboardScreen> {
   }
 
   void _notificaciones() {
-    context.push(
-      AppRoutes.adminModulo('notificaciones'),
-      extra: const ProximamenteArgs(
-        titulo: 'Notificaciones',
-        descripcion: 'Avisos y notificaciones del recinto (próximamente)',
-      ),
-    );
+    NotificacionesDialog.mostrar(context);
   }
 
   @override
@@ -92,7 +84,10 @@ class _ResidentDashboardScreenState extends State<ResidentDashboardScreen> {
             onLogout: esEscritorio
                 ? null
                 : () => context.read<AuthBloc>().add(const LogoutRequested()),
-            notificationsCount: _notificacionesCount,
+            notificationsCount: context
+                .watch<NotificacionesBloc>()
+                .state
+                .noLeidas,
             onNotifications: _notificaciones,
           ),
           body: _ContenidoResidente(usuario: widget.usuario),

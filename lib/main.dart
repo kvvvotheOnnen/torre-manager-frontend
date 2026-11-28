@@ -102,15 +102,25 @@ import 'features/marketplace/data/datasources/marketplace_remote_data_source.dar
 import 'features/marketplace/data/repositories/marketplace_repository_impl.dart';
 import 'features/marketplace/domain/usecases/actualizar_publicacion_usecase.dart';
 import 'features/marketplace/domain/usecases/alternar_favorito_usecase.dart';
+import 'features/marketplace/domain/usecases/aprobar_solicitud_usecase.dart';
 import 'features/marketplace/domain/usecases/crear_publicacion_usecase.dart';
 import 'features/marketplace/domain/usecases/eliminar_publicacion_usecase.dart';
 import 'features/marketplace/domain/usecases/listar_favoritos_marketplace_usecase.dart';
 import 'features/marketplace/domain/usecases/listar_historial_marketplace_usecase.dart';
 import 'features/marketplace/domain/usecases/listar_mis_publicaciones_usecase.dart';
 import 'features/marketplace/domain/usecases/listar_publicaciones_usecase.dart';
+import 'features/marketplace/domain/usecases/listar_solicitudes_usecase.dart';
 import 'features/marketplace/domain/usecases/marcar_publicacion_vendida_usecase.dart';
+import 'features/marketplace/domain/usecases/rechazar_solicitud_usecase.dart';
 import 'features/marketplace/domain/usecases/retirar_publicacion_usecase.dart';
 import 'features/marketplace/presentation/bloc/marketplace_bloc.dart';
+import 'features/notificaciones/data/datasources/notificaciones_remote_data_source.dart';
+import 'features/notificaciones/data/repositories/notificaciones_repository_impl.dart';
+import 'features/notificaciones/domain/usecases/contar_notificaciones_no_leidas_usecase.dart';
+import 'features/notificaciones/domain/usecases/listar_notificaciones_usecase.dart';
+import 'features/notificaciones/domain/usecases/marcar_notificacion_leida_usecase.dart';
+import 'features/notificaciones/domain/usecases/marcar_todas_notificaciones_leidas_usecase.dart';
+import 'features/notificaciones/presentation/bloc/notificaciones_bloc.dart';
 import 'features/tenant/presentation/bloc/tenant_bloc.dart';
 
 void main() {
@@ -142,6 +152,7 @@ class _TorreManagerAppState extends State<TorreManagerApp> {
   late final ServiciosBloc _serviciosBloc;
   late final MarketplaceBloc _marketplaceBloc;
   late final RegistroResidenteBloc _registroResidenteBloc;
+  late final NotificacionesBloc _notificacionesBloc;
   late final GoRouter _router;
   late final ThemeModeController _themeModeController;
 
@@ -167,7 +178,9 @@ class _TorreManagerAppState extends State<TorreManagerApp> {
     _authBloc = AuthBloc(loginUseCase, authRepository);
     _authBloc.add(const AuthCheckRequested());
 
-    final infraestructuraDataSource = InfraestructuraRemoteDataSource(apiClient);
+    final infraestructuraDataSource = InfraestructuraRemoteDataSource(
+      apiClient,
+    );
     final infraestructuraRepository = InfraestructuraRepositoryImpl(
       infraestructuraDataSource,
     );
@@ -260,7 +273,9 @@ class _TorreManagerAppState extends State<TorreManagerApp> {
       asistenteAdminDataSource,
     );
     _asistenteAdminBloc = AsistenteAdminBloc(
-      obtenerDocumentoUseCase: ObtenerDocumentoUseCase(asistenteAdminRepository),
+      obtenerDocumentoUseCase: ObtenerDocumentoUseCase(
+        asistenteAdminRepository,
+      ),
       subirDocumentoUseCase: SubirDocumentoUseCase(asistenteAdminRepository),
       eliminarDocumentoUseCase: EliminarDocumentoUseCase(
         asistenteAdminRepository,
@@ -353,16 +368,49 @@ class _TorreManagerAppState extends State<TorreManagerApp> {
       vender: MarcarPublicacionVendidaUseCase(marketplaceRepository),
       eliminar: EliminarPublicacionUseCase(marketplaceRepository),
       favorito: AlternarFavoritoUseCase(marketplaceRepository),
+      listarSolicitudes: ListarSolicitudesUseCase(marketplaceRepository),
+      aprobarSolicitud: AprobarSolicitudMarketplaceUseCase(
+        marketplaceRepository,
+      ),
+      rechazarSolicitud: RechazarSolicitudMarketplaceUseCase(
+        marketplaceRepository,
+      ),
+    );
+
+    final notificacionesDataSource = NotificacionesRemoteDataSource(apiClient);
+    final notificacionesRepository = NotificacionesRepositoryImpl(
+      notificacionesDataSource,
+    );
+    _notificacionesBloc = NotificacionesBloc(
+      listar: ListarNotificacionesUseCase(notificacionesRepository),
+      contarNoLeidas: ContarNotificacionesNoLeidasUseCase(
+        notificacionesRepository,
+      ),
+      marcarLeida: MarcarNotificacionLeidaUseCase(notificacionesRepository),
+      marcarTodas: MarcarTodasNotificacionesLeidasUseCase(
+        notificacionesRepository,
+      ),
     );
 
     _authBloc.stream.listen((state) {
       if (state is AuthSuccess || state is AuthUnauthenticated) {
         _paqueteriaBloc.add(const PaqueteriaLimpiada());
       }
+      if (state is AuthUnauthenticated ||
+          (state is AuthSuccess && state.usuario.rol == Rol.superadmin)) {
+        _notificacionesBloc.add(const NotificacionesLimpiadas());
+      }
       if (state is AuthSuccess && state.usuario.rol != Rol.superadmin) {
         _tenantBloc.add(const TenantResuelto());
       } else if (state is AuthUnauthenticated) {
         _tenantBloc.add(const TenantLimpiado());
+      }
+    });
+
+    _tenantBloc.stream.listen((state) {
+      if (state.status == TenantStatus.listo &&
+          state.proyectoActivoId != null) {
+        _notificacionesBloc.add(const NotificacionesSolicitadas());
       }
     });
 
@@ -386,6 +434,7 @@ class _TorreManagerAppState extends State<TorreManagerApp> {
     _funcionesDashboardBloc.close();
     _serviciosBloc.close();
     _marketplaceBloc.close();
+    _notificacionesBloc.close();
     _miSolicitudResidenteBloc.close();
     _registroResidenteBloc.close();
     _themeModeController.dispose();
@@ -413,6 +462,7 @@ class _TorreManagerAppState extends State<TorreManagerApp> {
         BlocProvider.value(value: _funcionesDashboardBloc),
         BlocProvider.value(value: _serviciosBloc),
         BlocProvider.value(value: _marketplaceBloc),
+        BlocProvider.value(value: _notificacionesBloc),
       ],
       child: ListenableBuilder(
         listenable: _themeModeController,

@@ -7,6 +7,7 @@ import '../../domain/entities/condicion_producto.dart';
 import '../../domain/entities/estado_publicacion.dart';
 import '../../domain/entities/publicacion_foto.dart';
 import '../../domain/entities/publicacion_marketplace.dart';
+import '../../domain/entities/solicitudes_marketplace.dart';
 import '../../domain/repositories/marketplace_repository.dart';
 import '../datasources/marketplace_remote_data_source.dart';
 
@@ -169,6 +170,53 @@ class MarketplaceRepositoryImpl implements MarketplaceRepositoryInterface {
     try {
       await _remoteDataSource.eliminar(id: id, motivo: motivo);
       return const Right(true);
+    } on ApiException catch (error) {
+      return Left(_failureDesde(error));
+    } on FormatException {
+      return const Left(ServerFailure('Respuesta inesperada del servidor.'));
+    } catch (_) {
+      return const Left(UnexpectedFailure());
+    }
+  }
+
+  @override
+  Future<Either<Failure, SolicitudesMarketplace>> solicitudes() async {
+    try {
+      final dto = await _remoteDataSource.solicitudes();
+      return Right(dto.toEntity());
+    } on ApiException catch (error) {
+      return Left(_failureDesde(error));
+    } on FormatException {
+      return const Left(ServerFailure('Respuesta inesperada del servidor.'));
+    } catch (_) {
+      return const Left(UnexpectedFailure());
+    }
+  }
+
+  @override
+  Future<Either<Failure, PublicacionMarketplace>> aprobarSolicitud(
+    String id,
+  ) async {
+    try {
+      final dto = await _remoteDataSource.aprobar(id);
+      return Right(dto.toEntity());
+    } on ApiException catch (error) {
+      return Left(_failureDesde(error));
+    } on FormatException {
+      return const Left(ServerFailure('Respuesta inesperada del servidor.'));
+    } catch (_) {
+      return const Left(UnexpectedFailure());
+    }
+  }
+
+  @override
+  Future<Either<Failure, PublicacionMarketplace>> rechazarSolicitud({
+    required String id,
+    required String motivo,
+  }) async {
+    try {
+      final dto = await _remoteDataSource.rechazar(id: id, motivo: motivo);
+      return Right(dto.toEntity());
     } on ApiException catch (error) {
       return Left(_failureDesde(error));
     } on FormatException {

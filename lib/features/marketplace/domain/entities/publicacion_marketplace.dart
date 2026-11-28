@@ -25,6 +25,8 @@ class PublicacionMarketplace extends Equatable {
     required this.motivoEliminacion,
     required this.eliminadoPorRol,
     required this.eliminadoEn,
+    required this.motivoRechazo,
+    required this.rechazadoEn,
     required this.creadoEn,
   });
 
@@ -47,10 +49,13 @@ class PublicacionMarketplace extends Equatable {
   final String? motivoEliminacion;
   final String? eliminadoPorRol;
   final DateTime? eliminadoEn;
+  final String? motivoRechazo;
+  final DateTime? rechazadoEn;
   final DateTime? creadoEn;
 
   bool get tieneFoto => fotoUrl != null && fotoUrl!.isNotEmpty;
   bool get estaDisponible => estado.estaDisponible;
+  bool get esPendiente => estado.esPendiente;
   bool get estaVendida => estado.estaVendida;
 
   PublicacionMarketplace copyWith({bool? esFavorita}) {
@@ -74,6 +79,8 @@ class PublicacionMarketplace extends Equatable {
       motivoEliminacion: motivoEliminacion,
       eliminadoPorRol: eliminadoPorRol,
       eliminadoEn: eliminadoEn,
+      motivoRechazo: motivoRechazo,
+      rechazadoEn: rechazadoEn,
       creadoEn: creadoEn,
     );
   }
@@ -99,6 +106,8 @@ class PublicacionMarketplace extends Equatable {
     motivoEliminacion,
     eliminadoPorRol,
     eliminadoEn,
+    motivoRechazo,
+    rechazadoEn,
     creadoEn,
   ];
 }

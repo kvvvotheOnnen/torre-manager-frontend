@@ -8,16 +8,20 @@ import 'package:torre_manager_frontend/features/marketplace/domain/entities/cond
 import 'package:torre_manager_frontend/features/marketplace/domain/entities/estado_publicacion.dart';
 import 'package:torre_manager_frontend/features/marketplace/domain/entities/publicacion_foto.dart';
 import 'package:torre_manager_frontend/features/marketplace/domain/entities/publicacion_marketplace.dart';
+import 'package:torre_manager_frontend/features/marketplace/domain/entities/solicitudes_marketplace.dart';
 import 'package:torre_manager_frontend/features/marketplace/domain/repositories/marketplace_repository.dart';
 import 'package:torre_manager_frontend/features/marketplace/domain/usecases/actualizar_publicacion_usecase.dart';
 import 'package:torre_manager_frontend/features/marketplace/domain/usecases/alternar_favorito_usecase.dart';
+import 'package:torre_manager_frontend/features/marketplace/domain/usecases/aprobar_solicitud_usecase.dart';
 import 'package:torre_manager_frontend/features/marketplace/domain/usecases/crear_publicacion_usecase.dart';
 import 'package:torre_manager_frontend/features/marketplace/domain/usecases/eliminar_publicacion_usecase.dart';
 import 'package:torre_manager_frontend/features/marketplace/domain/usecases/listar_favoritos_marketplace_usecase.dart';
 import 'package:torre_manager_frontend/features/marketplace/domain/usecases/listar_historial_marketplace_usecase.dart';
 import 'package:torre_manager_frontend/features/marketplace/domain/usecases/listar_mis_publicaciones_usecase.dart';
 import 'package:torre_manager_frontend/features/marketplace/domain/usecases/listar_publicaciones_usecase.dart';
+import 'package:torre_manager_frontend/features/marketplace/domain/usecases/listar_solicitudes_usecase.dart';
 import 'package:torre_manager_frontend/features/marketplace/domain/usecases/marcar_publicacion_vendida_usecase.dart';
+import 'package:torre_manager_frontend/features/marketplace/domain/usecases/rechazar_solicitud_usecase.dart';
 import 'package:torre_manager_frontend/features/marketplace/domain/usecases/retirar_publicacion_usecase.dart';
 import 'package:torre_manager_frontend/features/marketplace/presentation/bloc/marketplace_bloc.dart';
 
@@ -41,6 +45,8 @@ const _refrigerador = PublicacionMarketplace(
   motivoEliminacion: null,
   eliminadoPorRol: null,
   eliminadoEn: null,
+  motivoRechazo: null,
+  rechazadoEn: null,
   creadoEn: null,
 );
 
@@ -64,6 +70,8 @@ const _mesa = PublicacionMarketplace(
   motivoEliminacion: null,
   eliminadoPorRol: null,
   eliminadoEn: null,
+  motivoRechazo: null,
+  rechazadoEn: null,
   creadoEn: null,
 );
 
@@ -87,6 +95,8 @@ const _vendida = PublicacionMarketplace(
   motivoEliminacion: null,
   eliminadoPorRol: null,
   eliminadoEn: null,
+  motivoRechazo: null,
+  rechazadoEn: null,
   creadoEn: null,
 );
 
@@ -117,6 +127,8 @@ PublicacionMarketplace _conEstado(
     motivoEliminacion: base.motivoEliminacion,
     eliminadoPorRol: base.eliminadoPorRol,
     eliminadoEn: base.eliminadoEn,
+    motivoRechazo: base.motivoRechazo,
+    rechazadoEn: base.rechazadoEn,
     creadoEn: base.creadoEn,
   );
 }
@@ -139,6 +151,12 @@ class _FakeMarketplaceRepository implements MarketplaceRepositoryInterface {
   PublicacionMarketplace? retirada;
   PublicacionMarketplace? vendida;
   Completer<Either<Failure, PublicacionMarketplace>>? retirarCompleter;
+  List<PublicacionMarketplace> solicitudesLista = const [];
+  int solicitudesLlamadas = 0;
+  String? solicitudAprobada;
+  String? solicitudRechazada;
+  String? motivoRechazado;
+  EstadoPublicacion estadoCrear = EstadoPublicacion.disponible;
 
   @override
   Future<Either<Failure, List<PublicacionMarketplace>>> listar({
@@ -190,7 +208,7 @@ class _FakeMarketplaceRepository implements MarketplaceRepositoryInterface {
       precio: precio,
       categoria: categoria,
       condicion: condicion,
-      estado: EstadoPublicacion.disponible,
+      estado: estadoCrear,
       fotoUrl: foto == null ? null : 'http://foto',
       esMia: true,
       esFavorita: false,
@@ -203,6 +221,8 @@ class _FakeMarketplaceRepository implements MarketplaceRepositoryInterface {
       motivoEliminacion: null,
       eliminadoPorRol: null,
       eliminadoEn: null,
+      motivoRechazo: null,
+      rechazadoEn: null,
       creadoEn: null,
     );
     catalogo = [...catalogo, creada];
@@ -260,6 +280,35 @@ class _FakeMarketplaceRepository implements MarketplaceRepositoryInterface {
     ultimoFavorito = favorito;
     return Right(favorito);
   }
+
+  @override
+  Future<Either<Failure, SolicitudesMarketplace>> solicitudes() async {
+    solicitudesLlamadas++;
+    return Right(
+      SolicitudesMarketplace(
+        pendientes: solicitudesLista.length,
+        solicitudes: solicitudesLista,
+      ),
+    );
+  }
+
+  @override
+  Future<Either<Failure, PublicacionMarketplace>> aprobarSolicitud(
+    String id,
+  ) async {
+    solicitudAprobada = id;
+    return Right(_conEstado(_refrigerador, EstadoPublicacion.disponible));
+  }
+
+  @override
+  Future<Either<Failure, PublicacionMarketplace>> rechazarSolicitud({
+    required String id,
+    required String motivo,
+  }) async {
+    solicitudRechazada = id;
+    motivoRechazado = motivo;
+    return Right(_conEstado(_refrigerador, EstadoPublicacion.rechazada));
+  }
 }
 
 MarketplaceBloc _crearBloc(_FakeMarketplaceRepository repository) {
@@ -274,6 +323,9 @@ MarketplaceBloc _crearBloc(_FakeMarketplaceRepository repository) {
     vender: MarcarPublicacionVendidaUseCase(repository),
     eliminar: EliminarPublicacionUseCase(repository),
     favorito: AlternarFavoritoUseCase(repository),
+    listarSolicitudes: ListarSolicitudesUseCase(repository),
+    aprobarSolicitud: AprobarSolicitudMarketplaceUseCase(repository),
+    rechazarSolicitud: RechazarSolicitudMarketplaceUseCase(repository),
   );
 }
 
@@ -561,5 +613,77 @@ void main() {
 
     expect(estados.last.status, MarketplaceStatus.error);
     expect(estados.last.mensaje, 'Sin conexión.');
+  });
+
+  test('carga las solicitudes pendientes de aprobación', () async {
+    repository.solicitudesLista = [
+      _conEstado(_refrigerador, EstadoPublicacion.pendiente),
+    ];
+
+    bloc.add(const VistaMarketplaceCambiada(MarketplaceVista.solicitudes));
+    await pumpEventQueue();
+
+    expect(repository.solicitudesLlamadas, 1);
+    expect(estados.last.vista, MarketplaceVista.solicitudes);
+    expect(estados.last.publicaciones, hasLength(1));
+    expect(estados.last.pendientes, 1);
+  });
+
+  test('aprobar una solicitud la quita y baja el contador', () async {
+    repository.solicitudesLista = [
+      _conEstado(_refrigerador, EstadoPublicacion.pendiente),
+    ];
+
+    bloc.add(const VistaMarketplaceCambiada(MarketplaceVista.solicitudes));
+    await pumpEventQueue();
+
+    bloc.add(const SolicitudAprobadaSolicitada('1'));
+    await pumpEventQueue();
+
+    expect(repository.solicitudAprobada, '1');
+    expect(estados.last.publicaciones, isEmpty);
+    expect(estados.last.pendientes, 0);
+    expect(estados.last.mensaje, 'Publicación aprobada.');
+  });
+
+  test('rechazar una solicitud registra el motivo y baja el contador', () async {
+    repository.solicitudesLista = [
+      _conEstado(_refrigerador, EstadoPublicacion.pendiente),
+    ];
+
+    bloc.add(const VistaMarketplaceCambiada(MarketplaceVista.solicitudes));
+    await pumpEventQueue();
+
+    bloc.add(
+      const SolicitudRechazadaSolicitada(
+        id: '1',
+        motivo: 'Producto no permitido.',
+      ),
+    );
+    await pumpEventQueue();
+
+    expect(repository.solicitudRechazada, '1');
+    expect(repository.motivoRechazado, 'Producto no permitido.');
+    expect(estados.last.publicaciones, isEmpty);
+    expect(estados.last.pendientes, 0);
+    expect(estados.last.mensaje, 'Solicitud rechazada.');
+  });
+
+  test('una publicación pendiente avisa que va a revisión', () async {
+    repository.estadoCrear = EstadoPublicacion.pendiente;
+
+    bloc.add(
+      const PublicacionGuardada(
+        titulo: 'Parlante',
+        descripcion: 'Buen estado.',
+        precio: 20000,
+        categoria: CategoriaProducto.otros,
+        condicion: CondicionProducto.usado,
+      ),
+    );
+    await pumpEventQueue();
+
+    expect(estados.last.vista, MarketplaceVista.mias);
+    expect(estados.last.mensaje, 'Publicación enviada a revisión.');
   });
 }

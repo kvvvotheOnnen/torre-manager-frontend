@@ -26,6 +26,7 @@ import '../widgets/opciones_publicacion_dialog.dart';
 import '../widgets/publicacion_card.dart';
 import '../widgets/publicacion_detalle_dialog.dart';
 import '../widgets/publicacion_form_dialog.dart';
+import '../widgets/rechazar_solicitud_dialog.dart';
 
 class MarketplaceScreen extends StatefulWidget {
   const MarketplaceScreen({super.key});
@@ -37,6 +38,7 @@ class MarketplaceScreen extends StatefulWidget {
 class _MarketplaceScreenState extends State<MarketplaceScreen> {
   final _busqueda = TextEditingController();
   bool _adminDetectado = false;
+  bool _contadorSolicitado = false;
 
   @override
   void initState() {
@@ -48,6 +50,7 @@ class _MarketplaceScreenState extends State<MarketplaceScreen> {
     final admin = _esAdmin(funciones.state);
     _adminDetectado = admin;
     context.read<MarketplaceBloc>().add(MarketplaceSolicitadas(todas: admin));
+    _solicitarContadorSolicitudes();
   }
 
   @override
@@ -73,6 +76,15 @@ class _MarketplaceScreenState extends State<MarketplaceScreen> {
   bool _puede(String accion) {
     final state = context.read<FuncionesDashboardBloc>().state;
     return _funcion(state)?.puede(accion) ?? false;
+  }
+
+  void _solicitarContadorSolicitudes() {
+    if (_contadorSolicitado || !_puede('aprobar')) {
+      return;
+    }
+
+    _contadorSolicitado = true;
+    context.read<MarketplaceBloc>().add(const ContadorSolicitudesSolicitado());
   }
 
   Future<void> _abrirFormulario([PublicacionMarketplace? publicacion]) async {
@@ -202,6 +214,7 @@ class _MarketplaceScreenState extends State<MarketplaceScreen> {
                   const MarketplaceSolicitadas(todas: true),
                 );
               }
+              _solicitarContadorSolicitudes();
             },
             child: BlocConsumer<MarketplaceBloc, MarketplaceState>(
               listenWhen: (anterior, actual) =>
@@ -223,6 +236,7 @@ class _MarketplaceScreenState extends State<MarketplaceScreen> {
                 final puedePublicar = _puede('publicar');
                 final puedeFavoritos = _puede('favoritos');
                 final puedeGestionar = _puede('gestionar');
+                final puedeAprobar = _puede('aprobar');
 
                 return AppContent(
                   child: RefreshIndicator(
@@ -341,7 +355,22 @@ class _MarketplaceScreenState extends State<MarketplaceScreen> {
                                           ),
                                     ),
                                   ],
-                                  if (puedePublicar && !puedeGestionar)
+                                  if (puedeAprobar)
+                                    _BotonVista(
+                                      icono: Icons.inbox_outlined,
+                                      etiqueta: 'Solicitudes',
+                                      contador: state.pendientes,
+                                      activo:
+                                          state.vista ==
+                                          MarketplaceVista.solicitudes,
+                                      onPressed: () =>
+                                          context.read<MarketplaceBloc>().add(
+                                            const VistaMarketplaceCambiada(
+                                              MarketplaceVista.solicitudes,
+                                            ),
+                                          ),
+                                    ),
+                                  if (!puedeGestionar)
                                     _BotonVista(
                                       icono: Icons.grid_view_outlined,
                                       etiqueta: 'Catálogo',
@@ -446,15 +475,25 @@ class _MarketplaceScreenState extends State<MarketplaceScreen> {
                           )
                         else if (state.sinResultados)
                           AppEmptyState(
-                            icon: state.vista == MarketplaceVista.eliminadas
-                                ? Icons.delete_outline
-                                : Icons.storefront_outlined,
-                            title: state.vista == MarketplaceVista.eliminadas
-                                ? 'Sin publicaciones eliminadas'
-                                : 'Sin publicaciones',
-                            message: state.vista == MarketplaceVista.eliminadas
-                                ? 'Las publicaciones eliminadas por moderación aparecerán aquí.'
-                                : 'No hay artículos que coincidan con el filtro.',
+                            icon: switch (state.vista) {
+                              MarketplaceVista.eliminadas =>
+                                Icons.delete_outline,
+                              MarketplaceVista.solicitudes =>
+                                Icons.inbox_outlined,
+                              _ => Icons.storefront_outlined,
+                            },
+                            title: switch (state.vista) {
+                              MarketplaceVista.eliminadas =>
+                                'Sin publicaciones eliminadas',
+                              MarketplaceVista.solicitudes => 'Sin solicitudes',
+                              _ => 'Sin publicaciones',
+                            },
+                            message: switch (state.vista) {
+                              MarketplaceVista.eliminadas => 'Las publicaciones eliminadas por moderación aparecerán aquí.',
+                              MarketplaceVista.solicitudes => 'No hay publicaciones pendientes de aprobación.',
+                              _ =>
+                                'No hay artículos que coincidan con el filtro.',
+                            },
                             actionLabel: 'Limpiar filtros',
                             onAction: () {
                               _busqueda.clear();
@@ -506,6 +545,25 @@ class _MarketplaceScreenState extends State<MarketplaceScreen> {
                                             ? () =>
                                                   _alternarFavorito(publicacion)
                                             : null,
+                                        onAprobar:
+                                            puedeAprobar &&
+                                                state.vista ==
+                                                    MarketplaceVista.solicitudes
+                                            ? () => context
+                                                  .read<MarketplaceBloc>()
+                                                  .add(
+                                                    SolicitudAprobadaSolicitada(
+                                                      publicacion.id,
+                                                    ),
+                                                  )
+                                            : null,
+                                        onRechazar:
+                                            puedeAprobar &&
+                                                state.vista ==
+                                                    MarketplaceVista.solicitudes
+                                            ? () =>
+                                                  _gestionarRechazo(publicacion)
+                                            : null,
                                       ),
                                     ),
                                 ],
@@ -521,6 +579,18 @@ class _MarketplaceScreenState extends State<MarketplaceScreen> {
           ),
         );
       },
+    );
+  }
+
+  Future<void> _gestionarRechazo(PublicacionMarketplace publicacion) async {
+    final motivo = await RechazarSolicitudDialog.mostrar(context, publicacion);
+
+    if (motivo == null || motivo.trim().isEmpty || !mounted) {
+      return;
+    }
+
+    context.read<MarketplaceBloc>().add(
+      SolicitudRechazadaSolicitada(id: publicacion.id, motivo: motivo.trim()),
     );
   }
 
@@ -564,26 +634,32 @@ class _BotonVista extends StatelessWidget {
     required this.etiqueta,
     required this.activo,
     required this.onPressed,
+    this.contador = 0,
   });
 
   final IconData icono;
   final String etiqueta;
   final bool activo;
   final VoidCallback onPressed;
+  final int contador;
 
   @override
   Widget build(BuildContext context) {
+    final iconoWidget = contador > 0
+        ? Badge.count(count: contador, child: Icon(icono, size: 18))
+        : Icon(icono, size: 18);
+
     if (activo) {
       return FilledButton.tonalIcon(
         onPressed: onPressed,
-        icon: Icon(icono, size: 18),
+        icon: iconoWidget,
         label: Text(etiqueta),
       );
     }
 
     return OutlinedButton.icon(
       onPressed: onPressed,
-      icon: Icon(icono, size: 18),
+      icon: iconoWidget,
       label: Text(etiqueta),
     );
   }
